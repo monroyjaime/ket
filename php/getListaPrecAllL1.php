@@ -1,0 +1,44 @@
+<?php
+//session_start();
+require_once("dbcat.php");
+$db = new DB();
+$tipoPrec = (isset($_GET['prec']))? intval($_GET['prec']) : 0; 
+$quePrec = ($tipoPrec == 0)? "cost_max" : "cost_mayor";
+$role = (isset($_GET['role']))? intval($_GET['role']) : -1;
+
+
+$numProd = 0;
+$query  = "SELECT a.id,a.code,a.name,a.".$quePrec.",a.unit,b.name AS dpto, a.photo_url, a.current_stock,a.stock_tot";
+$query .= " FROM productos a, departamentos b where b.num = 1 AND a.dpto_id = b.id";
+if($role == 6)
+    $query .= " AND a.current_stock > 0";
+
+$query .= " AND a.".$quePrec." > 0 and a.show='t' order by a.dpto_id,a.code";
+$consult = $db->consultas($query);
+foreach ($consult as $value){
+    $objRtn = new stdClass();
+    $objRtn->div = "Automotriz";
+    $objRtn->dpto = $value->dpto;
+    $objRtn->code = $value->code;
+    $objRtn->name = $value->name;
+
+    $objRtn->cost_max = ($tipoPrec == 0)? number_format(floatval($value->cost_max),3,",") : number_format(floatval($value->cost_mayor),3,",");
+    $objRtn->cost_max_80 = ($tipoPrec == 0)? number_format(floatval($value->cost_max)*0.8,3,",") : number_format(floatval($value->cost_mayor)*0.8,3,",");
+
+    $objRtn->current_stock = $value->current_stock;
+
+    $objRtn->unit = $value->unit;
+    $objRtn->photo_url = $value->photo_url;
+    $listaPrecAll[] = $objRtn;
+    $numProd++;
+}
+	
+
+$objPag = new stdClass();
+$objPag->total=$numProd;
+$objPag->totalNotFiltered=$numProd;
+$objPag->rows = $listaPrecAll;
+
+//$listaPrecDpto = db->getListaPrecDpto($dptoId);
+echo json_encode($objPag);
+?>
