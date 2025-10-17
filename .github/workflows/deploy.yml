@@ -1,42 +1,23 @@
-name: 🔍 SSH Authentication Debug
+name: 🔑 Test NEW SSH Key
 
 on:
   push:
     branches: [ main ]
 
 jobs:
-  debug:
+  test:
     runs-on: ubuntu-latest
     steps:
-    - name: 🔑 Debug SSH Step by Step
+    - name: 🔑 Test with NEW key
       run: |
         mkdir -p ~/.ssh
-        chmod 700 ~/.ssh
+        echo "${{ secrets.SERVER_SSH_KEY }}" > ~/.ssh/new_key
+        chmod 600 ~/.ssh/new_key
         
-        # 1. Guardar la clave
-        echo "${{ secrets.SERVER_SSH_KEY }}" > ~/.ssh/debug_key
-        chmod 600 ~/.ssh/debug_key
-        
-        echo "=== 1. Key content (first 3 lines) ==="
-        head -3 ~/.ssh/debug_key
-        
-        echo "=== 2. Testing SSH connection with simple command ==="
-        ssh -i ~/.ssh/debug_key \
+        echo "=== Testing NEW key ==="
+        ssh -i ~/.ssh/new_key \
             -o StrictHostKeyChecking=no \
             -o ConnectTimeout=10 \
             -p 5655 \
             ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} \
-            "echo '✅ Simple command works'" && echo "SUCCESS" || echo "FAILED"
-        
-        echo "=== 3. Testing SSH connection with rsync command ==="
-        ssh -i ~/.ssh/debug_key \
-            -o StrictHostKeyChecking=no \
-            -p 5655 \
-            ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} \
-            "rsync --version" && echo "SUCCESS" || echo "FAILED"
-        
-        echo "=== 4. Testing direct rsync ==="
-        rsync --version
-        rsync -avz --dry-run \
-          -e "ssh -i ~/.ssh/debug_key -o StrictHostKeyChecking=no -p 5655 -v" \
-          ./ ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/var/www/html/ || echo "RSYNC FAILED"
+            "echo '✅ NEW KEY WORKS!'" || echo "❌ NEW KEY FAILED"
