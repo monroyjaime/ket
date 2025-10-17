@@ -1,29 +1,39 @@
-name: 🔑 Test SSH Authentication
+
+name: 🚀 Deploy to Production
 
 on:
   push:
     branches: [ main ]
 
 jobs:
-  test-auth:
+  deploy:
     runs-on: ubuntu-latest
+    
     steps:
-    - name: 🔑 Test SSH Connection
+    - name: 🔄 Checkout code
+      uses: actions/checkout@v4
+      
+    - name: 📦 Install rsync
+      run: sudo apt-get update && sudo apt-get install -y rsync
+      
+    - name: 🔑 Setup SSH
       run: |
         mkdir -p ~/.ssh
         chmod 700 ~/.ssh
-        
-        # Guardar la clave privada
-        echo "${{ secrets.SERVER_SSH_KEY }}" > ~/.ssh/test_key
-        chmod 600 ~/.ssh/test_key
-        
-        echo "=== Key format check ==="
-        head -2 ~/.ssh/test_key
-        
-        echo "=== Testing SSH connection ==="
-        ssh -i ~/.ssh/test_key \
-            -o StrictHostKeyChecking=no \
-            -o ConnectTimeout=10 \
-            -p 5655 \
-            ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} \
-            "echo '✅ SUCCESS: Authenticated!'" || echo "❌ FAILED: Authentication"
+        echo "${{ secrets.SERVER_SSH_KEY }}" > ~/.ssh/deploy_key
+        chmod 600 ~/.ssh/deploy_key
+        ssh-keyscan -p 5655 ${{ secrets.SERVER_HOST }} >> ~/.ssh/known_hosts
+      
+    - name: 🚀 Deploy with rsync
+      run: |
+        echo "=== Starting deployment ==="
+        rsync -avz --delete \
+          -e "ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no -p 5655" \
+          ./ ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/var/www/html/
+        echo "=== Deployment completed ==="
+      
+    - name: ✅ Verify deployment
+      run: |
+        ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no -p 5655 \
+          ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} \
+          "ls -la /var/www/html/ && echo '✅ Deployment verified successfully!'"
