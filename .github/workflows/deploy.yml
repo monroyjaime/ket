@@ -25,6 +25,7 @@ jobs:
       run: |
         # ✅ MANTIENE --delete pero optimizado
         rsync -avz --delete \
+          --no-times \  # ← ¡ESTA ES LA CLAVE!
           --exclude='.git' \
           --exclude='.github' \
           --exclude='README.md' \
