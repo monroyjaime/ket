@@ -203,5 +203,9 @@ if($newNumProductos > 0) //Prevent delete all productos table
     }
 }
 
-
+// finally update stock_tot column each time this script runs
+if($db->querySet("UPDATE productos SET stock_tot = current_stock+stock_lleg") == 1)
+    echo "exitosa actualizacion de stock_tot global";
+else
+    echo "Error actualizando stock_tot global";
 ?>    
