@@ -12,7 +12,7 @@ jobs:
     - name: 🔄 Checkout code
       uses: actions/checkout@v4
       with:
-        fetch-depth: 1  # ✅ Más rápido
+        fetch-depth: 1
         
     - name: 🔑 Setup SSH
       run: |
@@ -21,18 +21,17 @@ jobs:
         chmod 600 ~/.ssh/deploy_key
         ssh-keyscan -p 5655 ${{ secrets.SERVER_HOST }} >> ~/.ssh/known_hosts
       
-    - name: 🚀 Smart deploy
+    - name: 🚀 Smart deploy (preserve timestamps)
       run: |
-        # ✅ MANTIENE --delete pero optimizado
         rsync -avz --delete \
-          --no-times \  # ← ¡ESTA ES LA CLAVE!
+          --no-times \
           --exclude='.git' \
           --exclude='.github' \
           --exclude='README.md' \
           --exclude='*.log' \
           -e "ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no -p 5655" \
           ./ ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/var/www/html/
-        echo "✅ Deployment completed with full sync"
+        echo "✅ Deployment completed with preserved timestamps"
       
     - name: ✅ Verify deployment
       run: |
