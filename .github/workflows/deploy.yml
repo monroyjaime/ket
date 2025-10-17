@@ -1,4 +1,3 @@
-
 name: 🚀 Deploy to Production
 
 on:
@@ -12,7 +11,9 @@ jobs:
     steps:
     - name: 🔄 Checkout code
       uses: actions/checkout@v4
-      
+      with:
+        fetch-depth: 1  # ✅ Más rápido
+        
     - name: 🔑 Setup SSH
       run: |
         mkdir -p ~/.ssh
@@ -20,13 +21,17 @@ jobs:
         chmod 600 ~/.ssh/deploy_key
         ssh-keyscan -p 5655 ${{ secrets.SERVER_HOST }} >> ~/.ssh/known_hosts
       
-    - name: 🚀 Deploy with rsync
+    - name: 🚀 Smart deploy
       run: |
-        echo "=== Starting deployment ==="
+        # ✅ MANTIENE --delete pero optimizado
         rsync -avz --delete \
+          --exclude='.git' \
+          --exclude='.github' \
+          --exclude='README.md' \
+          --exclude='*.log' \
           -e "ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no -p 5655" \
           ./ ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/var/www/html/
-        echo "=== Deployment completed ==="
+        echo "✅ Deployment completed with full sync"
       
     - name: ✅ Verify deployment
       run: |
