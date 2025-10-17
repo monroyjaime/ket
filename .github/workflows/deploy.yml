@@ -1,23 +1,35 @@
-name: 🔑 Test NEW SSH Key
+
+name: 🚀 Deploy to Production
 
 on:
   push:
     branches: [ main ]
 
 jobs:
-  test:
+  deploy:
     runs-on: ubuntu-latest
+    
     steps:
-    - name: 🔑 Test with NEW key
+    - name: 🔄 Checkout code
+      uses: actions/checkout@v4
+      
+    - name: 🔑 Setup SSH
       run: |
         mkdir -p ~/.ssh
-        echo "${{ secrets.SERVER_SSH_KEY }}" > ~/.ssh/new_key
-        chmod 600 ~/.ssh/new_key
-        
-        echo "=== Testing NEW key ==="
-        ssh -i ~/.ssh/new_key \
-            -o StrictHostKeyChecking=no \
-            -o ConnectTimeout=10 \
-            -p 5655 \
-            ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} \
-            "echo '✅ NEW KEY WORKS!'" || echo "❌ NEW KEY FAILED"
+        echo "${{ secrets.SERVER_SSH_KEY }}" > ~/.ssh/deploy_key
+        chmod 600 ~/.ssh/deploy_key
+        ssh-keyscan -p 5655 ${{ secrets.SERVER_HOST }} >> ~/.ssh/known_hosts
+      
+    - name: 🚀 Deploy with rsync
+      run: |
+        echo "=== Starting deployment ==="
+        rsync -avz --delete \
+          -e "ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no -p 5655" \
+          ./ ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/var/www/html/
+        echo "=== Deployment completed ==="
+      
+    - name: ✅ Verify deployment
+      run: |
+        ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no -p 5655 \
+          ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} \
+          "ls -la /var/www/html/ && echo '✅ Deployment successful!'"
