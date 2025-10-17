@@ -1,34 +1,42 @@
-name: 🚀 Deploy to Production
+name: 🔍 SSH Authentication Debug
 
 on:
   push:
     branches: [ main ]
 
 jobs:
-  deploy:
+  debug:
     runs-on: ubuntu-latest
-    
     steps:
-    - name: 🔄 Checkout code
-      uses: actions/checkout@v4
-      
-    - name: 🔑 Setup SSH
+    - name: 🔑 Debug SSH Step by Step
       run: |
         mkdir -p ~/.ssh
-        echo "${{ secrets.SERVER_SSH_KEY }}" > ~/.ssh/deploy_key
-        chmod 600 ~/.ssh/deploy_key
-        ssh-keyscan -p 5655 ${{ secrets.SERVER_HOST }} >> ~/.ssh/known_hosts
-      
-    - name: 🚀 Deploy with rsync
-      run: |
-        echo "=== Starting deployment ==="
-        rsync -avz --delete \
-          -e "ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no -p 5655" \
-          ./ ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/var/www/html/
-        echo "=== Deployment completed ==="
-      
-    - name: ✅ Verify deployment
-      run: |
-        ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no -p 5655 \
-          ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} \
-          "ls -la /var/www/html/ && echo '✅ Deployment successful!'"
+        chmod 700 ~/.ssh
+        
+        # 1. Guardar la clave
+        echo "${{ secrets.SERVER_SSH_KEY }}" > ~/.ssh/debug_key
+        chmod 600 ~/.ssh/debug_key
+        
+        echo "=== 1. Key content (first 3 lines) ==="
+        head -3 ~/.ssh/debug_key
+        
+        echo "=== 2. Testing SSH connection with simple command ==="
+        ssh -i ~/.ssh/debug_key \
+            -o StrictHostKeyChecking=no \
+            -o ConnectTimeout=10 \
+            -p 5655 \
+            ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} \
+            "echo '✅ Simple command works'" && echo "SUCCESS" || echo "FAILED"
+        
+        echo "=== 3. Testing SSH connection with rsync command ==="
+        ssh -i ~/.ssh/debug_key \
+            -o StrictHostKeyChecking=no \
+            -p 5655 \
+            ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} \
+            "rsync --version" && echo "SUCCESS" || echo "FAILED"
+        
+        echo "=== 4. Testing direct rsync ==="
+        rsync --version
+        rsync -avz --dry-run \
+          -e "ssh -i ~/.ssh/debug_key -o StrictHostKeyChecking=no -p 5655 -v" \
+          ./ ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/var/www/html/ || echo "RSYNC FAILED"
