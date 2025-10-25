@@ -7,7 +7,6 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    
     steps:
     - name: 🔄 Checkout code
       uses: actions/checkout@v4
@@ -19,22 +18,13 @@ jobs:
         mkdir -p ~/.ssh
         echo "${{ secrets.SERVER_SSH_KEY }}" > ~/.ssh/deploy_key
         chmod 600 ~/.ssh/deploy_key
-        ssh-keyscan -p 5655 ${{ secrets.SERVER_HOST }} >> ~/.ssh/known_hosts
+        ssh-keyscan -H ${{ secrets.SERVER_HOST }} -p 5655 >> ~/.ssh/known_hosts
       
-    - name: 🚀 Smart deploy (preserve timestamps)
+    - name: 🚀 Safe deploy (NO delete)
       run: |
-        rsync -avz --delete \
-          --no-times \
-          --exclude='.git' \
-          --exclude='.github' \
-          --exclude='README.md' \
-          --exclude='*.log' \
-          -e "ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no -p 5655" \
-          ./ ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/var/www/html/
-        echo "✅ Deployment completed with preserved timestamps"
+        rsync -avz --no-times -e "ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no -p 5655" ./ ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/var/www/html/
+        echo "✅ Ket deployment completed safely - No files deleted"
       
     - name: ✅ Verify deployment
       run: |
-        ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no -p 5655 \
-          ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} \
-          "ls -la /var/www/html/ && echo '✅ Deployment successful!'"
+        ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no -p 5655 ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} "ls -la /var/www/html/ && echo '✅ Ket deployment verified!'"
