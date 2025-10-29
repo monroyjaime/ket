@@ -293,12 +293,26 @@ foreach ($consult as $value)
           #admin-opt .btn-link {
               width: 100%;
               white-space: nowrap;
+              padding: 10px 20px;
+              text-decoration: none;
+              color: #333; /* Color del texto normal */
+              display: block;
+              transition: background-color 0.3s ease, color 0.3s ease; /* Transición suave */
           }
 
-          /* Opcional: Ajustar el padding para mejor apariencia */
-          #admin-opt .btn-link {
-              padding: 10px 20px;
+          /* Efecto hover para cambiar color de fondo */
+          #admin-opt .btn-link:hover {
+              background-color: #007bff !important; /* Color azul de fondo al hover */
+              color: white !important; /* Color del texto al hover */
           }
+
+          /* Opcional: Para mejorar la apariencia del texto h5 dentro del enlace */
+          #admin-opt .btn-link h5 {
+              margin: 0;
+              display: inline;
+              font-size: 1rem;
+          }
+
           body {
             background-image: url("img/fondoOscuroMobile.jpg");
             background-size: contain;
