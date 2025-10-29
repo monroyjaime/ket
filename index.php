@@ -242,14 +242,22 @@ foreach ($consult as $value)
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ENjdO4Dr2bkBIFxQpeoTz1HIcje39Wm4jDKdf19U8gI4ddQ3GYNS7NTKfAdVQSZe" crossorigin="anonymous"></script>        
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
         <style type="text/css">
-          /* Clase personalizada para el hover */
-          .hover-bg-light:hover {
-              background-color: #f8f9fa !important;
+          /* Ajustar el ancho del menú desplegable */
+          #admin-opt.dropdown-menu {
+              width: auto !important;
+              min-width: auto !important;
+              white-space: nowrap !important;
           }
 
-          /* Ajustes adicionales si es necesario */
+          /* Asegurar que los enlaces ocupen todo el ancho necesario */
           #admin-opt .btn-link {
-              transition: background-color 0.2s ease; 
+              width: 100%;
+              white-space: nowrap;
+          }
+
+          /* Opcional: Ajustar el padding para mejor apariencia */
+          #admin-opt .btn-link {
+              padding: 10px 20px;
           }
         </style>  
         <script type="text/javascript">
