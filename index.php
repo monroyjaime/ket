@@ -102,8 +102,8 @@ foreach ($consult as $value)
                 $icon_admin .=  '<a href="#" class="dropdown-toggle" data-toggle="dropdown"><i class="bi bi-pencil-square icon-dark-blue icon-large" id="btnsMenu"></i>Administrar...</a>';
                 $icon_admin .=  '<ul id="admin-opt" class="dropdown-menu">';
                 $icon_admin .=  '<li>';
-                $icon_admin .=  '<div class="row">';
-                $icon_admin .=  '<a href="./admin/">Pedidos</a>';
+                $icon_admin .=  '<div class="row">';<i class="bi bi-file-text"></i>
+                $icon_admin .=  '<a href="./admin/" class="btn-link" id="btnsMenu"><i class="bi bi-file-text"></i>Pedidos</a>';
                 $icon_admin .=  '</div>';
                 $icon_admin .=  '</li>';
                 $icon_admin .=  '</ul>';
