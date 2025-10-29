@@ -103,7 +103,10 @@ foreach ($consult as $value)
                 $icon_admin .=  '<ul id="admin-opt" class="dropdown-menu">';
                 $icon_admin .=  '<li>';
                 $icon_admin .=  '<div class="row">';
-                $icon_admin .=  '<a href="./admin/" class="btn-link" id="btnsMenu"><i class="bi bi-file-text"></i>Pedidos</a>';
+                $icon_admin .=  '<a href="./admin/" class="btn-link" id="btnsMenu"><i class="bi bi-file-text"></i><h5>Pedidos</h5></a>';
+                $icon_admin .=  '</div>';
+                $icon_admin .=  '<div class="row">';
+                $icon_admin .=  '<a href="#" class="btn-link" id="btnsMenu"><i class="bi bi-file-text"></i><h5>Presupuestos</h5></a>';
                 $icon_admin .=  '</div>';
                 $icon_admin .=  '</li>';
                 $icon_admin .=  '</ul>';
