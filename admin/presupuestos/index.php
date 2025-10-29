@@ -310,7 +310,7 @@ foreach ($consult as $value)
         </div>  
  
         <div class="col text-end" style="max-height: 40px;" >
-            <img src="../catalogo/images/logoMini.png" class="img-fluid" alt="logo" />
+            <img src="../../catalogo/images/logoMini.png" class="img-fluid" alt="logo" />
         </div>       
 
     </div>
