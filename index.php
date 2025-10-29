@@ -67,7 +67,7 @@ foreach ($consult as $value)
         $icon_admin   ='<li class="nav-item dropend">';
         $icon_admin  .=    '<a href="#" class="dropdown-toggle text-decoration-none text-dark" data-toggle="dropdown">';
         $icon_admin  .=        '<i class="bi bi-pencil-square icon-dark-blue icon-large" id="btnsMenu"></i>Admin...</a>';
-        $icon_admin  .=    '<ul id="admin-opt" class="dropdown-menu">';
+        $icon_admin  .=    '<ul id="admin-opt" class="dropdown-menu w-auto">';
         $icon_admin  .=        '<li>';
         $icon_admin  .=            '<div class="row">';
         $icon_admin  .=                '<a href="./admin/" class="btn-link text-decoration-none text-dark p-2 rounded hover-bg-light d-block" id="btnsMenu">';
@@ -122,7 +122,7 @@ foreach ($consult as $value)
               $icon_admin   ='<li class="nav-item dropend">';
               $icon_admin  .=    '<a href="#" class="dropdown-toggle text-decoration-none text-dark" data-toggle="dropdown">';
               $icon_admin  .=        '<i class="bi bi-pencil-square icon-dark-blue icon-large" id="btnsMenu"></i>Admin...</a>';
-              $icon_admin  .=    '<ul id="admin-opt" class="dropdown-menu">';
+              $icon_admin  .=    '<ul id="admin-opt" class="dropdown-menu w-auto">';
               $icon_admin  .=        '<li>';
               $icon_admin  .=            '<div class="row">';
               $icon_admin  .=                '<a href="./admin/" class="btn-link text-decoration-none text-dark p-2 rounded hover-bg-light d-block" id="btnsMenu">';
@@ -247,23 +247,9 @@ foreach ($consult as $value)
               background-color: #f8f9fa !important;
           }
 
-          /* Ajustar el ancho del menú desplegable */
-          #admin-opt.dropdown-menu {
-              width: auto !important;
-              min-width: auto !important;
-              white-space: nowrap !important;
-          }
-
-          /* Asegurar que los enlaces ocupen todo el ancho necesario */
+          /* Ajustes adicionales si es necesario */
           #admin-opt .btn-link {
-              width: 100%;
-              white-space: nowrap;
               transition: background-color 0.2s ease; 
-          }
-
-          /* Opcional: Ajustar el padding para mejor apariencia */
-          #admin-opt .btn-link {
-              padding: 10px 20px;
           }
         </style>  
         <script type="text/javascript">
