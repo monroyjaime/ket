@@ -64,6 +64,25 @@ foreach ($consult as $value)
     $icon_admin ='';
       if($admin ==1)
       {
+        $icon_admin   ='<li class="nav-item dropend">';
+        $icon_admin  .=    '<a href="#" class="dropdown-toggle text-decoration-none text-dark" data-toggle="dropdown">';
+        $icon_admin  .=        '<i class="bi bi-pencil-square icon-dark-blue icon-large" id="btnsMenu"></i>Admin...</a>';
+        $icon_admin  .=    '<ul id="admin-opt" class="dropdown-menu">';
+        $icon_admin  .=        '<li>';
+        $icon_admin  .=            '<div class="row">';
+        $icon_admin  .=                '<a href="./admin/" class="btn-link text-decoration-none text-dark p-2 rounded hover-bg-light d-block" id="btnsMenu">';
+        $icon_admin  .=                    '<i class="bi bi-file-text"></i><h5 class="d-inline ms-2">Pedidos</h5>';
+        $icon_admin  .=                '</a>';
+        $icon_admin  .=            '</div>';
+        $icon_admin  .=            '<div class="row">';
+        $icon_admin  .=                '<a href="#" class="btn-link text-decoration-none text-dark p-2 rounded hover-bg-light d-block" id="btnsMenu">';
+        $icon_admin  .=                    '<i class="bi bi-file-text"></i><h5 class="d-inline ms-2">Presupuestos</h5>';
+        $icon_admin  .=                '</a>';
+        $icon_admin  .=            '</div>';
+        $icon_admin  .=        '</li>';
+        $icon_admin  .=    '</ul>';
+        $icon_admin  .='</li>';
+        /*
         $icon_admin  =  '<li class="nav-item dropend">'; 
         $icon_admin .=  '<a href="#" class="dropdown-toggle" data-toggle="dropdown"><i class="bi bi-pencil-square icon-dark-blue icon-large" id="btnsMenu"></i>Administrar...</a>';
         $icon_admin .=  '<ul id="admin-opt" class="dropdown-menu">';
@@ -74,6 +93,7 @@ foreach ($consult as $value)
         $icon_admin .=  '</li>';
         $icon_admin .=  '</ul>';
         $icon_admin .=  '</li>';
+        */
       }
     $sesionAlreadyActive = true;
 
@@ -98,6 +118,26 @@ foreach ($consult as $value)
         $icon_admin ='';
             if($admin ==1)
             {
+
+              $icon_admin   ='<li class="nav-item dropend">';
+              $icon_admin  .=    '<a href="#" class="dropdown-toggle text-decoration-none text-dark" data-toggle="dropdown">';
+              $icon_admin  .=        '<i class="bi bi-pencil-square icon-dark-blue icon-large" id="btnsMenu"></i>Admin...</a>';
+              $icon_admin  .=    '<ul id="admin-opt" class="dropdown-menu">';
+              $icon_admin  .=        '<li>';
+              $icon_admin  .=            '<div class="row">';
+              $icon_admin  .=                '<a href="./admin/" class="btn-link text-decoration-none text-dark p-2 rounded hover-bg-light d-block" id="btnsMenu">';
+              $icon_admin  .=                    '<i class="bi bi-file-text"></i><h5 class="d-inline ms-2">Pedidos</h5>';
+              $icon_admin  .=                '</a>';
+              $icon_admin  .=            '</div>';
+              $icon_admin  .=            '<div class="row">';
+              $icon_admin  .=                '<a href="#" class="btn-link text-decoration-none text-dark p-2 rounded hover-bg-light d-block" id="btnsMenu">';
+              $icon_admin  .=                    '<i class="bi bi-file-text"></i><h5 class="d-inline ms-2">Presupuestos</h5>';
+              $icon_admin  .=                '</a>';
+              $icon_admin  .=            '</div>';
+              $icon_admin  .=        '</li>';
+              $icon_admin  .=    '</ul>';
+              $icon_admin  .='</li>';
+                /*
                 $icon_admin  =  '<li class="nav-item dropend">'; 
                 $icon_admin .=  '<a href="#" class="dropdown-toggle" data-toggle="dropdown"><i class="bi bi-pencil-square icon-dark-blue icon-large" id="btnsMenu"></i>Administrar...</a>';
                 $icon_admin .=  '<ul id="admin-opt" class="dropdown-menu">';
@@ -111,6 +151,7 @@ foreach ($consult as $value)
                 $icon_admin .=  '</li>';
                 $icon_admin .=  '</ul>';
                 $icon_admin .=  '</li>';
+                */
             }
       /*$consult = $db->consultas("SELECT usuario, num, id FROM sesion WHERE active='t' AND ip_client = '".$ip."'");
       foreach ($consult as $value)
@@ -194,13 +235,23 @@ foreach ($consult as $value)
     <head>
         <meta charset="utf-8"/>
         <meta name="viewport" content="initial-scale=1, maximum-scale=1">
-		<title>Ket Home</title>
+		    <title>Ket Home</title>
         <link rel="Shortcut Icon" href="../favicon.ico" type="image/x-icon" />
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-KK94CHFLLe+nY2dmCWGMq91rCGa5gtU4mk92HdvYe+M/SXH301p5ILy+dN9+nJOZ" crossorigin="anonymous">		
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">   
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ENjdO4Dr2bkBIFxQpeoTz1HIcje39Wm4jDKdf19U8gI4ddQ3GYNS7NTKfAdVQSZe" crossorigin="anonymous"></script>        
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+        <style type="text/css">
+          /* Clase personalizada para el hover */
+          .hover-bg-light:hover {
+              background-color: #f8f9fa !important;
+          }
 
+          /* Ajustes adicionales si es necesario */
+          #admin-opt .btn-link {
+              transition: background-color 0.2s ease;
+          }
+        </style>  
         <script type="text/javascript">
 
           var sesionNum = <?php echo $sesion_num;?>;
