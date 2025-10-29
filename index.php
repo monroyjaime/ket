@@ -247,9 +247,23 @@ foreach ($consult as $value)
               background-color: #f8f9fa !important;
           }
 
-          /* Ajustes adicionales si es necesario */
+          /* Ajustar el ancho del menú desplegable */
+          #admin-opt.dropdown-menu {
+              width: auto !important;
+              min-width: auto !important;
+              white-space: nowrap !important;
+          }
+
+          /* Asegurar que los enlaces ocupen todo el ancho necesario */
           #admin-opt .btn-link {
-              transition: background-color 0.2s ease;
+              width: 100%;
+              white-space: nowrap;
+              transition: background-color 0.2s ease; 
+          }
+
+          /* Opcional: Ajustar el padding para mejor apariencia */
+          #admin-opt .btn-link {
+              padding: 10px 20px;
           }
         </style>  
         <script type="text/javascript">
