@@ -60,7 +60,21 @@ foreach ($consult as $value)
     $_SESSION["usr_admin"] = $admin;
     $_SESSION["only_stock"] = $onlyStock;
 
-    $icon_admin = ($admin == 0)? '' : '<a href="./admin/" class="btn-link" id="btnsMenu"><i class="bi bi-pencil-square icon-dark-blue icon-large"></i></a>';
+    //$icon_admin = ($admin == 0)? '' : '<a href="./admin/" class="btn-link" id="btnsMenu"><i class="bi bi-pencil-square icon-dark-blue icon-large"></i></a>';
+    $icon_admin ='';
+      if($admin ==1)
+      {
+        $icon_admin  =  '<li class="nav-item dropend">'; 
+        $icon_admin .=  '<a href="#" class="dropdown-toggle" data-toggle="dropdown"><i class="bi bi-pencil-square icon-dark-blue icon-large" id="btnsMenu"></i>Administrar...</a>';
+        $icon_admin .=  '<ul id="admin-opt" class="dropdown-menu">';
+        $icon_admin .=  '<li>';
+        $icon_admin .=  '<div class="row">';
+        $icon_admin .=  '<>';
+        $icon_admin .=  '</div>';
+        $icon_admin .=  '</li>';
+        $icon_admin .=  '</ul>';
+        $icon_admin .=  '</li>';
+      }
     $sesionAlreadyActive = true;
 
   }
@@ -80,8 +94,21 @@ foreach ($consult as $value)
       $role = $_SESSION["role"];
       $admin = $_SESSION["usr_admin"];
 
-      $icon_admin = ($admin == 0)? '' : '<a href="./admin/" class="btn-link" id="btnsMenu"><i class="bi bi-pencil-square icon-dark-blue icon-large"></i></a>';
-
+      //$icon_admin = ($admin == 0)? '' : '<a href="./admin/" class="btn-link" id="btnsMenu"><i class="bi bi-pencil-square icon-dark-blue icon-large"></i></a>';
+        $icon_admin ='';
+            if($admin ==1)
+            {
+                $icon_admin  =  '<li class="nav-item dropend">'; 
+                $icon_admin .=  '<a href="#" class="dropdown-toggle" data-toggle="dropdown"><i class="bi bi-pencil-square icon-dark-blue icon-large" id="btnsMenu"></i>Administrar...</a>';
+                $icon_admin .=  '<ul id="admin-opt" class="dropdown-menu">';
+                $icon_admin .=  '<li>';
+                $icon_admin .=  '<div class="row">';
+                $icon_admin .=  '<a href="./admin/">Pedidos</a>';
+                $icon_admin .=  '</div>';
+                $icon_admin .=  '</li>';
+                $icon_admin .=  '</ul>';
+                $icon_admin .=  '</li>';
+            }
       /*$consult = $db->consultas("SELECT usuario, num, id FROM sesion WHERE active='t' AND ip_client = '".$ip."'");
       foreach ($consult as $value)
       {
