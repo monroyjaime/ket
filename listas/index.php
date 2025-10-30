@@ -393,11 +393,11 @@ foreach ($consult as $value)
 <div class="col text-center" >
   <div class="col text-center" style="background-color: #DDD;">
     <?php echo $tituloLista; ?>
-  
+<!-- CAMBIO 30/10, no mostrar botones en vita de lista  
   <div class="col text-center" style="max-height: 40px; padding-botton: 14px; padding-top: 1px;" >
     <?php echo $btnsPedido; ?>
   </div>
-
+-->
 <!--  
 
 <div class="input-group">
@@ -438,7 +438,7 @@ foreach ($consult as $value)
       data-row-style="rowStyle">
       <thead>
         <tr>
-          <?php echo $pedidoCheckColumn;?>
+          <!-- <?php echo $pedidoCheckColumn;?> -->
           <th data-field="code" data-halign="center" data-align="left">CODIGO</th>
           <th data-field="name" data-halign="center" data-align="left" data-width="500">. . . . . . DESCRIPCION . . . . . .</th>
           <?php echo $stockColumn;?>
