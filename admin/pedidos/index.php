@@ -1,6 +1,6 @@
 <?php
 session_start();
-require_once("../php/dbcat.php");
+require_once("../../php/dbcat.php");
 $db = new DB();
 
 $clientNum= 0;
@@ -95,7 +95,7 @@ switch($role)
 /*
 if($role == -1)
 {
-  header("Location: ../");
+  header("Location: ../../");
   die();
 
 }  
@@ -382,7 +382,7 @@ foreach ($consult as $value)
  
 
         <div class="col text-end" style="max-height: 40px;" >
-            <img src="../catalogo/images/logoMini.png" class="img-fluid" alt="logo" />
+            <img src="../../catalogo/images/logoMini.png" class="img-fluid" alt="logo" />
         </div>       
 
     </div>
@@ -432,7 +432,7 @@ foreach ($consult as $value)
       data-page-size="100" 
       data-page-list="[100]"
 
-      data-url="../php/getListaPrecAll2Prec.php"
+      data-url="../../php/getListaPrecAll2Prec.php"
       data-mobile-responsive="false"
       data-check-on-init="true"
       data-row-style="rowStyle">
@@ -511,7 +511,7 @@ foreach ($consult as $value)
         data-toggle="table"  
         data-height="300"
         data-checkbox-header="false"
-        data-url="../php/getCarritoCurrentData.php">
+        data-url="../../php/getCarritoCurrentData.php">
 
         <thead>
           <tr>
@@ -591,7 +591,7 @@ foreach ($consult as $value)
           data-height="300"
           data-check-on-init="true"
 
-          data-url="../php/getDataOnePedido.php?num=0"
+          data-url="../../php/getDataOnePedido.php?num=0"
           data-row-style='lastRowStyle'>
           
           <thead>
@@ -625,7 +625,7 @@ foreach ($consult as $value)
     <script src="https://cdn.jsdelivr.net/npm/tableexport.jquery.plugin@1.10.21/libs/jsPDF/jspdf.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/tableexport.jquery.plugin@1.10.21/libs/jsPDF-AutoTable/jspdf.plugin.autotable.js"></script>
     <script src="https://unpkg.com/bootstrap-table@1.22.1/dist/extensions/export/bootstrap-table-export.min.js"></script>
-    <script src="../js/jquery.redirect.js" type="text/javascript"></script>
+    <script src="../../js/jquery.redirect.js" type="text/javascript"></script>
    
    <script type="text/javascript">
     var client_num = <?php echo $clientNum; ?>;
@@ -768,7 +768,7 @@ foreach ($consult as $value)
       $('#table').bootstrapTable({})
         .on('check.bs.table', function (e, row) {
           //console.log('Code: '+ row.code + " Selected");
-          $.post("../php/insDelOneProdCarrito.php",{action: 1, code:row.code}, 
+          $.post("../../php/insDelOneProdCarrito.php",{action: 1, code:row.code}, 
               function(data,status){
                   console.log('insert one prod. messg from Srv: '+data);
               });
@@ -781,7 +781,7 @@ foreach ($consult as $value)
         })
         .on('uncheck.bs.table', function (e, row) {
           //console.log('Code: '+ row.code + " unSelected");
-          $.post("../php/insDelOneProdCarrito.php",{action: 0, code:row.code}, 
+          $.post("../../php/insDelOneProdCarrito.php",{action: 0, code:row.code}, 
             function(data,status){
               console.log('delete one prod. messg from Srv: '+data);
               if(data == 1)
@@ -796,7 +796,7 @@ foreach ($consult as $value)
       .on('check.bs.table', function (e, row,$element) {
         var index = $element.data('index');
         //console.log("index: "+index)
-        $.post("../php/updTipoPrecProdCarrito.php",{value: 1, code:row.code}, 
+        $.post("../../php/updTipoPrecProdCarrito.php",{value: 1, code:row.code}, 
         function(data,status){
           if(data == 1)
           {
@@ -820,7 +820,7 @@ foreach ($consult as $value)
       .on('uncheck.bs.table', function (e, row,$element) {
         var index = $element.data('index');
         //console.log("index: "+index)
-        $.post("../php/updTipoPrecProdCarrito.php",{value: 0, code:row.code}, 
+        $.post("../../php/updTipoPrecProdCarrito.php",{value: 0, code:row.code}, 
         function(data,status){
           if(data == 1)
           {
@@ -925,10 +925,10 @@ foreach ($consult as $value)
 
     $('#inputGroupPedidos').change(function(){
       var selectedItem = $('#inputGroupPedidos').val();
-      newUrl = '../php/getDataOnePedido.php?num='+selectedItem
+      newUrl = '../../php/getDataOnePedido.php?num='+selectedItem
       console.log("Selected pedido num: "+newUrl);
 
-    $.post("../php/getNumStsPedido.php",
+    $.post("../../php/getNumStsPedido.php",
     {num:selectedItem}, 
     function(data,status){
     //console.log('data recibed from getNumStsPedido');
@@ -1113,7 +1113,7 @@ foreach ($consult as $value)
         
         function verFoto(val){
           //alert('clickeado '+val)
-          urlString ="../php/getOneProductPhoto.php?code="+val;
+          urlString ="../../php/getOneProductPhoto.php?code="+val;
           $('.modal-body').load(urlString,function(){
               $('#myModal').modal({show:true});
           });
@@ -1122,7 +1122,7 @@ foreach ($consult as $value)
 
         function verFotoMin(val){
           //alert('clickeado '+val)
-          urlString ="../php/getOneProductPhotoPrecMin.php?code="+val;
+          urlString ="../../php/getOneProductPhotoPrecMin.php?code="+val;
           $('.modal-body').load(urlString,function(){
               $('#myModal').modal({show:true});
           });
@@ -1131,7 +1131,7 @@ foreach ($consult as $value)
 
         function verFotoMay(val){
           //alert('clickeado '+val)
-          urlString ="../php/getOneProductPhotoPrecMay.php?code="+val;
+          urlString ="../../php/getOneProductPhotoPrecMay.php?code="+val;
           $('.modal-body').load(urlString,function(){
               $('#myModal').modal({show:true});
           });
@@ -1140,7 +1140,7 @@ foreach ($consult as $value)
 /*
         function backHome(){  
           console.log("usr_num ="+usrNum+" ses_num ="+sesionNum+" ses_id="+sesionId);    
-          pagetoCall = "../index.php";
+          pagetoCall = "../../index.php";
           $.redirect(pagetoCall,{"usr_num": usrNum,
                                  "ses_num": sesionNum,
                                  "ses_id": sesionId });
@@ -1160,18 +1160,18 @@ foreach ($consult as $value)
         }
         
         function backHome(){      
-          urlString =  "../";
+          urlString =  "../../";
           window.location.href = urlString;
         }
         
         function getCatalogo(idDpto,role,prec){   //,checkNum){   
-            urlString =  "../catalogo/indexDptoAll2.php?dpto_id="+idDpto+"&line=1&prec="+prec+"&from=1";;
+            urlString =  "../../catalogo/indexDptoAll2.php?dpto_id="+idDpto+"&line=1&prec="+prec+"&from=1";;
             window.location.href = urlString;
         }
 
         function getSelected(){
           $('#ModalMakePedido #table').bootstrapTable('refreshOptions',{
-            url : '../php/getCarritoCurrentData.php'
+            url : '../../php/getCarritoCurrentData.php'
           });
           /*var rows = []
           
@@ -1248,7 +1248,7 @@ foreach ($consult as $value)
           }
           
          
-          $.post("../php/insertPedidoGeneral.php",
+          $.post("../../php/insertPedidoGeneral.php",
             {data: paramJSON}, 
             function(data,status){
                 console.log('insertPedidoGeneral data recibed from Srv: '+data+' status: '+status);
@@ -1258,7 +1258,7 @@ foreach ($consult as $value)
           //$('.modal-body').html('');
           
           $('#ModalMakePedido').modal('hide');
-          $.post("../php/insDelOneProdCarrito.php",
+          $.post("../../php/insDelOneProdCarrito.php",
             {action: 2}, 
             function(data,status){
                 console.log('delete all products/client messg from Srv: '+data+' status: '+status);
@@ -1296,7 +1296,7 @@ foreach ($consult as $value)
             //console.log('catidad actual: '+cantidades[index]+' cantidad nueva: '+valor.value)
             if(cantidades[index] != parseInt(valor.value))
             {
-              $.post("../php/updCantOneProdCarrito.php",
+              $.post("../../php/updCantOneProdCarrito.php",
               {cantidad:valor.value, 
                code: codes[index]}, 
               function(data,status){
@@ -1359,7 +1359,7 @@ foreach ($consult as $value)
         }
 
         function showPedidoClient(){
-          $.post("../php/getInputGroupPedidosClient.php",
+          $.post("../../php/getInputGroupPedidosClient.php",
             {}, 
             function(data,status){
                 console.log('data recibed from Show Pedido');
@@ -1370,7 +1370,7 @@ foreach ($consult as $value)
 
             });
 
-          $.post("../php/getMaxNumStsPedido.php",
+          $.post("../../php/getMaxNumStsPedido.php",
             {}, 
             function(data,status){
             //console.log('data recibed from getNumStsPedido');
@@ -1396,7 +1396,7 @@ foreach ($consult as $value)
 
         function refreshMakePedido(){
           $('#ModalMakePedido #table').bootstrapTable('refreshOptions',{
-            url : '../php/getCarritoCurrentData.php'})
+            url : '../../php/getCarritoCurrentData.php'})
         }
 
         const processRefreshMakePedido = debounce(() => refreshMakePedido());
