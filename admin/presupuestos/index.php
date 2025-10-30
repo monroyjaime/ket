@@ -140,7 +140,8 @@ $showPedidoPrecioNorm = ($role == 3)?  : '<th data-field="prec_min" data-halign=
 
 $precioColumn = ($role == -1)? '' : '<th data-field="cost_max" data-halign="center" data-align="right" data-formatter="precioFormater">PRECIO</th>';
 $precio80Column = ($role == -1)? '' :'<th data-field="cost_max_80" data-halign="center" data-align="right" data-formatter="precioFormater">PREC.-20%</th>';
-$tituloLista = ($role == -1)? '<h2 style="background-color: #037C79; padding-botton: 14px; color: #FFF;">Listado general</h2>' : '<h2 style="background-color: #037C79; color: #FFF;">Listado general '.$titlePrec.' '.$btnTipoPrecio.'</h2>';
+//$tituloLista = ($role == -1)? '<h2 style="background-color: #037C79; padding-botton: 14px; color: #FFF;">Listado general</h2>' : '<h2 style="background-color: #037C79; color: #FFF;">Listado general '.$titlePrec.' '.$btnTipoPrecio.'</h2>';
+$tituloLista = '<h2 style="background-color: #037C79; padding-botton: 14px; color: #FFF;">Pedidos</h2>';
 $dataUrl = "https://ketelectropartes.com/php/getListaPrecAll.php?prec=".$tipoPrecio;
 
 
@@ -375,12 +376,14 @@ foreach ($consult as $value)
         <div class="col text-start" style="max-height: 40px; padding-left: 20px;  " > 
         <a href="#" onClick="backHome()" title="Pag. Prev."><i class="bi bi-arrow-left-circle-fill icon-dark-blue icon-large"></i></a>
         </div>  
-        
+<!--        
         <div class="col text-left">
           <?php echo $tags1; ?>
         </div>
- 
-
+--> 
+        <div class="col text-center" style="max-height: 40px; padding-botton: 14px; padding-top: 1px;" >
+            <?php echo $btnsPedido; ?>
+          </div>
         <div class="col text-end" style="max-height: 40px;" >
             <img src="../../catalogo/images/logoMini.png" class="img-fluid" alt="logo" />
         </div>       
@@ -394,9 +397,7 @@ foreach ($consult as $value)
   <div class="col text-center" style="background-color: #DDD;">
     <?php echo $tituloLista; ?>
 
-  <div class="col text-center" style="max-height: 40px; padding-botton: 14px; padding-top: 1px;" >
-    <?php echo $btnsPedido; ?>
-  </div>
+ 
 
 <!--  
 
