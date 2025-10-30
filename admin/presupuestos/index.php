@@ -9,6 +9,7 @@ $vendedorNum= 0;
 $tipoPrecio = (isset($_SESSION['prec']))? intval($_SESSION['prec']) : 0;  
 $numUsr = (isset($_SESSION['usr_num']))? intval($_SESSION['usr_num']) : -1;
 $role = (isset($_SESSION['role']))? intval($_SESSION['role']) : -1;
+$onlyStock = (isset($_SESSION['only_stock']))? intval($_SESSION['only_stock']) : 0; 
 
 /*if ( isset($_GET['role_num']) ) 
   $role = intval($_GET['role_num']); */
@@ -24,14 +25,17 @@ $textPrecio = ($tipoPrecio == 0)? "selec. Precios al Mayor" : "selec. Precios Mi
 
 $btnTipoPrecio ='';
 $btnsPedido='';
+$showAllPed='f';
 if($numUsr > 0)
 {
-  $consult = $db->consultas("SELECT admin FROM usuario WHERE num=".$numUsr);
-  foreach ($consult as $value)
-      $ableToEdit = $value->admin;
+  $consult = $db->consultas("SELECT do_pedido, show_all_ped FROM usuario WHERE num=".$numUsr);
+  foreach ($consult as $value){
+    $ableToPedido = $value->do_pedido;
+    $showAllPed = $value->show_all_ped;
+  }
       
 
-  if($ableToEdit == 'f')
+  if($ableToPedido == 't')
   {
     $btnsPedido  = '<button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#ModalMakePedido" onClick="getSelected()" style="margin: 1px 2px 1px;"><i class="bi bi-cart"></i> Ver carrito</button> ';
     $btnsPedido .= '<button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#ModalShowPedido" onClick="showPedidoClient()" style="margin: 1px 2px 1px;"><i class="bi bi-view-list"></i> Ver Pedidos</button> ';
@@ -88,11 +92,10 @@ switch($role)
 
 
 }
-
 /*
 if($role == -1)
 {
-  header("Location: ../");
+  header("Location: ../../");
   die();
 
 }  
@@ -109,8 +112,13 @@ if($numUsr > 0 && $ableToPedido == 't') //check if there is something in the car
   }
 }
 
+$stockColumn='';
+if ($role > -1 && $role < 2)
+  $stockColumn =  '<th data-field="current_stock" data-halign="center" data-align="right" >STOCK</th>';
+elseif($role == 5)
+   $stockColumn = '<th data-field="stock_tot" data-halign="center" data-align="right" >STOCK</th>';
 
-$stockColumn = ( ($role > -1 && $role < 2) || $role == 5 )? '<th data-field="current_stock" data-halign="center" data-align="right" >STOCK</th>' : '';
+//$stockColumn = ( ($role > -1 && $role < 2) || $role == 5 )? '<th data-field="'.$correct_stock.'" data-halign="center" data-align="right" >STOCK</th>' : '';
 $pedidoCheckColumn = ($numUsr > 0 && $ableToPedido == 't')? '<th data-field="checked" data-checkbox="true"  data-formatter="checkFormater"></th>' : '';
 $precioMinColumn = ($role == -1)? '' : '<th data-field="cost_min" data-halign="center" data-align="right" data-formatter="precioFormater">PREC.MIN.</th>';
 $precioMinPedColumn = ($role == -1)? '' : '<th data-field="prec_min" data-halign="center" data-align="right" data-formatter="precioFormater">Precio Min.</th>';
@@ -130,8 +138,63 @@ elseif($role>1 && $role<3)
 }
 $showPedidoPrecioNorm = ($role == 3)?  : '<th data-field="prec_min" data-halign="center" data-align="right" data-formatter="precioFormater">Precio Min.</th>';
 
+$precioColumn = ($role == -1)? '' : '<th data-field="cost_max" data-halign="center" data-align="right" data-formatter="precioFormater">PRECIO</th>';
+$precio80Column = ($role == -1)? '' :'<th data-field="cost_max_80" data-halign="center" data-align="right" data-formatter="precioFormater">PREC.-20%</th>';
+$tituloLista = ($role == -1)? '<h2 style="background-color: #037C79; padding-botton: 14px; color: #FFF;">Listado general</h2>' : '<h2 style="background-color: #037C79; color: #FFF;">Listado general '.$titlePrec.' '.$btnTipoPrecio.'</h2>';
+$dataUrl = "https://ketelectropartes.com/php/getListaPrecAll.php?prec=".$tipoPrecio;
 
 
+$tags1  = '<div class="btn-group">';
+
+$tags1 .=    '<a class="nav-link dropdown-toggle disable" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">';
+$tags1 .=      'listado Dptos.';
+$tags1 .=    '</a>';
+$tags1 .=    '<ul class="dropdown-menu dropdown-menu-end dropdown-menu-lg-start" style="height: auto;max-height: 200px; overflow-x: hidden;">';
+$tags1 .=        '<li>';
+$consult = $db->consultas("SELECT id,name FROM departamentos WHERE num=1 AND show='t' ORDER BY orden,name");
+foreach ($consult as $value){
+    $dpto_Id = $value->id;
+    $dpto_Name = $value->name;
+    $tags1 .=        '<a class="dropdown-item" href="#" onClick="javascript:getLista('.$dpto_Id.','.$role.','.$tipoPrecio.')">'.$dpto_Name.'</a>';
+}
+
+$tags1 .= '<hr class="mt-2 mb-3"/>';
+
+$consult = $db->consultas("SELECT id,name FROM departamentos WHERE num=2 AND show='t' ORDER BY orden,name");
+foreach ($consult as $value){
+    $dpto_Id = $value->id;
+    $dpto_Name = $value->name;
+    $tags1 .=        '<a class="dropdown-item" href="#" onClick="javascript:getLista('.$dpto_Id.','.$role.','.$tipoPrecio.')">'.$dpto_Name.'</a>';
+}
+
+$tags1 .=        '</li>';
+$tags1 .=     '</ul>';
+
+
+$tags1 .=    '<a class="nav-link dropdown-toggle disable" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">';
+$tags1 .=      'Catálogo';
+$tags1 .=    '</a>';
+$tags1 .=    '<ul class="dropdown-menu dropdown-menu-end dropdown-menu-lg-start" style="height: auto;max-height: 200px; overflow-x: hidden;">';
+$tags1 .=        '<li>';
+$consult = $db->consultas("SELECT id,name,img_route FROM departamentos WHERE num=1 AND img_route != 'no' ORDER BY orden,name");
+foreach ($consult as $value){
+    $dpto_Id = $value->id;
+    $dpto_Name = $value->name;
+    $tags1 .= '<a class="dropdown-item" href="#" onClick="javascript:getCatalogo('.$dpto_Id.','.$role.','.$tipoPrecio.')">'.$dpto_Name.'</a>';
+}
+
+$tags1 .= '<hr class="mt-2 mb-3"/>';
+
+$consult = $db->consultas("SELECT id,name,img_route FROM departamentos WHERE num=2 AND img_route != 'no' ORDER BY orden,name");
+foreach ($consult as $value){
+    $dpto_Id = $value->id;
+    $dpto_Name = $value->name;
+    $tags1 .= '<a class="dropdown-item" href="#" onClick="javascript:getCatalogo('.$dpto_Id.','.$role.','.$tipoPrecio.')">'.$dpto_Name.'</a>';
+}
+
+$tags1 .=        '</li>';
+$tags1 .=     '</ul>';
+$tags1 .= '</div>';
 
 $consult=$db->consultas("SELECT full_name,client,vendedor FROM usuario WHERE num=".$numUsr);
 foreach ($consult as $value){
@@ -163,12 +226,16 @@ if($vendedorNum >0){
 $clientDefined = ($clientNum==0)? true : false;
 $vendedorDefined = ($vendedorNum==0)? true : false;
 
-$usrNameTag = '<h4 style="background-color: #6c757d; padding-botton: 14px; color: #FFF;">Usuario autorizado para Procesar pedido: '.$usrName.' </h4>';
+$queUsuario=($showAllPed == 't')? "todos los usuarios" : $usrName;
+
+$usrNameTag = '<h4 style="background-color: #6c757d; padding-botton: 14px; color: #FFF;">Lista de pedidos de '.$queUsuario.'</h4>';
 
 $optionText = ($clientNum==0)? "Seleccione Cliente..." : $clientCode.' --- '.$clientName;
 
 $inputCliTomSel ='<option value="'.$clientNum.'">'.$optionText.'</option>';
-$consult = $db->consultas("SELECT num,code,full_name FROM cliente ORDER BY num");
+$queryClients = ($showAllPed == 't')?  "SELECT num,code,full_name FROM cliente ORDER BY num" : "SELECT num,code,full_name FROM cliente WHERE vendedor=(select vendedor from usuario where num=".$numUsr.") ORDER BY num";
+
+$consult = $db->consultas($queryClients);
 foreach ($consult as $value)
   $inputCliTomSel .= '<option value="'.$value->num.'">'.$value->code.' --- '.$value->full_name.'</option>';
 
@@ -308,7 +375,12 @@ foreach ($consult as $value)
         <div class="col text-start" style="max-height: 40px; padding-left: 20px;  " > 
         <a href="#" onClick="backHome()" title="Pag. Prev."><i class="bi bi-arrow-left-circle-fill icon-dark-blue icon-large"></i></a>
         </div>  
+        
+        <div class="col text-left">
+          <?php echo $tags1; ?>
+        </div>
  
+
         <div class="col text-end" style="max-height: 40px;" >
             <img src="../../catalogo/images/logoMini.png" class="img-fluid" alt="logo" />
         </div>       
@@ -320,9 +392,24 @@ foreach ($consult as $value)
   
 <div class="col text-center" >
   <div class="col text-center" style="background-color: #DDD;">
-  <h2 style="background-color: #037C79; color: #FFF;">Procesamiento de Pedidos</h2>
+    <?php echo $tituloLista; ?>
 
+  <div class="col text-center" style="max-height: 40px; padding-botton: 14px; padding-top: 1px;" >
+    <?php echo $btnsPedido; ?>
+  </div>
 
+<!--  
+
+<div class="input-group">
+  <div class="form-outline" data-mdb-input-init>
+    <input type="search" id="form1" class="form-control" />
+    <label class="form-label" for="form1">Search</label>
+  </div>
+  <button type="button" class="btn btn-primary" data-mdb-ripple-init>
+    <i class="fas fa-search"></i>
+  </button>
+</div>
+ -->
 <div id="toolbar" class="select">
     <select class="form-control">
     </select> 
@@ -345,24 +432,22 @@ foreach ($consult as $value)
       data-page-size="100" 
       data-page-list="[100]"
 
-      data-url="../../php/getAllPedidosProcess.php"
+      data-url="../../php/getListaPrecAll2Prec.php"
       data-mobile-responsive="false"
       data-check-on-init="true"
-      data-row-style="lastRowStyle">
+      data-row-style="rowStyle">
       <thead>
         <tr>
-          <th data-halign="center" data-align="left" data-formatter="actionsPedidosFormater">ACCIONES</th>
-          <th data-field="fecha" data-halign="center" data-align="left">FECHA</th>
-          <th data-field="hora" data-halign="center" data-align="left">HORA</th>
-          <th data-field="usr" data-halign="center" data-align="left">USUARIO</th>
-          <th data-field="cli" data-halign="center" data-align="left">CLIENTE</th>
-          <th data-field="vend" data-halign="center" data-align="left">VENDEDOR</th>
-          <th data-field="numk" data-halign="center" data-align="left" data-formatter="valeryFormater"># WEB</th>
-          <th data-field="numv" data-halign="center" data-align="left" data-formatter="valeryFormater"># VALERY</th>
-          <th data-field="edo" data-halign="center" data-align="left" data-formatter="estadoFormater">ESTADO</th>
-          <th data-field="total" data-halign="center" data-align="right" data-formatter="precioFormaterDot">MONTO</th>
-          <th data-field="coment" data-halign="center" data-align="left">COMENTARIOS</th>
+          <?php echo $pedidoCheckColumn;?>
+          <th data-field="code" data-halign="center" data-align="left">CODIGO</th>
+          <th data-field="name" data-halign="center" data-align="left" data-width="500">. . . . . . DESCRIPCION . . . . . .</th>
+          <?php echo $stockColumn;?>
+          <th data-field="unit">UNIDAD</th>
 
+          <?php echo $precioMinColumn;?>
+          <?php echo $precioMayColumn;?>
+          
+          <th data-field="photo_url" data-formatter="fotoFormater">FOTO</th>
         </tr>
       </thead>
     </table>
@@ -371,15 +456,15 @@ foreach ($consult as $value)
 
 
 <!-- Modal -->
-<div class="modal fade" id="ModalDeletePedido" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+<div class="modal fade" id="myModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
   <div class="modal-dialog">
     <!-- Modal content-->
     <div class="modal-content">
       <div class="modal-header">
         <button type="button" class="close" data-bs-dismiss="modal">&times;</button>
-        <h4 class="modal-title">Borrar Pedido</h4>
+        <h4 class="modal-title">Detalle de Producto</h4>
       </div>
-      <div class="modalDelPed-body">
+      <div class="modal-body">
 
       </div>
       <div class="modal-footer">
@@ -398,30 +483,27 @@ foreach ($consult as $value)
         <h4 class="modal-title">Definir Pedido</h4>
       </div>
       <div class="modal-body">
-          <div class="p-4">
-            <div class="input-group input-group-lg ">
-              <label class="input-group-text " for="clients-tom-sel">Cliente</label>
-              </div>
-              <select id="clients-tom-sel" placeholder="Seleccione Cliente..." autocomplete="off">
-                <?php echo $inputCliTomSel; ?>
-              </select>  
-          </div>  
+  <div class="container">
+    <div class="row">
+      <div class="col">
+        <div class="p-4" >
+          <h6>Cliente:</h6>
+          <select id="clients-tom-sel" placeholder="Seleccione Cliente..." autocomplete="off">
+            <?php echo $inputCliTomSel; ?>
+          </select> 
+        </div> 
+      </div>
 
-          <div class="input-group mb-3">
-            <div class="input-group-prepend">
-              <label class="input-group-text " for="vendedores-tom-sel">Vendedor</label>
-              </div>
-              <select id="vendedores-tom-sel" placeholder="Seleccione Vendedor..." autocomplete="off">
-                <?php echo $inputVenTomSel; ?>
-              </select>  
-          </div>
-
-          <div class="p-4"><div class="input-group input-group-sm">
-            <span class="input-group-text">Text</span>
-            <input type="text" value="awesome,neat" id="input-group-sm-single" placeholder="How cool is this?">
-            <button class="btn btn btn-success">Go</button>
-          </div>
-          </div>
+      <div class="col">
+        <div class="p-4">
+          <h6>Vendedor:</h6>
+          <select id="vendedores-tom-sel" placeholder="Seleccione Vendedor..." autocomplete="off">
+            <?php echo $inputVenTomSel; ?>
+          </select>  
+        </div>
+      </div>  
+    </div>
+  </div> 
 
 
         <table
@@ -478,16 +560,22 @@ foreach ($consult as $value)
     <div class="modal-content">
     <div class="modal-header">
         <button type="button" class="close" data-bs-dismiss="modal">&times;</button>
-        <h4 class="modal-title">Procesar Pedido</h4>
+        <h4 class="modal-title">Mostrar Pedidos</h4>
     </div>
     <div class="modal-body">
       <div class="col text-center">
         <?php echo $usrNameTag; ?>
       </div>  
       <div class="modal-body">
+        <div style="text-align: right;">
+          <div class="input-group mb-3">
+          <div class="input-group-prepend">
+            <label class="input-group-text " for="inputGroupPedidos">Pedidos</label>
+          </div>
+          <select class="custom-select form-control" id="inputGroupPedidos">
 
-        <div id ="pedidoDataGeneral">
-
+          </select>
+          </div>
         </div>
 
         <table 
@@ -503,19 +591,18 @@ foreach ($consult as $value)
           data-height="300"
           data-check-on-init="true"
 
-          data-url="../../php/getDataOnePedidoAdmin.php?num=0"
+          data-url="../../php/getDataOnePedido.php?num=0"
           data-row-style='lastRowStyle'>
           
           <thead>
             <tr>
-              <th data-field="fecha" data-halign="center" data-align="right" data-width="125">FECHA</th>
-              <th data-field="cli_code" data-halign="center" data-align="right" data-width="125">CLIENTE</th>
-              <th data-field="ven_code" data-halign="center" data-align="right" data-width="125">VENDEDOR</th>
               <th data-field="code" data-halign="center" data-align="left">CODIGO</th>
               <th data-field="cantidad" data-halign="center" data-align="right" data-width="125">CANTIDAD</th>
-              <th data-field="precio" data-halign="center" data-align="right" data-width="125" data-formatter="precioFormaterAdm">PRECIO</th>
+              <th data-field="unidad" data-halign="center" data-align="left" data-width="150">UNIDAD</th>
+              <th data-field="precio" data-halign="center" data-align="right" data-width="125" data-formatter="precioFormaterPed">PRECIO</th>
+              <th data-field="monto" data-halign="center" data-align="right" data-width="125" data-formatter="montoFormaterPed">MONTO</th>
+              <th data-field="comentario" data-halign="center" data-align="left" data-width="500">COMENTARIO</th>
               <th data-field="tipo_prec" data-halign="center" data-align="right" data-width="125">TIPO PREC.</th>
-              <th data-field="monto" data-halign="center" data-align="right" data-width="125" data-formatter="montoFormaterAdm">MONTO</th>
             </tr>
           </thead>
         </table>  
@@ -552,9 +639,25 @@ foreach ($consult as $value)
 
     var codes_carrito = <?php echo json_encode($prodsCarrito); ?>;
 
-    var name_pedido ='';
+    $(document).ready(function() {
+        // Initialize the table
+        $('#ModalShowPedido #table').bootstrapTable({
+            exportDataType: $(this).val(),
 
-    
+            exportTypes: ['excel','pdf'],
+
+            exportOptions: {
+                fileName: 'default_filename' // Default file name
+            },
+
+            jspdf: {orientation: 'p',
+              margins: {left:10, right:10, top:20, bottom:20},
+              autotable: {widths : 'auto'}
+            }
+        });
+
+      });
+
     var eventHandCliVend = function(){
       return function(){
         var selectedClient = parseInt(ctrlClientSel.getValue())
@@ -574,8 +677,8 @@ foreach ($consult as $value)
 
     }
 
+
     var ctrlClientSel = new TomSelect("#clients-tom-sel",{
-      create: true,
       sortField: {
         field: "text",
         direction: "asc"
@@ -587,7 +690,6 @@ foreach ($consult as $value)
 
 
     var ctrlVendedorSel = new TomSelect("#vendedores-tom-sel",{
-      create: true,
       sortField: {
         field: "text",
         direction: "asc"
@@ -595,40 +697,22 @@ foreach ($consult as $value)
       onChange: eventHandCliVend()
     });
 
-
-    
-
-
-    $(document).ready(function() {
-        // Initialize the table
-        $('#ModalShowPedido #table').bootstrapTable({
-            exportDataType: $(this).val(),
-
-            exportTypes: ['excel'],
-
-            exportOptions: {
-                fileName: 'default_filename' // Default file name
-            }
-        });
-
+    $('#table').bootstrapTable({
+      checkboxHeader: false, // Disable the "check all" option
       });
-  
-
-
    
 
     $( window ).on( "load", function() {
+
+      
 
       console.log("on load Tom Select client num: "+ctrlClientSel.getValue());
       console.log("on load Tom Select vendedor num: "+ctrlVendedorSel.getValue());
 
 
-
       console.log("from php client num: "+client_num+" vendedor num: "+vend_num);
       console.log("selected on load vendedor num: "+$('#inputGroupVendedor').val());
       /*console.log("productos en carrito: "+codes_carrito.length+"--"+codes_carrito[0]);*/
-      
-      
       for (i = 0; i < codes_carrito.length; i++)        
           console.log((i+1) + ": "+codes_carrito[i].code+" tipo prec:"+codes_carrito[i].tipo_prec) 
     
@@ -759,20 +843,31 @@ foreach ($consult as $value)
         })
       })
 
-  
-
       /*$('#ModalMakePedido #table').bootstrapTable({})   
         .on('click-cell.bs.table', function (field,value,row) {
           console.log('click cell: row'+JSON.stringify(row));
         });*/
 
-          
+      /*  function dateFilename() {
+        var d = new Date()
+        return 'pedidoKet' + d.getFullYear() + 
+          ('00' + (d.getMonth() + 1)).slice(-2) +
+          ('00' + d.getDate()).slice(-2) + 
+          ('00' + d.getHours()).slice(-2) + 
+          ('00' + d.getMinutes()).slice(-2) +
+          ('00' + d.getSeconds()).slice(-2)
+      }
+
 
       
-
+       $('#toolbar').find('select').change(function () {
+        $table1.bootstrapTable('destroy').bootstrapTable({
+          exportDataType: $(this).val(),
+          exportTypes: ['excel','pdf'],
+          exportOptions: {fileName: dateFilename}          
+        })
+      }).trigger('change')  */
       
-      
-
       $('.float-right.search.btn-group').find('input').attr('placeholder','....');
       $('.float-right.search.btn-group').find('input').wrap("<div class='input-group' id='awsearch'> </div>"); 
       $('#awsearch').prepend("<span class='input-group-addon'><i class='bi bi-search icon-dark-blue'></i> Buscar</span>")
@@ -791,60 +886,75 @@ foreach ($consult as $value)
        // $(".modal-body").html("");
       }); 
 
+/*
+      ctrlClientSel.on('change',function{
+      console.log("Selected client num: "+ctrlClientSel.getValue())
+    })
 
+    ctrlVendedorSel.on('change',function{
+      console.log("Selected Vendedor num: "+ctrlVendedorSel.getValue())
+    }) 
+
+
+
+      $('#inputGroupCliente').change(function () {
+        var selectedClient = $('#inputGroupCliente').val();
+        var selectedVendor = $('#inputGroupVendedor').val();
+
+        console.log("Selected client num: "+selectedClient+" Selected vendedor num: "+selectedVendor);
+        if (selectedClient ==0 || selectedVendor==0)
+          $('#ModalMakePedido #reg-pedido').prop('disabled', true);
+        else
+          $('#ModalMakePedido #reg-pedido').prop('disabled', false);
+    });
+
+    
+
+    $('#inputGroupVendedor').change(function () {
+        var selectedClient = $('#inputGroupCliente').val();
+        var selectedVendor = $('#inputGroupVendedor').val();
+
+        console.log("Selected client num: "+selectedClient+" Selected vendedor num: "+selectedVendor);
+        if (selectedClient ==0 || selectedVendor==0)
+          $('#ModalMakePedido #reg-pedido').prop('disabled', true);
+        else
+          $('#ModalMakePedido #reg-pedido').prop('disabled', false);
+    });
+
+    */
 
     $('#inputGroupPedidos').change(function(){
       var selectedItem = $('#inputGroupPedidos').val();
-      newUrl = '../../php/getDataOnePedidoAdmin.php?num='+selectedItem
+      newUrl = '../../php/getDataOnePedido.php?num='+selectedItem
       console.log("Selected pedido num: "+newUrl);
+
+    $.post("../../php/getNumStsPedido.php",
+    {num:selectedItem}, 
+    function(data,status){
+    //console.log('data recibed from getNumStsPedido');
+    if(status === 'success')
+    {
+        const obj = JSON.parse(data)
+        numPedido=obj.num_pedido
+        pedSts=obj.ped_sts
+        console.log("num pedido  "+numPedido+" ped sts: "+pedSts)
+        //console.log("num valery already defined: "+numValery)
+        $('#ModalShowPedido #table').bootstrapTable('refreshOptions',{
+          exportOptions: {
+            fileName: function() {
+                return 'ket'+numPedido;
+            }
+          }  
+        })
+      }
+    });
       
       $('#ModalShowPedido #table').bootstrapTable('refresh',{url: newUrl});
 
     })
 
-  })
 
-
-    function editOnePed(num){
-      $.post("../../php/getDataGenOnePedidoAdmin.php",
-      {num:num}, 
-      function(data,status){
-          console.log('data recibed getDataGenOnePedidoAdmin');
-
-          $('#ModalShowPedido #pedidoDataGeneral').html(data);
-
-      });
-
-    $.post("../../php/getNumStsPedido.php",
-    {num:num}, 
-    function(data,status){
-        //console.log('data recibed from getNumStsPedido');
-        if(status === 'success')
-        {
-          const obj = JSON.parse(data)
-          numPedido=obj.num_pedido
-          pedSts=obj.ped_sts
-          console.log("num pedido  "+numPedido+" ped sts: "+pedSts)
-          //console.log("num valery already defined: "+numValery)
-          $('#ModalShowPedido #table').bootstrapTable('refreshOptions',{
-            exportOptions: {
-              fileName: function() {
-                  return 'ket'+numPedido;
-              }
-            }  
-          })
-          
-        }
-      });      
-
-      newUrl = '../../php/getDataOnePedidoAdmin.php?num='+num
-      $('#ModalShowPedido #table').bootstrapTable('refresh',{url: newUrl});
-
-      
-     $('#ModalShowPedido').modal({show:true});
-
-
-    }
+    })
 
         function getLista(idDpto,rol){
             console.log( "selected Depertamento: "+idDpto );
@@ -918,39 +1028,6 @@ foreach ($consult as $value)
           return '$'+value .replace(/[.]/, ",");
         }
 
-        function precioFormaterAdm(value,row) {
-          return value .replace(/[.]/, ",");
-        }
-
-        function precioFormaterDot(value,row) {
-          return '$'+value;  // .replace(/[.]/, ",");
-        }
-
-        function valeryFormater(value,row){
-          if(value == 'no')
-            return '<i style="color:rgb(138, 138, 138); font-style: italic">no definido</i>';
-          else
-            return value
-        }
-
-        function actionsPedidosFormater(value,row){
-          borrarEnable = (row.edo == 0)? '' : 'disabled';
-          btnsPedido = '<button type="button" class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#ModalDeletePedido" onClick="fillBodydelPed('+row.pedido_num+')" style="margin: 1px 2px 1px;" '+borrarEnable+'><i class="bi bi-trash "></i>Borrar</button> '
-
-          btnsPedido += '<button type="button" class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#ModalShowPedido" onClick="editOnePed('+row.pedido_num+')" style="margin: 1px 2px 1px;"><i class="bi bi-pencil-square "></i>Editar</button> '
-          return btnsPedido
-        }
-
-        function estadoFormater(value,row){
-          if(value==0)
-            return '<i style="color:#AA0000; font-style: normal">Registrado</i>';
-          else if(value==1)
-            return '<i style="color:#AA5200; font-style: normal">Procesandose</i>';
-          else if(value==2)
-            return '<i style="color:#188203; font-style: normal">Despachado</i>';
-
-        }
-
         function precioMayorFormater(value,row){
           if(value == 0)
             return '---'
@@ -974,13 +1051,6 @@ foreach ($consult as $value)
             return '$' + (parseFloat(value).toFixed(3)).toString().replace(/[.]/, ",");
           else
             return '$'+((parseInt(row.cantidad)*parseFloat(row.precio)).toFixed(3)).toString().replace(/[.]/, ",");
-        }
-
-        function montoFormaterAdm(value,row){
-          if(parseFloat(value))
-            return (parseFloat(value).toFixed(3)).toString().replace(/[.]/, ",");
-          else
-            return ((parseInt(row.cantidad)*parseFloat(row.precio)).toFixed(3)).toString().replace(/[.]/, ",");
         }
 
         function cantidadFormater(value,row){
@@ -1048,25 +1118,6 @@ foreach ($consult as $value)
               $('#myModal').modal({show:true});
           });
           //window.location.href = urlString;
-        }
-
-        function fillBodydelPed(num){
-          urlString ="../../php/fillBodydelPed.php?num="+num;
-          $('.modalDelPed-body').load(urlString,function(){
-            $('#ModalDeletePedido').modal({show:true})
-          })
-
-        }
-
-        function deletePedido(num){
-          $('#ModalDeletePedido').modal('hide');
-          $.post("../../php/deletePedidoNum.php",
-            {num: num}, 
-            function(data,status){
-                console.log('delete pedido from Srv: '+data+' status: '+status);
-                if(status === 'success')
-                  backToSelfAlt(); 
-            });
         }
 
         function verFotoMin(val){
@@ -1318,62 +1369,34 @@ foreach ($consult as $value)
                 $('#ModalShowPedido').modal({show:true});
 
             });
+
+          $.post("../../php/getMaxNumStsPedido.php",
+            {}, 
+            function(data,status){
+            //console.log('data recibed from getNumStsPedido');
+            if(status === 'success')
+            {
+                const obj = JSON.parse(data)
+                numPedido=obj.num_pedido
+                pedSts=obj.ped_sts
+                console.log("num pedido  "+numPedido+" ped sts: "+pedSts)
+                //console.log("num valery already defined: "+numValery)
+                $('#ModalShowPedido #table').bootstrapTable('refreshOptions',{
+                  exportOptions: {
+                    fileName: function() {
+                        return 'ket'+numPedido;
+                    }
+                  }  
+                })
+              }
+            });
+            
+            
         }
 
         function refreshMakePedido(){
           $('#ModalMakePedido #table').bootstrapTable('refreshOptions',{
             url : '../../php/getCarritoCurrentData.php'})
-        }
-
-        function handleSubmitChangePed(event,numPed,stsPedido){
-            event.preventDefault();
-            if(stsPedido == 0)
-            {
-              
-              console.log('Cambiar pedido form just submitted, num: '+numPed+' define num pedido Valery')
-            }
-            else if(stsPedido == 1)
-            {
-              console.log('Cambiar pedido form just submitted, num: '+numPed+' Cambiar status a 2 (despachado) ')
-            }
-            else if(stsPedido == 2)
-            {
-              console.log('Cambiar pedido form just submitted, num: '+numPed+' Archivar ')
-
-            }
-        }
-
-        function getFormValues(event,numPed,stsPedido)
-        {
-          event.preventDefault();
-          formNumPedValery = $('#inputNumValery').val()
-          formStsPed = $('#inputStatus').val()
-          console.log("getFormValues click ped. num: "+numPed+" stsPedido: "+stsPedido)
-          console.log('form values: num valery: '+formNumPedValery+' Status. '+formStsPed)
-          if(formNumPedValery)
-          {
-            //console.log('numero valery definido')
-            if(stsPedido == 0 && formStsPed == 'Registrado')
-              updStatus = 1
-            else if(stsPedido == 1 && formStsPed == 'Despachado')
-              updStatus =  2
-            else if(stsPedido == 2 && formStsPed == 'Despachado')
-              updStatus =  3
-
-              $.post("../../php/updPedidoNumSts.php",
-              {num_ped:numPed, 
-               num_valery: formNumPedValery,
-               sts_ped: updStatus}, 
-              function(data,status){
-                  //console.log('update cantidad messg from Srv: '+data);
-                  if(data == 1 && status === 'success')
-                  {                  
-                    $('#ModalShowPedido').modal('hide');
-                    console.log('Update pedido_general from Srv: '+data);
-                    backToSelfAlt(); 
-                  }
-              });  
-          }
         }
 
         const processRefreshMakePedido = debounce(() => refreshMakePedido());
