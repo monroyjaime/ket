@@ -375,11 +375,11 @@ foreach ($consult as $value)
         <div class="col text-start" style="max-height: 40px; padding-left: 20px;  " > 
         <a href="#" onClick="backHome()" title="Pag. Prev."><i class="bi bi-arrow-left-circle-fill icon-dark-blue icon-large"></i></a>
         </div>  
-        
+<!--        
         <div class="col text-left">
           <?php echo $tags1; ?>
         </div>
- 
+--> 
 
         <div class="col text-end" style="max-height: 40px;" >
             <img src="../../catalogo/images/logoMini.png" class="img-fluid" alt="logo" />
