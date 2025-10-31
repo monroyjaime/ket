@@ -433,7 +433,7 @@ foreach ($consult as $value)
       data-page-size="100" 
       data-page-list="[100]"
 
-      data-url="../../php/getListaPrecAll2Prec.php"
+      data-url="../../php/getListaProdAllPresup.php"
       data-mobile-responsive="false"
       data-check-on-init="true"
       data-row-style="rowStyle">
@@ -441,12 +441,12 @@ foreach ($consult as $value)
         <tr>
           <?php echo $pedidoCheckColumn;?>
           <th data-field="code" data-halign="center" data-align="left">CODIGO</th>
-          <th data-field="name" data-halign="center" data-align="left" data-width="500">. . . . . . DESCRIPCION . . . . . .</th>
-          <?php echo $stockColumn;?>
+          <th data-field="relacionado" data-halign="center" data-align="left">RELACIONADO</th>
+          <th data-field="stock" data-halign="center" data-align="left">STOCK</th>
+          <th data-field="llegando" data-halign="center" data-align="left">LLEGANDO</th>
+          <th data-field="costo" data-halign="center" data-align="left">COSTO</th>
           <th data-field="unit">UNIDAD</th>
-
-          <?php echo $precioMinColumn;?>
-          <?php echo $precioMayColumn;?>
+          <th data-field="name" data-halign="center" data-align="left" data-width="500">. . . . . . DESCRIPCION . . . . . .</th>
           
           <th data-field="photo_url" data-formatter="fotoFormater">FOTO</th>
         </tr>
