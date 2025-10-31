@@ -37,8 +37,8 @@ if($numUsr > 0)
 
   if($ableToPedido == 't')
   {
-    $btnsPedido  = '<button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#ModalMakePedido" onClick="getSelected()" style="margin: 1px 2px 1px;"><i class="bi bi-cart"></i> Ver carrito</button> ';
-    $btnsPedido .= '<button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#ModalShowPedido" onClick="showPedidoClient()" style="margin: 1px 2px 1px;"><i class="bi bi-view-list"></i> Ver Pedidos</button> ';
+    $btnsPedido  = '<button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#ModalMakePedido" onClick="getSelected()" style="margin: 1px 2px 1px;"><i class="bi bi-gear"></i> Def. Presup.</button> ';
+    $btnsPedido .= '<button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#ModalShowPedido" onClick="showPedidoClient()" style="margin: 1px 2px 1px;"><i class="bi bi-file-earmark-ppt"></i> Ver Presup.</button> ';
   }
 }
 
@@ -141,7 +141,7 @@ $showPedidoPrecioNorm = ($role == 3)?  : '<th data-field="prec_min" data-halign=
 $precioColumn = ($role == -1)? '' : '<th data-field="cost_max" data-halign="center" data-align="right" data-formatter="precioFormater">PRECIO</th>';
 $precio80Column = ($role == -1)? '' :'<th data-field="cost_max_80" data-halign="center" data-align="right" data-formatter="precioFormater">PREC.-20%</th>';
 //$tituloLista = ($role == -1)? '<h2 style="background-color: #037C79; padding-botton: 14px; color: #FFF;">Listado general</h2>' : '<h2 style="background-color: #037C79; color: #FFF;">Listado general '.$titlePrec.' '.$btnTipoPrecio.'</h2>';
-$tituloLista = '<h2 style="background-color: #037C79; padding-botton: 14px; color: #FFF;">Pedidos</h2>';
+$tituloLista = '<h2 style="background-color: #037C79; padding-botton: 14px; color: #FFF;">Presupuestos</h2>';
 $dataUrl = "https://ketelectropartes.com/php/getListaPrecAll.php?prec=".$tipoPrecio;
 
 
