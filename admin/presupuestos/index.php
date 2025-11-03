@@ -694,20 +694,11 @@ foreach ($consult as $value)
           field: "text",
           direction: "asc"
       },
-      onChange: eventHandCliVend,
+      onChange: eventHandCliVend(),
       create: true,
       createOnBlur: true
     });
-    
 
-
-    var ctrlVendedorSel = new TomSelect("#vendedores-tom-sel",{
-      sortField: {
-        field: "text",
-        direction: "asc"
-      },
-      onChange: eventHandCliVend()
-    });
 
     $('#table').bootstrapTable({
       checkboxHeader: false, // Disable the "check all" option
