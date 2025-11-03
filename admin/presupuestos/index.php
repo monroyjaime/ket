@@ -663,11 +663,11 @@ foreach ($consult as $value)
       return function(){
         var selectedClient = parseInt(ctrlClientSel.getValue())
         selectedClient = (isNaN(selectedClient))? 0 : selectedClient
-        var selectedVendedor = parseInt(ctrlVendedorSel.getValue())
-        selectedVendedor =(isNaN(selectedVendedor))? 0 : selectedVendedor
+        //var selectedVendedor = parseInt(ctrlVendedorSel.getValue())
+        //selectedVendedor =(isNaN(selectedVendedor))? 0 : selectedVendedor
         console.log("Selected client num: "+selectedClient)
-        console.log("Selected vendedor num: "+selectedVendedor)
-        if (selectedClient ==0 || selectedVendedor==0)
+        //console.log("Selected vendedor num: "+selectedVendedor)
+        if (selectedClient ==0 )
           $('#ModalMakePedido #reg-pedido').prop('disabled', true);
         else
           $('#ModalMakePedido #reg-pedido').prop('disabled', false);
@@ -1205,7 +1205,7 @@ foreach ($consult as $value)
         function registrarPedido(){
           
           var selectedClientNum = parseInt(ctrlClientSel.getValue())
-          var selectedVendedorNum = parseInt(ctrlVendedorSel.getValue())
+          //var selectedVendedorNum = parseInt(ctrlVendedorSel.getValue())
 
           selectedPrecMay = getRowCheckedPrecio()
           if(selectedPrecMay.length ==0)
@@ -1240,7 +1240,7 @@ foreach ($consult as $value)
 
           pedido.cliente = selectedClientNum;
 
-          pedido.vendedor = selectedVendedorNum;
+          //pedido.vendedor = selectedVendedorNum;
 
           pedido.comentario = document.getElementById('comentarioPedido').value
 
