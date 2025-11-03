@@ -145,57 +145,7 @@ $tituloLista = '<h2 style="background-color: #037C79; padding-botton: 14px; colo
 $dataUrl = "https://ketelectropartes.com/php/getListaPrecAll.php?prec=".$tipoPrecio;
 
 
-$tags1  = '<div class="btn-group">';
 
-$tags1 .=    '<a class="nav-link dropdown-toggle disable" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">';
-$tags1 .=      'listado Dptos.';
-$tags1 .=    '</a>';
-$tags1 .=    '<ul class="dropdown-menu dropdown-menu-end dropdown-menu-lg-start" style="height: auto;max-height: 200px; overflow-x: hidden;">';
-$tags1 .=        '<li>';
-$consult = $db->consultas("SELECT id,name FROM departamentos WHERE num=1 AND show='t' ORDER BY orden,name");
-foreach ($consult as $value){
-    $dpto_Id = $value->id;
-    $dpto_Name = $value->name;
-    $tags1 .=        '<a class="dropdown-item" href="#" onClick="javascript:getLista('.$dpto_Id.','.$role.','.$tipoPrecio.')">'.$dpto_Name.'</a>';
-}
-
-$tags1 .= '<hr class="mt-2 mb-3"/>';
-
-$consult = $db->consultas("SELECT id,name FROM departamentos WHERE num=2 AND show='t' ORDER BY orden,name");
-foreach ($consult as $value){
-    $dpto_Id = $value->id;
-    $dpto_Name = $value->name;
-    $tags1 .=        '<a class="dropdown-item" href="#" onClick="javascript:getLista('.$dpto_Id.','.$role.','.$tipoPrecio.')">'.$dpto_Name.'</a>';
-}
-
-$tags1 .=        '</li>';
-$tags1 .=     '</ul>';
-
-
-$tags1 .=    '<a class="nav-link dropdown-toggle disable" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">';
-$tags1 .=      'Catálogo';
-$tags1 .=    '</a>';
-$tags1 .=    '<ul class="dropdown-menu dropdown-menu-end dropdown-menu-lg-start" style="height: auto;max-height: 200px; overflow-x: hidden;">';
-$tags1 .=        '<li>';
-$consult = $db->consultas("SELECT id,name,img_route FROM departamentos WHERE num=1 AND img_route != 'no' ORDER BY orden,name");
-foreach ($consult as $value){
-    $dpto_Id = $value->id;
-    $dpto_Name = $value->name;
-    $tags1 .= '<a class="dropdown-item" href="#" onClick="javascript:getCatalogo('.$dpto_Id.','.$role.','.$tipoPrecio.')">'.$dpto_Name.'</a>';
-}
-
-$tags1 .= '<hr class="mt-2 mb-3"/>';
-
-$consult = $db->consultas("SELECT id,name,img_route FROM departamentos WHERE num=2 AND img_route != 'no' ORDER BY orden,name");
-foreach ($consult as $value){
-    $dpto_Id = $value->id;
-    $dpto_Name = $value->name;
-    $tags1 .= '<a class="dropdown-item" href="#" onClick="javascript:getCatalogo('.$dpto_Id.','.$role.','.$tipoPrecio.')">'.$dpto_Name.'</a>';
-}
-
-$tags1 .=        '</li>';
-$tags1 .=     '</ul>';
-$tags1 .= '</div>';
 
 $consult=$db->consultas("SELECT full_name,client,vendedor FROM usuario WHERE num=".$numUsr);
 foreach ($consult as $value){
@@ -376,11 +326,7 @@ foreach ($consult as $value)
         <div class="col text-start" style="max-height: 40px; padding-left: 20px;  " > 
         <a href="#" onClick="backHome()" title="Pag. Prev."><i class="bi bi-arrow-left-circle-fill icon-dark-blue icon-large"></i></a>
         </div>  
-<!--        
-        <div class="col text-left">
-          <?php echo $tags1; ?>
-        </div>
---> 
+
         <div class="col text-center" style="max-height: 40px; padding-botton: 14px; padding-top: 1px;" >
             <?php echo $btnsPedido; ?>
           </div>
@@ -694,7 +640,7 @@ foreach ($consult as $value)
           field: "text",
           direction: "asc"
       },
-      onChange: eventHandCliVend(),
+      onChange: eventHandCliVend,
       create: true,
       createOnBlur: true
     });
