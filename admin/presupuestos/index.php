@@ -678,15 +678,26 @@ foreach ($consult as $value)
 
     }
 
+    
 
+/*
     var ctrlClientSel = new TomSelect("#clients-tom-sel",{
       sortField: {
         field: "text",
         direction: "asc"
       },
       onChange: eventHandCliVend()
-    });
+    }); */
 
+    var ctrlClientSel = new TomSelect("#clients-tom-sel",{
+      sortField: {
+          field: "text",
+          direction: "asc"
+      },
+      onChange: eventHandCliVend,
+      create: true,
+      createOnBlur: true
+    });
     
 
 
