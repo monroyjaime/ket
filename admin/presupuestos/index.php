@@ -710,11 +710,11 @@ foreach ($consult as $value)
       
 
       console.log("on load Tom Select client num: "+ctrlClientSel.getValue());
-      console.log("on load Tom Select vendedor num: "+ctrlVendedorSel.getValue());
+      //console.log("on load Tom Select vendedor num: "+ctrlVendedorSel.getValue());
 
 
       console.log("from php client num: "+client_num+" vendedor num: "+vend_num);
-      console.log("selected on load vendedor num: "+$('#inputGroupVendedor').val());
+      //console.log("selected on load vendedor num: "+$('#inputGroupVendedor').val());
       /*console.log("productos en carrito: "+codes_carrito.length+"--"+codes_carrito[0]);*/
       for (i = 0; i < codes_carrito.length; i++)        
           console.log((i+1) + ": "+codes_carrito[i].code+" tipo prec:"+codes_carrito[i].tipo_prec) 
