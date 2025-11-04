@@ -54,6 +54,8 @@ if($numUsr > 0 && $ableToPresupuesto == 't') //check if there is something in th
   }
 }
 
+$pedidoCheckColumn = ($numUsr > 0 && $ableToPresupuesto == 't')? '<th data-field="checked" data-checkbox="true"  data-formatter="checkFormater"></th>' : '';
+
 $tituloLista = '<h2 style="background-color: #037C79; padding-botton: 14px; color: #FFF;">Presupuestos</h2>';
 $dataUrl = "https://ketelectropartes.com/php/getListaPrecAll.php?prec=".$tipoPrecio;
 
