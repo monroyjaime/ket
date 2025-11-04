@@ -305,8 +305,8 @@ foreach ($consult as $value)
           <th data-field="relacionado" data-halign="center" data-align="left">RELACIONADO</th>
           <th data-field="stock" data-halign="center" data-align="left">STOCK</th>
           <th data-field="llegando" data-halign="center" data-align="left">LLEGANDO</th>
-          <th data-field="prec_min" data-halign="center" data-align="left">PREC 1</th>
-          <th data-field="prec_may" data-halign="center" data-align="left">PREC 2</th>
+          <th data-field="prec_min" data-formatter="precioFormaterPresup" data-halign="center" data-align="left">PREC 1</th>
+          <th data-field="prec_may" data-formatter="precioFormaterPresup" data-halign="center" data-align="left">PREC 2</th>
 
           <th data-field="costo" data-halign="center" data-align="left">COSTO</th>
           <th data-field="unit">UNIDAD</th>
@@ -903,7 +903,9 @@ foreach ($consult as $value)
         }
 
         function precioFormaterPresup(value,row){
-          if (parseFloat(value) < parseFloat(row.monto)*2)
+          if (parseFloat(row.monto)*2 < parseFloat(value))
+              return '<i style="color: #720000ff; font-style: normal;font-weight: bold">$'+value.replace(/[.]/, ",")+'</i>';
+          else
             return '$'+value.replace(/[.]/, ",");
         }
 
