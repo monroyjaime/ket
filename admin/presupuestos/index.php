@@ -30,7 +30,7 @@ if($numUsr > 0)
 {
   $consult = $db->consultas("SELECT do_presupuesto, show_all_pres FROM usuario WHERE num=".$numUsr);
   foreach ($consult as $value){
-    $ableToPresupuesto = $value->do_preupuesto;
+    $ableToPresupuesto = $value->do_presupuesto;
     $showAllPres = $value->show_all_pres;
   }
       
