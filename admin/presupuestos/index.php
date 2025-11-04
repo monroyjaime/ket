@@ -28,82 +28,25 @@ $btnsPedido='';
 $showAllPed='f';
 if($numUsr > 0)
 {
-  $consult = $db->consultas("SELECT do_pedido, show_all_ped FROM usuario WHERE num=".$numUsr);
+  $consult = $db->consultas("SELECT do_presupuesto, show_all_pres FROM usuario WHERE num=".$numUsr);
   foreach ($consult as $value){
-    $ableToPedido = $value->do_pedido;
-    $showAllPed = $value->show_all_ped;
+    $ableToPresupuesto = $value->do_pedido;
+    $showAllPres = $value->show_all_pres;
   }
       
 
-  if($ableToPedido == 't')
+  if($ableToPresupuesto == 't')
   {
     $btnsPedido  = '<button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#ModalMakePedido" onClick="getSelected()" style="margin: 1px 2px 1px;"><i class="bi bi-gear"></i> Def. Presup.</button> ';
     $btnsPedido .= '<button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#ModalShowPedido" onClick="showPedidoClient()" style="margin: 1px 2px 1px;"><i class="bi bi-file-earmark-ppt"></i> Ver Presup.</button> ';
   }
 }
 
-if($role == -1)
-{
-  $precioMinColumn = '';
-  $precioMayColumn = '';
-}
-elseif($role == 3)
-{
-  //$btnTipoPrecio = ($tipoPrecio==0)? '<h5>Detal</h5>' : '<h5>Myor</h5>';
-  $precioMinColumn = '<th data-field="cost_min" data-halign="center" data-align="right" data-formatter="precioFormater">PRECIO</th>';
-  $precioMayColumn = '';
-  $precioMinPedColumn = '<th data-field="prec_min" data-halign="center" data-align="right" data-formatter="precioFormater">Precio</th>';
-  $precioMayPedColumn = '';
-}
-elseif($role >-1 && $role < 3)
-{
-  $btnTipoPrecio = '<button type="button" class="btn btn-warning btn-sm" onClick="backToSelf('.$role.','.$otroPrecio.')" style="margin: 10px 0px 10px;">'.$textPrecio.'</button>';
 
-  $precioMinColumn = '<th data-field="cost_min" data-halign="center" data-align="right" data-formatter="precioFormater">PREC.MIN.</th>';
-  $precioMayColumn = '<th data-field="cost_may" data-halign="center" data-align="right" data-formatter="precioMayorFormater">PREC.MAY.</th>';
-
-  $precioMinPedColumn = '<th data-field="prec_min" data-halign="center" data-align="right" data-formatter="precioFormater">Precio Min.</th>';
-  $precioMayPedColumn = '<th data-field="prec_may" data-halign="center" data-align="right" data-formatter="precioMayorFormater">Precio May.</th>';
-}
-
-switch($role)
-{
-    case 1:
-      $titlePrec = ($tipoPrecio==0)? "(Precios)" : "(Precios al mayor)";
-    break;
-    case 2:
-      $titlePrec = ($tipoPrecio==0)? "(Precios)" : "(Precios al mayor)";
-
-    break;
-    case 3:
-      $titlePrec = "(Precios)";
-
-    break;
-
-    case 4:
-      $titlePrec = "(Precios al Mayor)";
-      $tipoPrecio=1;
-    break;
-
-    case 5:
-      $titlePrec = "(Precios al Mayor)";
-      $tipoPrecio=1;
-    break;
-
-
-}
-/*
-if($role == -1)
-{
-  header("Location: ../../");
-  die();
-
-}  
-*/
 $prodsCarrito = [];
-if($numUsr > 0 && $ableToPedido == 't') //check if there is something in the carrito
+if($numUsr > 0 && $ableToPresupuesto == 't') //check if there is something in the carrito
 {
-  $consult = $db->consultas("SELECT product_code,tipo_precio FROM pedido_carrito WHERE user_num=".$numUsr." ORDER BY product_code");
+  $consult = $db->consultas("SELECT product_code,tipo_precio FROM presupuesto_carrito WHERE user_num=".$numUsr." ORDER BY product_code");
   foreach ($consult as $value){
     $objRtn = new stdClass();
     $objRtn->code = $value->product_code;
@@ -119,7 +62,7 @@ elseif($role == 5)
    $stockColumn = '<th data-field="stock_tot" data-halign="center" data-align="right" >STOCK</th>';
 
 //$stockColumn = ( ($role > -1 && $role < 2) || $role == 5 )? '<th data-field="'.$correct_stock.'" data-halign="center" data-align="right" >STOCK</th>' : '';
-$pedidoCheckColumn = ($numUsr > 0 && $ableToPedido == 't')? '<th data-field="checked" data-checkbox="true"  data-formatter="checkFormater"></th>' : '';
+$pedidoCheckColumn = ($numUsr > 0 && $ableToPresupuesto == 't')? '<th data-field="checked" data-checkbox="true"  data-formatter="checkFormater"></th>' : '';
 $precioMinColumn = ($role == -1)? '' : '<th data-field="cost_min" data-halign="center" data-align="right" data-formatter="precioFormater">PREC.MIN.</th>';
 $precioMinPedColumn = ($role == -1)? '' : '<th data-field="prec_min" data-halign="center" data-align="right" data-formatter="precioFormater">Precio Min.</th>';
 $precioMayColumn = ($role == -1 || $role > 2)? '' : '<th data-field="cost_may" data-halign="center" data-align="right" data-formatter="precioMayorFormater">PREC.MAY.</th>';
@@ -985,6 +928,10 @@ foreach ($consult as $value)
             return '---'
           else
             return '$'+value.replace(/[.]/, ",");
+        }
+
+        function precioFormaterPresup(value,row){
+          if (parseFloat(value) < parseFloat(row.monto)*2)
         }
 
         function precioFormaterPed(value,row) {
