@@ -989,6 +989,7 @@ foreach ($consult as $value)
 
         function precioFormaterPresup(value,row){
           if (parseFloat(value) < parseFloat(row.monto)*2)
+            return '$'+value.replace(/[.]/, ",");
         }
 
         function precioFormaterPed(value,row) {
