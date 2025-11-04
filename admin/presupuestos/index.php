@@ -30,7 +30,7 @@ if($numUsr > 0)
 {
   $consult = $db->consultas("SELECT do_presupuesto, show_all_pres FROM usuario WHERE num=".$numUsr);
   foreach ($consult as $value){
-    $ableToPresupuesto = $value->do_pedido;
+    $ableToPresupuesto = $value->do_preupuesto;
     $showAllPres = $value->show_all_pres;
   }
       
@@ -103,7 +103,7 @@ if($role == -1)
 $prodsCarrito = [];
 if($numUsr > 0 && $ableToPresupuesto == 't') //check if there is something in the carrito
 {
-  $consult = $db->consultas("SELECT product_code,tipo_precio FROM presupuesto_carrito WHERE user_num=".$numUsr." ORDER BY product_code");
+  $consult = $db->consultas("SELECT product_code,tipo_precio FROM pedido_carrito WHERE user_num=".$numUsr." ORDER BY product_code");
   foreach ($consult as $value){
     $objRtn = new stdClass();
     $objRtn->code = $value->product_code;
