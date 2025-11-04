@@ -54,35 +54,6 @@ if($numUsr > 0 && $ableToPresupuesto == 't') //check if there is something in th
   }
 }
 
-$stockColumn='';
-if ($role > -1 && $role < 2)
-  $stockColumn =  '<th data-field="current_stock" data-halign="center" data-align="right" >STOCK</th>';
-elseif($role == 5)
-   $stockColumn = '<th data-field="stock_tot" data-halign="center" data-align="right" >STOCK</th>';
-
-//$stockColumn = ( ($role > -1 && $role < 2) || $role == 5 )? '<th data-field="'.$correct_stock.'" data-halign="center" data-align="right" >STOCK</th>' : '';
-$pedidoCheckColumn = ($numUsr > 0 && $ableToPresupuesto == 't')? '<th data-field="checked" data-checkbox="true"  data-formatter="checkFormater"></th>' : '';
-$precioMinColumn = ($role == -1)? '' : '<th data-field="cost_min" data-halign="center" data-align="right" data-formatter="precioFormater">PREC.MIN.</th>';
-$precioMinPedColumn = ($role == -1)? '' : '<th data-field="prec_min" data-halign="center" data-align="right" data-formatter="precioFormater">Precio Min.</th>';
-$precioMayColumn = ($role == -1 || $role > 2)? '' : '<th data-field="cost_may" data-halign="center" data-align="right" data-formatter="precioMayorFormater">PREC.MAY.</th>';
-$precioMayPedColumn = ($role == -1 || $role > 2)? '' : '<th data-field="prec_may" data-halign="center" data-align="right" data-formatter="precioMayorFormater">Precio May.</th>';
-$checkPreMayColumn = ($role == -1 || $role > 2)? '' : '<th data-field="check_prec" data-checkbox="true"  data-formatter="checkPrecMayFormater"></th>';
-
-//$pedidoCheckColumn = ($numUsr == 1)? '<th data-checkbox="true" data-formatter="checkFormater"></th>' : '';
-if($role == 3)
-{
-  $showPedidoPrecioNorm = '<th data-field="prec_min" data-halign="center" data-align="right" data-formatter="precioFormater">Precio</th>';
-  $showPedidoPrecioMayor = '';
-}
-elseif($role>1 && $role<3)
-{
-
-}
-$showPedidoPrecioNorm = ($role == 3)?  : '<th data-field="prec_min" data-halign="center" data-align="right" data-formatter="precioFormater">Precio Min.</th>';
-
-$precioColumn = ($role == -1)? '' : '<th data-field="cost_max" data-halign="center" data-align="right" data-formatter="precioFormater">PRECIO</th>';
-$precio80Column = ($role == -1)? '' :'<th data-field="cost_max_80" data-halign="center" data-align="right" data-formatter="precioFormater">PREC.-20%</th>';
-//$tituloLista = ($role == -1)? '<h2 style="background-color: #037C79; padding-botton: 14px; color: #FFF;">Listado general</h2>' : '<h2 style="background-color: #037C79; color: #FFF;">Listado general '.$titlePrec.' '.$btnTipoPrecio.'</h2>';
 $tituloLista = '<h2 style="background-color: #037C79; padding-botton: 14px; color: #FFF;">Presupuestos</h2>';
 $dataUrl = "https://ketelectropartes.com/php/getListaPrecAll.php?prec=".$tipoPrecio;
 
