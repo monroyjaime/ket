@@ -42,64 +42,6 @@ if($numUsr > 0)
   }
 }
 
-if($role == -1)
-{
-  $precioMinColumn = '';
-  $precioMayColumn = '';
-}
-elseif($role == 3)
-{
-  //$btnTipoPrecio = ($tipoPrecio==0)? '<h5>Detal</h5>' : '<h5>Myor</h5>';
-  $precioMinColumn = '<th data-field="cost_min" data-halign="center" data-align="right" data-formatter="precioFormater">PRECIO</th>';
-  $precioMayColumn = '';
-  $precioMinPedColumn = '<th data-field="prec_min" data-halign="center" data-align="right" data-formatter="precioFormater">Precio</th>';
-  $precioMayPedColumn = '';
-}
-elseif($role >-1 && $role < 3)
-{
-  $btnTipoPrecio = '<button type="button" class="btn btn-warning btn-sm" onClick="backToSelf('.$role.','.$otroPrecio.')" style="margin: 10px 0px 10px;">'.$textPrecio.'</button>';
-
-  $precioMinColumn = '<th data-field="cost_min" data-halign="center" data-align="right" data-formatter="precioFormater">PREC.MIN.</th>';
-  $precioMayColumn = '<th data-field="cost_may" data-halign="center" data-align="right" data-formatter="precioMayorFormater">PREC.MAY.</th>';
-
-  $precioMinPedColumn = '<th data-field="prec_min" data-halign="center" data-align="right" data-formatter="precioFormater">Precio Min.</th>';
-  $precioMayPedColumn = '<th data-field="prec_may" data-halign="center" data-align="right" data-formatter="precioMayorFormater">Precio May.</th>';
-}
-
-switch($role)
-{
-    case 1:
-      $titlePrec = ($tipoPrecio==0)? "(Precios)" : "(Precios al mayor)";
-    break;
-    case 2:
-      $titlePrec = ($tipoPrecio==0)? "(Precios)" : "(Precios al mayor)";
-
-    break;
-    case 3:
-      $titlePrec = "(Precios)";
-
-    break;
-
-    case 4:
-      $titlePrec = "(Precios al Mayor)";
-      $tipoPrecio=1;
-    break;
-
-    case 5:
-      $titlePrec = "(Precios al Mayor)";
-      $tipoPrecio=1;
-    break;
-
-
-}
-/*
-if($role == -1)
-{
-  header("Location: ../../");
-  die();
-
-}  
-*/
 $prodsCarrito = [];
 if($numUsr > 0 && $ableToPresupuesto == 't') //check if there is something in the carrito
 {
