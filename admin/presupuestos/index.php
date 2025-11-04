@@ -308,7 +308,7 @@ foreach ($consult as $value)
           <th data-field="prec_min" data-formatter="precioFormaterPresup" data-halign="center" data-align="left">PREC 1</th>
           <th data-field="prec_may" data-formatter="precioFormaterPresup" data-halign="center" data-align="left">PREC 2</th>
 
-          <th data-field="costo" data-halign="center" data-align="left">COSTO</th>
+          <th data-field="costo" data-formatter="precioFormatergen" data-halign="center" data-align="left">COSTO</th>
           <th data-field="unit">UNIDAD</th>
           <th data-field="name" data-halign="center" data-align="left" data-width="500">. . . . . . DESCRIPCION . . . . . .</th>
           
@@ -891,7 +891,7 @@ foreach ($consult as $value)
             
             }
 
-        function precioFormater(value,row) {
+        function precioFormatergen(value,row) {
           return '$'+value .replace(/[.]/, ",");
         }
 
