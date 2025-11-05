@@ -123,10 +123,10 @@ $consult = $db->consultas("SELECT num,code,full_name FROM vendedor ORDER BY num"
 foreach ($consult as $value)
   $inputVenTomSel .= '<option value="'.$value->num.'">'.$value->code.' --- '.$value->full_name.'</option>';
 
-$consult = $db->consultas("SELECT ganancia_min_global,descuento_max_global FROM all_ket_values");
+$consult = $db->consultas("SELECT ganancia_min_glob,descuento_max_glob FROM all_ket_values");
 foreach($consult as $value){
-  $ganan_glob = floatval($value->ganancia_min_global);
-  $desc_glob = floatval($value->descuento_max_global);
+  $ganan_glob = floatval($value->ganancia_min_glob);
+  $desc_glob = floatval($value->descuento_max_glob);
 }    
 ?>
 
