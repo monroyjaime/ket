@@ -1,17 +1,20 @@
 <?php
 session_start();
-require_once("../../php/dbcat.php");
-$db = new DB();
+require_once("../../php/dbcat_async.php"); // Usar la clase mejorada
+$db = new DBAsync();
 
-// Inicializar variables con valores por defecto
 $clientNum = 0;
 $vendedorNum = 0;
-$clientCode = "";
-$clientName = "";
-$vendedorCode = "";
-$vendedorName = "";
+
+// Inicializar variables importantes
 $ableToPresupuesto = 'f';
 $showAllPres = 'f';
+$usrName = '';
+$clientCode = '';
+$clientName = '';
+$vendedorCode = '';
+$vendedorName = '';
+$prodsCarrito = [];
 
 $tipoPrecio = (isset($_SESSION['prec'])) ? intval($_SESSION['prec']) : 0;  
 $numUsr = (isset($_SESSION['usr_num'])) ? intval($_SESSION['usr_num']) : -1;
@@ -30,19 +33,18 @@ $btnTipoPrecio = '';
 $btnsPedido = '';
 $showAllPed = 'f';
 
+// ✅ CONSULTA SEGURA - Información del usuario
 if ($numUsr > 0) {
-    try {
-        $consult = $db->consultas("SELECT do_presupuesto, show_all_pres FROM usuario WHERE num=" . $numUsr);
-        if ($consult && count($consult) > 0) {
-            foreach ($consult as $value) {
-                $ableToPresupuesto = isset($value->do_presupuesto) ? $value->do_presupuesto : 'f';
-                $showAllPres = isset($value->show_all_pres) ? $value->show_all_pres : 'f';
-            }
+    $consult = $db->consultaSegura(
+        "SELECT do_presupuesto, show_all_pres FROM usuario WHERE num = $1", 
+        [$numUsr]
+    );
+    
+    if (!empty($consult)) {
+        foreach ($consult as $value) {
+            $ableToPresupuesto = $value->do_presupuesto;
+            $showAllPres = $value->show_all_pres;
         }
-    } catch (Exception $e) {
-        error_log("Error en consulta usuario: " . $e->getMessage());
-        $ableToPresupuesto = 'f';
-        $showAllPres = 'f';
     }
 
     if ($ableToPresupuesto == 't') {
@@ -51,128 +53,113 @@ if ($numUsr > 0) {
     }
 }
 
+// ✅ CONSULTA SEGURA - Productos en carrito
 $prodsCarrito = [];
 if ($numUsr > 0 && $ableToPresupuesto == 't') {
-    try {
-        $consult = $db->consultas("SELECT product_code,tipo_precio FROM pedido_carrito WHERE user_num=" . $numUsr . " ORDER BY product_code");
-        if ($consult) {
-            foreach ($consult as $value) {
-                $objRtn = new stdClass();
-                $objRtn->code = $value->product_code;
-                $objRtn->tipo_prec = intval($value->tipo_precio);
-                $prodsCarrito[] = $objRtn;
-            }
-        }
-    } catch (Exception $e) {
-        error_log("Error en consulta carrito: " . $e->getMessage());
-        $prodsCarrito = [];
+    $consult = $db->consultaSegura(
+        "SELECT product_code, tipo_precio FROM pedido_carrito WHERE user_num = $1 ORDER BY product_code", 
+        [$numUsr]
+    );
+    
+    foreach ($consult as $value) {
+        $objRtn = new stdClass();
+        $objRtn->code = $value->product_code;
+        $objRtn->tipo_prec = intval($value->tipo_precio);
+        $prodsCarrito[] = $objRtn;
     }
 }
 
 $pedidoCheckColumn = ($numUsr > 0 && $ableToPresupuesto == 't') ? '<th data-field="checked" data-checkbox="true"  data-formatter="checkFormater"></th>' : '';
 
 $tituloLista = '<h2 style="background-color: #037C79; padding-bottom: 14px; color: #FFF;">Presupuestos</h2>';
+$dataUrl = "https://ketelectropartes.com/php/getListaPrecAll.php?prec=".$tipoPrecio;
 
-// Consulta información del usuario
-try {
-    if ($numUsr > 0) {
-        $consult = $db->consultas("SELECT full_name,client,vendedor FROM usuario WHERE num=" . $numUsr);
-        if ($consult && count($consult) > 0) {
-            foreach ($consult as $value) {
-                $usrName = isset($value->full_name) ? $value->full_name : '';
-                $clientNum = isset($value->client) ? intval($value->client) : 0;
-                $vendedorNum = isset($value->vendedor) ? intval($value->vendedor) : 0;
-            }
-        }
-    }
-} catch (Exception $e) {
-    error_log("Error en consulta usuario info: " . $e->getMessage());
-}
-
-// Consulta información del cliente
-if ($clientNum > 0) {
-    try {
-        $consult = $db->consultas("SELECT code,full_name FROM cliente WHERE num = " . $clientNum);
-        if ($consult && count($consult) > 0) {
-            foreach ($consult as $value) {
-                $clientCode = isset($value->code) ? $value->code : '';
-                $clientName = isset($value->full_name) ? $value->full_name : '';
-            }
-        }
-    } catch (Exception $e) {
-        error_log("Error en consulta cliente: " . $e->getMessage());
-    }
-}
-
-// Consulta información del vendedor
-if ($vendedorNum > 0) {
-    try {
-        $consult = $db->consultas("SELECT code,full_name FROM vendedor WHERE num = " . $vendedorNum);
-        if ($consult && count($consult) > 0) {
-            foreach ($consult as $value) {
-                $vendedorCode = isset($value->code) ? $value->code : '';
-                $vendedorName = isset($value->full_name) ? $value->full_name : '';
-            }
-        }
-    } catch (Exception $e) {
-        error_log("Error en consulta vendedor: " . $e->getMessage());
-    }
-}
-
-$clientDefined = ($clientNum == 0) ? true : false;
-$vendedorDefined = ($vendedorNum == 0) ? true : false;
-
-$queUsuario = ($showAllPres == 't') ? "todos los usuarios" : (isset($usrName) ? $usrName : 'Usuario');
-
-$usrNameTag = '<h4 style="background-color: #6c757d; padding-bottom: 14px; color: #FFF;">Lista de pedidos de ' . $queUsuario . '</h4>';
-
-$optionText = ($clientNum == 0) ? "Seleccione Cliente..." : $clientCode . ' --- ' . $clientName;
-$inputCliTomSel = '<option value="' . $clientNum . '">' . $optionText . '</option>';
-
-// Consulta clientes
-try {
-    $queryClients = ($showAllPres == 't') ? 
-        "SELECT num,code,full_name FROM cliente ORDER BY num" : 
-        "SELECT num,code,full_name FROM cliente WHERE vendedor=(SELECT vendedor FROM usuario WHERE num=" . $numUsr . ") ORDER BY num";
+// ✅ CONSULTA SEGURA - Datos completos del usuario
+if ($numUsr > 0) {
+    $consult = $db->consultaSegura(
+        "SELECT full_name, client, vendedor FROM usuario WHERE num = $1", 
+        [$numUsr]
+    );
     
-    $consult = $db->consultas($queryClients);
-    if ($consult) {
+    if (!empty($consult)) {
         foreach ($consult as $value) {
-            $inputCliTomSel .= '<option value="' . $value->num . '">' . $value->code . ' --- ' . $value->full_name . '</option>';
+            $usrName = $value->full_name;
+            $clientNum = intval($value->client);
+            $vendedorNum = intval($value->vendedor);
         }
     }
-} catch (Exception $e) {
-    error_log("Error en consulta clientes: " . $e->getMessage());
 }
 
-$optionText = ($vendedorNum == 0) ? "Seleccione Vendedor..." : $vendedorCode . ' --- ' . $vendedorName;
-$inputVenTomSel = '<option value="' . $vendedorNum . '">' . $optionText . '</option>';
-
-// Consulta vendedores
-try {
-    $consult = $db->consultas("SELECT num,code,full_name FROM vendedor ORDER BY num");
-    if ($consult) {
+// ✅ CONSULTA SEGURA - Información del cliente
+if ($clientNum > 0) {
+    $consult = $db->consultaSegura(
+        "SELECT code, full_name FROM cliente WHERE num = $1", 
+        [$clientNum]
+    );
+    
+    if (!empty($consult)) {
         foreach ($consult as $value) {
-            $inputVenTomSel .= '<option value="' . $value->num . '">' . $value->code . ' --- ' . $value->full_name . '</option>';
+            $clientCode = $value->code;
+            $clientName = $value->full_name;
         }
     }
-} catch (Exception $e) {
-    error_log("Error en consulta vendedores: " . $e->getMessage());
 }
 
-// Consulta valores globales
+// ✅ CONSULTA SEGURA - Información del vendedor
+if ($vendedorNum > 0) {
+    $consult = $db->consultaSegura(
+        "SELECT code, full_name FROM vendedor WHERE num = $1", 
+        [$vendedorNum]
+    );
+    
+    if (!empty($consult)) {
+        foreach ($consult as $value) {
+            $vendedorCode = $value->code;
+            $vendedorName = $value->full_name;
+        }
+    }
+}
+
+$clientDefined = ($clientNum == 0);
+$vendedorDefined = ($vendedorNum == 0);
+
+$queUsuario = ($showAllPres == 't') ? "todos los usuarios" : $usrName;
+$usrNameTag = '<h4 style="background-color: #6c757d; padding-bottom: 14px; color: #FFF;">Lista de pedidos de '.$queUsuario.'</h4>';
+
+$optionText = ($clientNum == 0) ? "Seleccione Cliente..." : $clientCode.' --- '.$clientName;
+$inputCliTomSel = '<option value="'.$clientNum.'">'.$optionText.'</option>';
+
+// ✅ CONSULTA SEGURA - Lista de clientes
+if ($numUsr > 0) {
+    $queryClients = ($showAllPres == 't') ? 
+        "SELECT num, code, full_name FROM cliente ORDER BY num" : 
+        "SELECT num, code, full_name FROM cliente WHERE vendedor = (SELECT vendedor FROM usuario WHERE num = $1) ORDER BY num";
+    
+    $consult = $db->consultaSegura($queryClients, [$numUsr]);
+    
+    foreach ($consult as $value) {
+        $inputCliTomSel .= '<option value="'.$value->num.'">'.$value->code.' --- '.$value->full_name.'</option>';
+    }
+}
+
+$optionText = ($vendedorNum == 0) ? "Seleccione Vendedor..." : $vendedorCode.' --- '.$vendedorName;
+$inputVenTomSel = '<option value="'.$vendedorNum.'">'.$optionText.'</option>';
+
+// ✅ CONSULTA SEGURA - Lista de vendedores
+$consult = $db->consultaSegura("SELECT num, code, full_name FROM vendedor ORDER BY num", []);
+foreach ($consult as $value) {
+    $inputVenTomSel .= '<option value="'.$value->num.'">'.$value->code.' --- '.$value->full_name.'</option>';
+}
+
+// ✅ CONSULTA SEGURA - Valores globales
 $ganan_glob = 0;
 $desc_glob = 0;
-try {
-    $consult = $db->consultas("SELECT ganancia_min_global,descuento_max_global FROM all_ket_values");
-    if ($consult && count($consult) > 0) {
-        foreach ($consult as $value) {
-            $ganan_glob = isset($value->ganancia_min_global) ? floatval($value->ganancia_min_global) : 0;
-            $desc_glob = isset($value->descuento_max_global) ? floatval($value->descuento_max_global) : 0;
-        }
+$consult = $db->consultaSegura("SELECT ganancia_min_global, descuento_max_global FROM all_ket_values", []);
+if (!empty($consult)) {
+    foreach ($consult as $value) {
+        $ganan_glob = floatval($value->ganancia_min_global);
+        $desc_glob = floatval($value->descuento_max_global);
     }
-} catch (Exception $e) {
-    error_log("Error en consulta valores globales: " . $e->getMessage());
 }
 ?>
 
@@ -186,10 +173,14 @@ try {
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css">
     <link rel="stylesheet" href="https://unpkg.com/bootstrap-table@1.22.1/dist/bootstrap-table.min.css">
+    <link href="https://unpkg.com/bootstrap-table@1.22.1/dist/bootstrap-table.min.css" rel="stylesheet">
+    <script src="https://unpkg.com/bootstrap-table@1.22.1/dist/bootstrap-table.min.js"></script>
+
     <link href="https://cdn.jsdelivr.net/npm/tom-select@2.0.0-rc.4/dist/css/tom-select.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/tom-select@2.0.0-rc.4/dist/js/tom-select.complete.min.js"></script>
 
     <script type="text/javascript">
-        var roleNum = <?php echo $role; ?>;  
+        var roleNum = <?php echo $role;?>;  
     </script>
 
     <style>
@@ -260,9 +251,10 @@ try {
             }
         }
 
-        a:link, a:visited, a:hover, a:active { 
-            text-decoration: none; 
-        }
+        a:link { text-decoration: none; } 
+        a:visited { text-decoration: none; } 
+        a:hover { text-decoration: none; } 
+        a:active { text-decoration: none; }
 
         .fixed-table-toolbar .search {
             width: 100%;
@@ -348,7 +340,7 @@ try {
     </div>
 </div>
 
-<!-- Modales (mantener igual que antes) -->
+<!-- Modal Detalle Producto -->
 <div class="modal fade" id="myModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -364,6 +356,7 @@ try {
     </div>
 </div>
 
+<!-- Modal Definir Pedido -->
 <div class="modal fade" id="ModalMakePedido" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
     <div class="modal-dialog" style="max-width: 90%;" role="document">
         <div class="modal-content">
@@ -434,6 +427,7 @@ try {
     </div>
 </div>
 
+<!-- Modal Mostrar Pedidos -->
 <div class="modal fade" id="ModalShowPedido" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
     <div class="modal-dialog" style="max-width: 90%;" role="document">
         <div class="modal-content">
@@ -487,7 +481,6 @@ try {
     </div>
 </div>
 
-<!-- Scripts -->
 <script src="https://cdn.jsdelivr.net/npm/jquery/dist/jquery.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p" crossorigin="anonymous"></script>
 <script src="https://unpkg.com/bootstrap-table@1.22.1/dist/bootstrap-table.min.js"></script>
@@ -496,11 +489,10 @@ try {
 <script src="https://cdn.jsdelivr.net/npm/tableexport.jquery.plugin@1.10.21/libs/jsPDF/jspdf.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/tableexport.jquery.plugin@1.10.21/libs/jsPDF-AutoTable/jspdf.plugin.autotable.js"></script>
 <script src="https://unpkg.com/bootstrap-table@1.22.1/dist/extensions/export/bootstrap-table-export.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/tom-select@2.0.0-rc.4/dist/js/tom-select.complete.min.js"></script>
 <script src="../../js/jquery.redirect.js" type="text/javascript"></script>
    
 <script type="text/javascript">
-    // Variables globales - con valores seguros
+    // Variables globales
     var client_num = <?php echo $clientNum; ?>;
     var vend_num = <?php echo $vendedorNum; ?>;
     var client_code = '<?php echo addslashes($clientCode); ?>';
@@ -565,7 +557,6 @@ try {
     }
 
     function initializeTomSelect() {
-        // Configuración TomSelect para clientes
         window.ctrlClientSel = new TomSelect("#clients-tom-sel", {
             sortField: {
                 field: "text",
@@ -575,7 +566,6 @@ try {
             create: false
         });
 
-        // Configuración TomSelect para vendedores
         window.ctrlVendedorSel = new TomSelect("#vendedores-tom-sel", {
             sortField: {
                 field: "text",
@@ -585,7 +575,6 @@ try {
             create: false
         });
 
-        // Establecer valores iniciales
         if (client_num > 0) {
             ctrlClientSel.setValue(client_num.toString());
         }
@@ -593,7 +582,6 @@ try {
             ctrlVendedorSel.setValue(vend_num.toString());
         }
 
-        // Verificar estado inicial del botón
         handleClientVendorChange();
     }
 
@@ -605,23 +593,19 @@ try {
     }
 
     function setupEventHandlers() {
-        // Event handlers para la tabla principal
         $('#table').on('check.bs.table', async function(e, row) {
             await handleProductSelect(row, true);
         }).on('uncheck.bs.table', async function(e, row) {
             await handleProductSelect(row, false);
         });
 
-        // Event handler para cambio de pedido
         $('#inputGroupPedidos').change(async function() {
             const selectedItem = $(this).val();
             await loadPedidoData(selectedItem);
         });
 
-        // Configuración de búsqueda
         $('.search input').attr('placeholder', 'Buscar...');
         
-        // Modal event handlers
         $('#myModal').on("hide.bs.modal", function() {
             $(".modal-body").html("");
         });
@@ -688,13 +672,11 @@ try {
         const rows = $('#table-pedido').bootstrapTable('getData') || [];
         const productos = [];
         
-        // Obtener comentarios
         const coments = [];
         $('#ModalMakePedido #Comentario').each(function(index, valor) {
             coments.push(valor.value);
         });
         
-        // Preparar productos
         for (let i = 0; i < rows.length; i++) {
             const producto = {
                 code: rows[i].code,
@@ -729,8 +711,7 @@ try {
         $('#ModalShowPedido #table-pedidos-show').bootstrapTable('refresh', { url: newUrl });
     }
 
-    // ========== FUNCIONES FORMATER Y UTILITARIAS ==========
-    // (Mantener las mismas funciones formatter del código anterior)
+    // ========== FUNCIONES FORMATER ==========
     function fotoFormater(value, row) {
         var strReturn = '<i class="bi bi-x-circle-fill icon-red" title="no disponible"></i>';
         if (value != 'empty.jpg')
@@ -875,16 +856,11 @@ try {
     }
 
     const processCatidadCambia = debounce(() => {
-        // Implementación simplificada para evitar complejidad
         updateTotal();
     });
 
-    // Inicialización cuando la ventana carga
     $(window).on("load", function() {
         console.log("Página cargada correctamente");
-        if (codes_carrito) {
-            console.log("Productos en carrito:", codes_carrito.length);
-        }
     });
 </script>
 </body>
