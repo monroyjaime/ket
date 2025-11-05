@@ -11,6 +11,9 @@ $numUsr = (isset($_SESSION['usr_num']))? intval($_SESSION['usr_num']) : -1;
 $role = (isset($_SESSION['role']))? intval($_SESSION['role']) : -1;
 $onlyStock = (isset($_SESSION['only_stock']))? intval($_SESSION['only_stock']) : 0; 
 
+$ableToPresupuesto = 'f'; // <- AÑADIR ESTA LÍNEA
+$showAllPres = 'f'; // <- AÑADIR ESTA LÍNEA
+
 /*if ( isset($_GET['role_num']) ) 
   $role = intval($_GET['role_num']); */
 
@@ -25,7 +28,7 @@ $textPrecio = ($tipoPrecio == 0)? "selec. Precios al Mayor" : "selec. Precios Mi
 
 $btnTipoPrecio ='';
 $btnsPedido='';
-$showAllPed='f';
+$showAllPres='f';
 if($numUsr > 0)
 {
   $consult = $db->consultas("SELECT do_presupuesto, show_all_pres FROM usuario WHERE num=".$numUsr);
@@ -70,13 +73,15 @@ foreach ($consult as $value){
   }
 
 $clientName = "";
-$clientcode = "";
+$clientCode = "";
 
 if($clientNum >0){
   $consult = $db->consultas("SELECT code,full_name FROM cliente where num = ".$clientNum);
-  foreach($consult as $value)
+  foreach($consult as $value){
     $clientCode = $value->code;
     $clientName = $value->full_name;
+  }
+    
 }
 
 $vendedorName ="";  
@@ -92,14 +97,14 @@ if($vendedorNum >0){
 $clientDefined = ($clientNum==0)? true : false;
 $vendedorDefined = ($vendedorNum==0)? true : false;
 
-$queUsuario=($showAllPed == 't')? "todos los usuarios" : $usrName;
+$queUsuario=($showAllPres == 't')? "todos los usuarios" : $usrName;
 
 $usrNameTag = '<h4 style="background-color: #6c757d; padding-botton: 14px; color: #FFF;">Lista de pedidos de '.$queUsuario.'</h4>';
 
 $optionText = ($clientNum==0)? "Seleccione Cliente..." : $clientCode.' --- '.$clientName;
 
 $inputCliTomSel ='<option value="'.$clientNum.'">'.$optionText.'</option>';
-$queryClients = ($showAllPed == 't')?  "SELECT num,code,full_name FROM cliente ORDER BY num" : "SELECT num,code,full_name FROM cliente WHERE vendedor=(select vendedor from usuario where num=".$numUsr.") ORDER BY num";
+$queryClients = ($showAllPres == 't')?  "SELECT num,code,full_name FROM cliente ORDER BY num" : "SELECT num,code,full_name FROM cliente WHERE vendedor=(select vendedor from usuario where num=".$numUsr.") ORDER BY num";
 
 $consult = $db->consultas($queryClients);
 foreach ($consult as $value)
@@ -116,8 +121,8 @@ foreach ($consult as $value)
 
 $consult = $db->consultas("SELECT ganancia_min_global,descuento_max_global FROM all_ket_values");
 foreach($consult as $value){
-  $ganan_glob = parseFloat($value->ganancia_min_global);
-  $desc_glob = parseFloat($value->descuento_max_global);
+  $ganan_glob = floatval($value->ganancia_min_global);
+  $desc_glob = floatval($value->descuento_max_global);
 }    
 ?>
 
