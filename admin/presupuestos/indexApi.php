@@ -3,9 +3,13 @@ ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
-session_start();
-require_once("../../php/dbcat.php");
-$db = new DB();
+// Iniciar session solo si no está activa
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+require_once("../../php/dbcat_async.php"); // Cambiar a dbcat_async.php
+$db = new DBAsync(); // Usar DBAsync en lugar de DB
 
 $clientNum = 0;
 $vendedorNum = 0;
@@ -43,10 +47,11 @@ $textPrecio = ($tipoPrecio == 0) ? "selec. Precios al Mayor" : "selec. Precios M
 $btnTipoPrecio = '';
 $btnsPedido = '';
 
-// Consulta de datos de usuario con validación
+// Consulta de datos de usuario con validación - USANDO DBAsync
 if ($numUsr > 0) {
     try {
-        $consult = $db->consultaSegura("SELECT do_presupuesto, show_all_pres, full_name, client, vendedor FROM usuario WHERE num = ?", [$numUsr]);
+        // Usar consultaSegura de DBAsync
+        $consult = $db->consultaSegura("SELECT do_presupuesto, show_all_pres, full_name, client, vendedor FROM usuario WHERE num = $1", [$numUsr]);
         
         if (!empty($consult)) {
             foreach ($consult as $value) {
@@ -71,7 +76,7 @@ if ($numUsr > 0) {
 $prodsCarrito = [];
 if ($numUsr > 0 && $ableToPresupuesto == 't') {
     try {
-        $consult = $db->consultaSegura("SELECT product_code, tipo_precio FROM pedido_carrito WHERE user_num = ? ORDER BY product_code", [$numUsr]);
+        $consult = $db->consultaSegura("SELECT product_code, tipo_precio FROM pedido_carrito WHERE user_num = $1 ORDER BY product_code", [$numUsr]);
         
         foreach ($consult as $value) {
             $objRtn = new stdClass();
@@ -89,7 +94,7 @@ $pedidoCheckColumn = ($numUsr > 0 && $ableToPresupuesto == 't') ? '<th data-fiel
 // Consulta de datos de cliente
 if ($clientNum > 0) {
     try {
-        $consult = $db->consultaSegura("SELECT code, full_name FROM cliente WHERE num = ?", [$clientNum]);
+        $consult = $db->consultaSegura("SELECT code, full_name FROM cliente WHERE num = $1", [$clientNum]);
         
         if (!empty($consult)) {
             foreach ($consult as $value) {
@@ -105,7 +110,7 @@ if ($clientNum > 0) {
 // Consulta de datos de vendedor - CORREGIDO (dentro del foreach)
 if ($vendedorNum > 0) {
     try {
-        $consult = $db->consultaSegura("SELECT code, full_name FROM vendedor WHERE num = ?", [$vendedorNum]);
+        $consult = $db->consultaSegura("SELECT code, full_name FROM vendedor WHERE num = $1", [$vendedorNum]);
         
         if (!empty($consult)) {
             foreach ($consult as $value) {
@@ -131,10 +136,14 @@ $inputCliTomSel = '<option value="'.$clientNum.'">'.$optionText.'</option>';
 
 $queryClients = ($showAllPres == 't') ? 
     "SELECT num, code, full_name FROM cliente ORDER BY num" : 
-    "SELECT num, code, full_name FROM cliente WHERE vendedor = (SELECT vendedor FROM usuario WHERE num = ?) ORDER BY num";
+    "SELECT num, code, full_name FROM cliente WHERE vendedor = (SELECT vendedor FROM usuario WHERE num = $1) ORDER BY num";
 
 try {
-    $consult = $db->consultaSegura($queryClients, ($showAllPres == 't') ? [] : [$numUsr]);
+    if ($showAllPres == 't') {
+        $consult = $db->consultaSegura("SELECT num, code, full_name FROM cliente ORDER BY num");
+    } else {
+        $consult = $db->consultaSegura($queryClients, [$numUsr]);
+    }
     
     foreach ($consult as $value) {
         $inputCliTomSel .= '<option value="'.$value->num.'">'.htmlspecialchars($value->code.' --- '.$value->full_name).'</option>';
