@@ -1,50 +1,64 @@
 <?php
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+
 session_start();
-require_once("../../php/dbcat_async.php"); // Usar la clase mejorada
-$db = new DBAsync();
+require_once("../../php/dbcat.php");
+$db = new DB();
 
 $clientNum = 0;
 $vendedorNum = 0;
+$usrName = "Usuario no identificado";
+$clientName = "";
+$clientCode = "";
+$vendedorName = "";
+$vendedorCode = "";
+$ganan_glob = 0;
+$desc_glob = 0;
 
-// Inicializar variables importantes
+// Validación robusta de parámetros
+$tipoPrecio = filter_var($_SESSION['prec'] ?? 0, FILTER_VALIDATE_INT, [
+    'options' => ['default' => 0, 'min_range' => 0, 'max_range' => 1]
+]);
+
+$numUsr = filter_var($_SESSION['usr_num'] ?? -1, FILTER_VALIDATE_INT) ?: -1;
+$role = filter_var($_SESSION['role'] ?? -1, FILTER_VALIDATE_INT) ?: -1;
+$onlyStock = filter_var($_SESSION['only_stock'] ?? 0, FILTER_VALIDATE_INT) ?: 0;
+
 $ableToPresupuesto = 'f';
 $showAllPres = 'f';
-$usrName = '';
-$clientCode = '';
-$clientName = '';
-$vendedorCode = '';
-$vendedorName = '';
-$prodsCarrito = [];
 
-$tipoPrecio = (isset($_SESSION['prec'])) ? intval($_SESSION['prec']) : 0;  
-$numUsr = (isset($_SESSION['usr_num'])) ? intval($_SESSION['usr_num']) : -1;
-$role = (isset($_SESSION['role'])) ? intval($_SESSION['role']) : -1;
-$onlyStock = (isset($_SESSION['only_stock'])) ? intval($_SESSION['only_stock']) : 0; 
-
+// Manejo seguro del parámetro prec
 if (isset($_GET['prec'])) {
-    $tipoPrecio = intval($_GET['prec']);
+    $tipoPrecio = filter_var($_GET['prec'], FILTER_VALIDATE_INT, [
+        'options' => ['default' => 0, 'min_range' => 0, 'max_range' => 1]
+    ]);
     $_SESSION["prec"] = $tipoPrecio;
-}  
+}
 
 $otroPrecio = ($tipoPrecio == 0) ? 1 : 0;
 $textPrecio = ($tipoPrecio == 0) ? "selec. Precios al Mayor" : "selec. Precios Minorista";
 
 $btnTipoPrecio = '';
 $btnsPedido = '';
-$showAllPed = 'f';
 
-// ✅ CONSULTA SEGURA - Información del usuario
+// Consulta de datos de usuario con validación
 if ($numUsr > 0) {
-    $consult = $db->consultaSegura(
-        "SELECT do_presupuesto, show_all_pres FROM usuario WHERE num = $1", 
-        [$numUsr]
-    );
-    
-    if (!empty($consult)) {
-        foreach ($consult as $value) {
-            $ableToPresupuesto = $value->do_presupuesto;
-            $showAllPres = $value->show_all_pres;
+    try {
+        $consult = $db->consultaSegura("SELECT do_presupuesto, show_all_pres, full_name, client, vendedor FROM usuario WHERE num = ?", [$numUsr]);
+        
+        if (!empty($consult)) {
+            foreach ($consult as $value) {
+                $ableToPresupuesto = $value->do_presupuesto;
+                $showAllPres = $value->show_all_pres;
+                $usrName = $value->full_name;
+                $clientNum = intval($value->client);
+                $vendedorNum = intval($value->vendedor);
+            }
         }
+    } catch (Exception $e) {
+        error_log("Error en consulta usuario: " . $e->getMessage());
     }
 
     if ($ableToPresupuesto == 't') {
@@ -53,114 +67,111 @@ if ($numUsr > 0) {
     }
 }
 
-// ✅ CONSULTA SEGURA - Productos en carrito
+// Consulta de productos en carrito
 $prodsCarrito = [];
 if ($numUsr > 0 && $ableToPresupuesto == 't') {
-    $consult = $db->consultaSegura(
-        "SELECT product_code, tipo_precio FROM pedido_carrito WHERE user_num = $1 ORDER BY product_code", 
-        [$numUsr]
-    );
-    
-    foreach ($consult as $value) {
-        $objRtn = new stdClass();
-        $objRtn->code = $value->product_code;
-        $objRtn->tipo_prec = intval($value->tipo_precio);
-        $prodsCarrito[] = $objRtn;
+    try {
+        $consult = $db->consultaSegura("SELECT product_code, tipo_precio FROM pedido_carrito WHERE user_num = ? ORDER BY product_code", [$numUsr]);
+        
+        foreach ($consult as $value) {
+            $objRtn = new stdClass();
+            $objRtn->code = $value->product_code;
+            $objRtn->tipo_prec = intval($value->tipo_precio);
+            $prodsCarrito[] = $objRtn;
+        }
+    } catch (Exception $e) {
+        error_log("Error en consulta carrito: " . $e->getMessage());
     }
 }
 
 $pedidoCheckColumn = ($numUsr > 0 && $ableToPresupuesto == 't') ? '<th data-field="checked" data-checkbox="true"  data-formatter="checkFormater"></th>' : '';
 
-$tituloLista = '<h2 style="background-color: #037C79; padding-bottom: 14px; color: #FFF;">Presupuestos</h2>';
-$dataUrl = "https://ketelectropartes.com/php/getListaPrecAll.php?prec=".$tipoPrecio;
-
-// ✅ CONSULTA SEGURA - Datos completos del usuario
-if ($numUsr > 0) {
-    $consult = $db->consultaSegura(
-        "SELECT full_name, client, vendedor FROM usuario WHERE num = $1", 
-        [$numUsr]
-    );
-    
-    if (!empty($consult)) {
-        foreach ($consult as $value) {
-            $usrName = $value->full_name;
-            $clientNum = intval($value->client);
-            $vendedorNum = intval($value->vendedor);
-        }
-    }
-}
-
-// ✅ CONSULTA SEGURA - Información del cliente
+// Consulta de datos de cliente
 if ($clientNum > 0) {
-    $consult = $db->consultaSegura(
-        "SELECT code, full_name FROM cliente WHERE num = $1", 
-        [$clientNum]
-    );
-    
-    if (!empty($consult)) {
-        foreach ($consult as $value) {
-            $clientCode = $value->code;
-            $clientName = $value->full_name;
+    try {
+        $consult = $db->consultaSegura("SELECT code, full_name FROM cliente WHERE num = ?", [$clientNum]);
+        
+        if (!empty($consult)) {
+            foreach ($consult as $value) {
+                $clientCode = $value->code;
+                $clientName = $value->full_name;
+            }
         }
+    } catch (Exception $e) {
+        error_log("Error en consulta cliente: " . $e->getMessage());
     }
 }
 
-// ✅ CONSULTA SEGURA - Información del vendedor
+// Consulta de datos de vendedor - CORREGIDO (dentro del foreach)
 if ($vendedorNum > 0) {
-    $consult = $db->consultaSegura(
-        "SELECT code, full_name FROM vendedor WHERE num = $1", 
-        [$vendedorNum]
-    );
-    
-    if (!empty($consult)) {
-        foreach ($consult as $value) {
-            $vendedorCode = $value->code;
-            $vendedorName = $value->full_name;
+    try {
+        $consult = $db->consultaSegura("SELECT code, full_name FROM vendedor WHERE num = ?", [$vendedorNum]);
+        
+        if (!empty($consult)) {
+            foreach ($consult as $value) {
+                $vendedorCode = $value->code;
+                $vendedorName = $value->full_name; // AHORA DENTRO del foreach
+            }
         }
+    } catch (Exception $e) {
+        error_log("Error en consulta vendedor: " . $e->getMessage());
     }
 }
 
-$clientDefined = ($clientNum == 0);
-$vendedorDefined = ($vendedorNum == 0);
+// Variables booleanas corregidas
+$clientDefined = ($clientNum > 0);
+$vendedorDefined = ($vendedorNum > 0);
 
-$queUsuario = ($showAllPres == 't') ? "todos los usuarios" : $usrName;
+$queUsuario = ($showAllPres == 't') ? "todos los usuarios" : htmlspecialchars($usrName);
 $usrNameTag = '<h4 style="background-color: #6c757d; padding-bottom: 14px; color: #FFF;">Lista de pedidos de '.$queUsuario.'</h4>';
 
-$optionText = ($clientNum == 0) ? "Seleccione Cliente..." : $clientCode.' --- '.$clientName;
+// Preparar opciones de clientes
+$optionText = ($clientNum == 0) ? "Seleccione Cliente..." : htmlspecialchars($clientCode.' --- '.$clientName);
 $inputCliTomSel = '<option value="'.$clientNum.'">'.$optionText.'</option>';
 
-// ✅ CONSULTA SEGURA - Lista de clientes
-if ($numUsr > 0) {
-    $queryClients = ($showAllPres == 't') ? 
-        "SELECT num, code, full_name FROM cliente ORDER BY num" : 
-        "SELECT num, code, full_name FROM cliente WHERE vendedor = (SELECT vendedor FROM usuario WHERE num = $1) ORDER BY num";
-    
-    $consult = $db->consultaSegura($queryClients, [$numUsr]);
+$queryClients = ($showAllPres == 't') ? 
+    "SELECT num, code, full_name FROM cliente ORDER BY num" : 
+    "SELECT num, code, full_name FROM cliente WHERE vendedor = (SELECT vendedor FROM usuario WHERE num = ?) ORDER BY num";
+
+try {
+    $consult = $db->consultaSegura($queryClients, ($showAllPres == 't') ? [] : [$numUsr]);
     
     foreach ($consult as $value) {
-        $inputCliTomSel .= '<option value="'.$value->num.'">'.$value->code.' --- '.$value->full_name.'</option>';
+        $inputCliTomSel .= '<option value="'.$value->num.'">'.htmlspecialchars($value->code.' --- '.$value->full_name).'</option>';
     }
+} catch (Exception $e) {
+    error_log("Error en consulta clientes: " . $e->getMessage());
 }
 
-$optionText = ($vendedorNum == 0) ? "Seleccione Vendedor..." : $vendedorCode.' --- '.$vendedorName;
+// Preparar opciones de vendedores
+$optionText = ($vendedorNum == 0) ? "Seleccione Vendedor..." : htmlspecialchars($vendedorCode.' --- '.$vendedorName);
 $inputVenTomSel = '<option value="'.$vendedorNum.'">'.$optionText.'</option>';
 
-// ✅ CONSULTA SEGURA - Lista de vendedores
-$consult = $db->consultaSegura("SELECT num, code, full_name FROM vendedor ORDER BY num", []);
-foreach ($consult as $value) {
-    $inputVenTomSel .= '<option value="'.$value->num.'">'.$value->code.' --- '.$value->full_name.'</option>';
+try {
+    $consult = $db->consultaSegura("SELECT num, code, full_name FROM vendedor ORDER BY num");
+    
+    foreach ($consult as $value) {
+        $inputVenTomSel .= '<option value="'.$value->num.'">'.htmlspecialchars($value->code.' --- '.$value->full_name).'</option>';
+    }
+} catch (Exception $e) {
+    error_log("Error en consulta vendedores: " . $e->getMessage());
 }
 
-// ✅ CONSULTA SEGURA - Valores globales
-$ganan_glob = 0;
-$desc_glob = 0;
-$consult = $db->consultaSegura("SELECT ganancia_min_global, descuento_max_global FROM all_ket_values", []);
-if (!empty($consult)) {
-    foreach ($consult as $value) {
-        $ganan_glob = floatval($value->ganancia_min_global);
-        $desc_glob = floatval($value->descuento_max_global);
+// Consulta de valores globales
+try {
+    $consult = $db->consultaSegura("SELECT ganancia_min_glob, descuento_max_glob FROM all_ket_values");
+    
+    if (!empty($consult)) {
+        foreach ($consult as $value) {
+            $ganan_glob = floatval($value->ganancia_min_glob);
+            $desc_glob = floatval($value->descuento_max_glob);
+        }
     }
+} catch (Exception $e) {
+    error_log("Error en consulta all_ket_values: " . $e->getMessage());
 }
+
+$tituloLista = '<h2 style="background-color: #037C79; padding-bottom: 14px; color: #FFF;">Presupuestos</h2>';
 ?>
 
 <!doctype html>
@@ -170,17 +181,20 @@ if (!empty($consult)) {
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <title>Ket-Listas de Precios</title>
 
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css">
     <link rel="stylesheet" href="https://unpkg.com/bootstrap-table@1.22.1/dist/bootstrap-table.min.css">
-    <link href="https://unpkg.com/bootstrap-table@1.22.1/dist/bootstrap-table.min.css" rel="stylesheet">
-    <script src="https://unpkg.com/bootstrap-table@1.22.1/dist/bootstrap-table.min.js"></script>
-
     <link href="https://cdn.jsdelivr.net/npm/tom-select@2.0.0-rc.4/dist/css/tom-select.css" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/tom-select@2.0.0-rc.4/dist/js/tom-select.complete.min.js"></script>
 
     <script type="text/javascript">
-        var roleNum = <?php echo $role;?>;  
+        var roleNum = <?php echo $role; ?>;  
+        var client_num = <?php echo $clientNum; ?>;
+        var vend_num = <?php echo $vendedorNum; ?>;
+        var client_code = <?php echo json_encode($clientCode); ?>;
+        var client_name = <?php echo json_encode($clientName); ?>;
+        var vend_code = <?php echo json_encode($vendedorCode); ?>;
+        var vend_name = <?php echo json_encode($vendedorName); ?>;
+        var codes_carrito = <?php echo json_encode($prodsCarrito); ?>;
     </script>
 
     <style>
@@ -188,95 +202,71 @@ if (!empty($consult)) {
             text-align: center;
             padding: 0px 0px;
         }
-
         .nav-link {
             color: #003272;
         }
-        
         span {
             display: inline-block;
             padding: 10px 20px;
         }
-        
         .icon-green {
             color: green;
         }
-        
         .icon-yellow {
             color: yellow;
         }
-        
         .icon-red {
             color: red;
         }
-        
         .icon-large {
             font-size: 25px;
         }
-        
         .icon-dark-blue {
             color: #003272;
         }
-        
         .dropend .dropdown-toggle {
             color: #003272;
             margin-left: 1em;
         }
-        
         .dropdown-item:hover {
             background-color: #003272;
             color: #fff;
         }
-        
         .dropdown .dropdown-menu {
             display: none;
         }
-        
         .dropdown:hover > .dropdown-menu,
         .dropend:hover > .dropdown-menu {
             display: block;
             margin-top: 0.125em;
             margin-left: 0.125em;
         }
-        
         @media screen and (min-width: 769px) {
             .dropend:hover > .dropdown-menu {
                 position: absolute;
                 top: 0;
                 left: 100%;
             }
-            
             .dropend .dropdown-toggle {
                 margin-left: 0.5em;
             }
         }
-
-        a:link { text-decoration: none; } 
-        a:visited { text-decoration: none; } 
-        a:hover { text-decoration: none; } 
-        a:active { text-decoration: none; }
-
+        a:link, a:visited, a:hover, a:active { 
+            text-decoration: none; 
+        }
         .fixed-table-toolbar .search {
             width: 100%;
         }
-
         input::-webkit-outer-spin-button,
         input::-webkit-inner-spin-button {
             -webkit-appearance: none;
             margin: 0;
         }
-
         input[type="number"] {
             -moz-appearance: textfield;
         }
-
         #Cantidad {
             width: 75px;
-        }
-
-        .loading {
-            opacity: 0.6;
-            pointer-events: none;
         }
     </style>
 </head>
@@ -299,13 +289,15 @@ if (!empty($consult)) {
 <div class="col text-center">
     <div class="col text-center" style="background-color: #DDD;">
         <?php echo $tituloLista; ?>
-
+        
         <div id="toolbar" class="select">
             <select class="form-control"></select> 
         </div>
 
         <table
-            id="table"
+            id="table-main"
+            class="bootstrap-table"
+            data-table-type="main"
             data-toggle="table"
             data-show-export="false"
             data-click-to-select="false"
@@ -356,7 +348,7 @@ if (!empty($consult)) {
     </div>
 </div>
 
-<!-- Modal Definir Pedido -->
+<!-- Modal Hacer Pedido -->
 <div class="modal fade" id="ModalMakePedido" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
     <div class="modal-dialog" style="max-width: 90%;" role="document">
         <div class="modal-content">
@@ -387,7 +379,9 @@ if (!empty($consult)) {
                 </div> 
 
                 <table
-                    id="table-pedido"
+                    id="table-carrito"
+                    class="bootstrap-table"
+                    data-table-type="make-pedido"
                     data-toggle="table"  
                     data-height="300"
                     data-checkbox-header="false"
@@ -416,7 +410,7 @@ if (!empty($consult)) {
                     <input type="text" aria-label="Last name" class="form-control" id="comentarioPedido">
                 </div>
 
-                <button type="button" class="btn btn-primary btn-sm" id="reg-pedido" onClick="registrarPedido()" style="margin: 10px 40px 1px;">
+                <button type="button" class="btn btn-primary btn-sm" id="reg-pedido" onClick="registrarPedido()" style="margin: 10px 40px 1px;" disabled>
                     <i class="bi bi-cart-check"></i> Registrar Pedido
                 </button>
             </div>
@@ -449,7 +443,9 @@ if (!empty($consult)) {
                 </div>
 
                 <table 
-                    id="table-pedidos-show"
+                    id="table-pedidos"
+                    class="bootstrap-table"
+                    data-table-type="show-pedido"
                     data-show-export="true"
                     data-click-to-select="true"
                     data-toolbar="#toolbar"
@@ -460,7 +456,7 @@ if (!empty($consult)) {
                     data-height="300"
                     data-check-on-init="true"
                     data-url="../../php/getDataOnePedido.php?num=0"
-                    data-row-style='lastRowStyle'>
+                    data-row-style="lastRowStyle">
                     <thead>
                         <tr>
                             <th data-field="code" data-halign="center" data-align="left">CODIGO</th>
@@ -482,46 +478,90 @@ if (!empty($consult)) {
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/jquery/dist/jquery.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://unpkg.com/bootstrap-table@1.22.1/dist/bootstrap-table.min.js"></script>
 <script src="https://unpkg.com/bootstrap-table@1.22.1/dist/extensions/mobile/bootstrap-table-mobile.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/tableexport.jquery.plugin@1.10.21/tableExport.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/tableexport.jquery.plugin@1.10.21/libs/jsPDF/jspdf.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/tableexport.jquery.plugin@1.10.21/libs/jsPDF-AutoTable/jspdf.plugin.autotable.js"></script>
 <script src="https://unpkg.com/bootstrap-table@1.22.1/dist/extensions/export/bootstrap-table-export.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/tom-select@2.0.0-rc.4/dist/js/tom-select.complete.min.js"></script>
 <script src="../../js/jquery.redirect.js" type="text/javascript"></script>
-   
+
 <script type="text/javascript">
-    // Variables globales
-    var client_num = <?php echo $clientNum; ?>;
-    var vend_num = <?php echo $vendedorNum; ?>;
-    var client_code = '<?php echo addslashes($clientCode); ?>';
-    var client_name = '<?php echo addslashes($clientName); ?>';
-    var vend_code = '<?php echo addslashes($vendedorCode); ?>';
-    var vend_name = '<?php echo addslashes($vendedorName); ?>';
-    var codes_carrito = <?php echo json_encode($prodsCarrito); ?>;
+    // Variables globales para las tablas
+    var $tableMain = $('#table-main');
+    var $tableShowPedido = $('#table-pedidos');
+    var $tableMakePedido = $('#table-carrito');
+    
+    var ctrlClientSel, ctrlVendedorSel;
 
-    // ========== FUNCIONES UTILITARIAS ASYNC/AWAIT ==========
-    async function apiCall(url, data = {}) {
-        try {
-            const response = await $.post(url, data);
-            return response;
-        } catch (error) {
-            console.error('Error en API call:', error);
-            throw error;
+    // Event handler simplificado y corregido
+    var eventHandCliVend = function() {
+        var selectedClient = parseInt(ctrlClientSel.getValue()) || 0;
+        var selectedVendedor = parseInt(ctrlVendedorSel.getValue()) || 0;
+        
+        console.log("Selected client num: " + selectedClient + ", vendedor num: " + selectedVendedor);
+        
+        // Habilitar botón solo si ambos están seleccionados
+        var bothSelected = (selectedClient > 0 && selectedVendedor > 0);
+        $('#ModalMakePedido #reg-pedido').prop('disabled', !bothSelected);
+    };
+
+    // Inicialización de Tom Select
+    $(document).ready(function() {
+        ctrlClientSel = new TomSelect("#clients-tom-sel", {
+            sortField: { field: "text", direction: "asc" },
+            onChange: eventHandCliVend,
+            create: true,
+            createOnBlur: true
+        });
+
+        ctrlVendedorSel = new TomSelect("#vendedores-tom-sel", {
+            sortField: { field: "text", direction: "asc" },
+            onChange: eventHandCliVend,
+            create: true,
+            createOnBlur: true
+        });
+
+        // Inicializar tabla de mostrar pedidos
+        $tableShowPedido.bootstrapTable({
+            exportDataType: 'all',
+            exportTypes: ['excel', 'pdf'],
+            exportOptions: { fileName: 'default_filename' },
+            jspdf: {
+                orientation: 'p',
+                margins: { left:10, right:10, top:20, bottom:20 },
+                autotable: { widths: 'auto' }
+            }
+        });
+    });
+
+    $(window).on("load", function() {
+        console.log("on load Tom Select client num: " + ctrlClientSel.getValue());
+        console.log("from php client num: " + client_num + " vendedor num: " + vend_num);
+
+        // Mostrar productos en carrito
+        for (i = 0; i < codes_carrito.length; i++) {
+            console.log((i+1) + ": " + codes_carrito[i].code + " tipo prec:" + codes_carrito[i].tipo_prec);
         }
-    }
 
-    function setLoading(element, isLoading) {
-        if (isLoading) {
-            element.addClass('loading');
-            element.prop('disabled', true);
-        } else {
-            element.removeClass('loading');
-            element.prop('disabled', false);
+        // Configurar valores por defecto y deshabilitar si es necesario
+        if (client_num > 0) {
+            ctrlClientSel.setValue(client_num);
+            ctrlClientSel.disable();
         }
-    }
+        
+        if (vend_num > 0) {
+            ctrlVendedorSel.setValue(vend_num);
+            ctrlVendedorSel.disable();
+        }
 
+        // Verificar si ambos están definidos
+        eventHandCliVend();
+    });
+
+    // Función debounce optimizada
     function debounce(func, timeout = 1000) {
         let timer;
         return (...args) => {
@@ -530,198 +570,28 @@ if (!empty($consult)) {
         };
     }
 
-    // ========== INICIALIZACIÓN ==========
-    $(document).ready(function() {
-        initializeTables();
-        initializeTomSelect();
-        setupEventHandlers();
-    });
-
-    function initializeTables() {
-        $('#table-pedidos-show').bootstrapTable({
-            exportDataType: 'all',
-            exportTypes: ['excel', 'pdf'],
-            exportOptions: {
-                fileName: 'default_filename'
-            },
-            jspdf: {
-                orientation: 'p',
-                margins: { left: 10, right: 10, top: 20, bottom: 20 },
-                autotable: { widths: 'auto' }
-            }
-        });
-
-        $('#table').bootstrapTable({
-            checkboxHeader: false
-        });
-    }
-
-    function initializeTomSelect() {
-        window.ctrlClientSel = new TomSelect("#clients-tom-sel", {
-            sortField: {
-                field: "text",
-                direction: "asc"
-            },
-            onChange: handleClientVendorChange,
-            create: false
-        });
-
-        window.ctrlVendedorSel = new TomSelect("#vendedores-tom-sel", {
-            sortField: {
-                field: "text",
-                direction: "asc"
-            },
-            onChange: handleClientVendorChange,
-            create: false
-        });
-
-        if (client_num > 0) {
-            ctrlClientSel.setValue(client_num.toString());
-        }
-        if (vend_num > 0) {
-            ctrlVendedorSel.setValue(vend_num.toString());
-        }
-
-        handleClientVendorChange();
-    }
-
-    function handleClientVendorChange() {
-        const selectedClient = parseInt(ctrlClientSel.getValue()) || 0;
-        const selectedVendedor = parseInt(ctrlVendedorSel.getValue()) || 0;
-        
-        $('#ModalMakePedido #reg-pedido').prop('disabled', selectedClient === 0 || selectedVendedor === 0);
-    }
-
-    function setupEventHandlers() {
-        $('#table').on('check.bs.table', async function(e, row) {
-            await handleProductSelect(row, true);
-        }).on('uncheck.bs.table', async function(e, row) {
-            await handleProductSelect(row, false);
-        });
-
-        $('#inputGroupPedidos').change(async function() {
-            const selectedItem = $(this).val();
-            await loadPedidoData(selectedItem);
-        });
-
-        $('.search input').attr('placeholder', 'Buscar...');
-        
-        $('#myModal').on("hide.bs.modal", function() {
-            $(".modal-body").html("");
-        });
-    }
-
-    async function handleProductSelect(row, isSelected) {
-        const action = isSelected ? 1 : 0;
-        
-        try {
-            const result = await apiCall("../../php/insDelOneProdCarrito.php", {
-                action: action,
-                code: row.code
+    // Función para refrescar tabla con Promise
+    function refreshCarritoTable() {
+        return new Promise((resolve) => {
+            $tableMakePedido.bootstrapTable('refresh');
+            $tableMakePedido.one('load-success.bs.table', function() {
+                resolve();
             });
-            
-            console.log(`${isSelected ? 'Added' : 'Removed'} product ${row.code}: ${result}`);
-            
-            if (!isSelected && result == 1) {
-                const selections = $('#table').bootstrapTable('getSelections');
-                if (selections.length === 0) {
-                    backToSelfAlt();
-                }
-            }
-            
-        } catch (error) {
-            console.error('Error handling product selection:', error);
-        }
-    }
-
-    // ========== FUNCIONES PRINCIPALES ==========
-    async function registrarPedido() {
-        const btnRegistrar = $('#reg-pedido');
-        
-        try {
-            setLoading(btnRegistrar, true);
-            
-            const selectedClientNum = parseInt(ctrlClientSel.getValue());
-            const selectedVendedorNum = parseInt(ctrlVendedorSel.getValue());
-            
-            if (selectedClientNum === 0 || selectedVendedorNum === 0) {
-                alert('Por favor, seleccione cliente y vendedor');
-                return;
-            }
-            
-            const pedidoData = await prepararDatosPedido(selectedClientNum);
-            
-            await apiCall("../../php/insertPedidoGeneral.php", {
-                data: JSON.stringify(pedidoData)
-            });
-            
-            await apiCall("../../php/insDelOneProdCarrito.php", { action: 2 });
-            
-            $('#ModalMakePedido').modal('hide');
-            backToSelfAlt();
-            
-        } catch (error) {
-            console.error('Error al registrar pedido:', error);
-            alert('Error al registrar el pedido. Por favor, intente nuevamente.');
-        } finally {
-            setLoading(btnRegistrar, false);
-        }
-    }
-
-    async function prepararDatosPedido(selectedClientNum) {
-        const rows = $('#table-pedido').bootstrapTable('getData') || [];
-        const productos = [];
-        
-        const coments = [];
-        $('#ModalMakePedido #Comentario').each(function(index, valor) {
-            coments.push(valor.value);
         });
-        
-        for (let i = 0; i < rows.length; i++) {
-            const producto = {
-                code: rows[i].code,
-                amount: parseInt(rows[i].cantidad) || 0,
-                precio: parseFloat(rows[i].prec_min) || 0,
-                comentario: coments[i] || rows[i].name || '',
-                tipo_prec: 0
-            };
-            productos.push(producto);
-        }
-        
-        return {
-            productos: productos,
-            cliente: selectedClientNum,
-            comentario: document.getElementById('comentarioPedido').value || ''
-        };
     }
 
-    async function showPedidoClient() {
-        try {
-            const pedidosHTML = await apiCall("../../php/getInputGroupPedidosClient.php");
-            $('#ModalShowPedido #inputGroupPedidos').html(pedidosHTML);
-            $('#ModalShowPedido').modal({ show: true });
-        } catch (error) {
-            console.error('Error al cargar pedidos:', error);
-            alert('Error al cargar los pedidos del cliente.');
-        }
-    }
-
-    async function loadPedidoData(selectedItem) {
-        const newUrl = `../../php/getDataOnePedido.php?num=${selectedItem}`;
-        $('#ModalShowPedido #table-pedidos-show').bootstrapTable('refresh', { url: newUrl });
-    }
-
-    // ========== FUNCIONES FORMATER ==========
+    // Funciones de formateo
     function fotoFormater(value, row) {
         var strReturn = '<i class="bi bi-x-circle-fill icon-red" title="no disponible"></i>';
-        if (value != 'empty.jpg')
-            strReturn = '<a class="ver" data-bs-toggle="modal" data-bs-target="#myModal" href="#" onClick="verFoto(\''+row.code+'\')" title="click para ver"><i class="bi bi-check-circle-fill icon-yellow"></i></a>'
+        if (value != 'empty.jpg') {
+            strReturn = '<a class="ver" data-bs-toggle="modal" data-bs-target="#myModal" href="#" onClick="verFoto(\''+row.code+'\')" title="click para ver"><i class="bi bi-check-circle-fill icon-yellow"></i></a>';
+        }
         return strReturn;
     }
 
     function checkFormater(value, row) {
-        if (codes_carrito && codes_carrito.length > 0) {
-            for (let i = 0; i < codes_carrito.length; i++) {
+        if (codes_carrito.length > 0) {
+            for (i = 0; i < codes_carrito.length; i++) {
                 if (row.code === codes_carrito[i].code) {
                     return { checked: true };
                 }
@@ -731,136 +601,280 @@ if (!empty($consult)) {
     }
 
     function precioFormatergen(value, row) {
-        return '$' + (value ? value.toString().replace(/[.]/, ",") : '0');
+        return '$' + value.replace(/[.]/, ",");
+    }
+
+    function precioMayorFormater(value, row) {
+        if (value == 0) return '---';
+        return '$' + value.replace(/[.]/, ",");
     }
 
     function precioFormaterPresup(value, row) {
-        if (!value) return '$0';
-        const rowMonto = parseFloat(row.monto) || 0;
-        const currentValue = parseFloat(value) || 0;
-        if (rowMonto * 2 < currentValue)
-            return '<i style="color: #720000ff; font-style: normal;font-weight: bold">$' + value.toString().replace(/[.]/, ",") + '</i>';
-        else
-            return '$' + value.toString().replace(/[.]/, ",");
+        if (parseFloat(row.monto) * 2 < parseFloat(value)) {
+            return '<i style="color: #720000ff; font-style: normal;font-weight: bold">$'+value.replace(/[.]/, ",")+'</i>';
+        }
+        return '$'+value.replace(/[.]/, ",");
     }
 
     function precioFormaterPed(value, row) {
-        if (!value || parseFloat(value) == 0)
+        if (parseFloat(value) == 0) {
             return '<i style="color: #003272; font-style: normal;font-weight: bold">TOTAL:</i>';
-        else
-            return '$' + value.toString().replace(/[.]/, ",");
+        }
+        return '$'+value.replace(/[.]/, ",");
     }
 
     function montoFormater(value, row) {
-        const cantidad = parseInt(row.cantidad) || 0;
-        const precio = parseFloat(row.prec_min) || 0;
-        const monto = cantidad * precio;
-        return '$' + monto.toFixed(3).toString().replace(/[.]/, ",");
+        currPrec = (row.check_prec == 0) ? row.prec_min : row.prec_may;
+        return '$' + ((parseInt(row.cantidad) * parseFloat(currPrec)).toFixed(3)).toString().replace(/[.]/, ",");
     }
 
     function montoFormaterPed(value, row) {
-        if (value && parseFloat(value))
-            return '$' + parseFloat(value).toFixed(3).toString().replace(/[.]/, ",");
-        else {
-            const cantidad = parseInt(row.cantidad) || 0;
-            const precio = parseFloat(row.precio) || 0;
-            const monto = cantidad * precio;
-            return '$' + monto.toFixed(3).toString().replace(/[.]/, ",");
+        if (parseFloat(value)) {
+            return '$' + (parseFloat(value).toFixed(3)).toString().replace(/[.]/, ",");
         }
+        return '$'+((parseInt(row.cantidad)*parseFloat(row.precio)).toFixed(3)).toString().replace(/[.]/, ",");
     }
 
     function cantidadFormater(value, row) {
-        return '<input class="form-control" id="Cantidad" type="number" min="0" value="' + (value || 0) + '" autofocus onfocus="this.select()" oninput="processCatidadCambia()"/>';
+        return '<input class="form-control" id="Cantidad" type="number" min="0" value="'+value+'" autofocus onfocus="this.select()" oninput="processCatidadCambia()"/>';
     }
 
     function comentarioFormater(value, row) {
-        return '<input class="form-control" id="Comentario" type="text" value="' + (row.name || '') + '" autofocus onfocus="this.select()" />';
+        return '<input class="form-control" id="Comentario" type="text" value="'+row.name+'" autofocus onfocus="this.select()" />';
     }
 
     function edoFormater(value, row) {
-        const cantidad = parseInt(row.cantidad) || 0;
-        if (cantidad > 0)
+        if (row.cantidad > 0) {
             return '<i class="bi bi-check-circle-fill icon-green" title="normal"></i>';
-        else
-            return '<i class="bi bi-x-circle-fill icon-red" title="quitar de pedido"></i>';
+        }
+        return '<i class="bi bi-x-circle-fill icon-red" title="quitar de pedido"></i>';
     }
 
     function rowStyle(row, index) {
         if (index % 2 === 0) {
-            return {
-                css: {
-                    color: 'white',
-                    background: '#037C79'
-                }
-            }
-        } else {
-            return {
-                css: {
-                    color: 'black',
-                    background: '#00CCCC'
-                }
-            }
+            return { css: { color: 'white', background: '#037C79' } };
         }
+        return { css: { color: 'black', background: '#00CCCC' } };
     }
 
     function lastRowStyle(row, index) {
         if (index % 2 === 0) {
-            return {
-                css: {
-                    color: 'black',
-                    background: '#EEEEEE'
-                }
-            }
-        } else {
-            return {
-                css: {
-                    color: 'black',
-                    background: '#DDDDDD'
-                }
-            }
+            return { css: { color: 'black', background: '#EEEEEE' } };
         }
+        return { css: { color: 'black', background: '#DDDDDD' } };
     }
 
+    // Funciones de navegación
     function verFoto(val) {
-        const urlString = "../../php/getOneProductPhoto.php?code=" + val;
+        urlString = "../../php/getOneProductPhoto.php?code=" + val;
         $('.modal-body').load(urlString, function() {
-            $('#myModal').modal({ show: true });
+            $('#myModal').modal({show:true});
         });
     }
 
+    function backHome() {      
+        urlString = "../../";
+        window.location.href = urlString;
+    }
+
     function backToSelfAlt() {
-        location.reload();
+        window.location.reload();
     }
 
-    function backHome() {
-        window.location.href = "../../";
-    }
-
+    // Funciones de pedidos
     function getSelected() {
-        $('#table-pedido').bootstrapTable('refresh');
-        $('#ModalMakePedido #MontoTotal').html('Total: $');
-        $('#ModalMakePedido').modal({ show: true });
+        refreshCarritoTable().then(() => {
+            updateTotal();
+        });
+        $('#ModalMakePedido').modal({show:true});
     }
+
+    function registrarPedido() {
+        var selectedClientNum = parseInt(ctrlClientSel.getValue()) || 0;
+        var selectedVendedorNum = parseInt(ctrlVendedorSel.getValue()) || 0;
+
+        if (selectedClientNum === 0 || selectedVendedorNum === 0) {
+            alert('Por favor seleccione cliente y vendedor');
+            return;
+        }
+
+        var rows = $tableMakePedido.bootstrapTable('getData');
+        const pedido = {};
+        productos = [];
+        coments = [];
+
+        $.each($('#ModalMakePedido #table #Comentario'), function(index, valor) {
+            coments.push(valor.value);
+        });
+
+        for (let i = 0; i < rows.length; i++) {
+            if (parseInt(rows[i].cantidad) > 0) {
+                const producto = {};
+                producto.code = rows[i].code;
+                producto.amount = parseInt(rows[i].cantidad);
+                producto.precio = (rows[i].check_prec) ? parseFloat(rows[i].prec_may) : parseFloat(rows[i].prec_min);
+                producto.comentario = coments[i] || rows[i].comentario;
+                producto.tipo_prec = (rows[i].check_prec) ? 1 : 0;
+                productos.push(producto);
+            }
+        }
+
+        if (productos.length === 0) {
+            alert('No hay productos en el pedido');
+            return;
+        }
+
+        pedido.productos = productos;
+        pedido.cliente = selectedClientNum;
+        pedido.vendedor = selectedVendedorNum;
+        pedido.comentario = document.getElementById('comentarioPedido').value;
+
+        var paramJSON = JSON.stringify(pedido);
+        
+        $.post("../../php/insertPedidoGeneral.php",
+            { data: paramJSON }, 
+            function(data, status) {
+                console.log('insertPedidoGeneral data recibed from Srv: ' + data + ' status: ' + status);
+                if (status === 'success' && data == '1') {
+                    $.post("../../php/insDelOneProdCarrito.php",
+                        { action: 2 }, 
+                        function(data, status) {
+                            console.log('delete all products messg from Srv: ' + data + ' status: ' + status);
+                            $('#ModalMakePedido').modal('hide');
+                            backToSelfAlt();
+                        });
+                } else {
+                    alert('Error al registrar el pedido');
+                }
+            }).fail(function() {
+                alert('Error de conexión');
+            });
+    }
+
+    function catidadCambia() {
+        var rows = $tableMakePedido.bootstrapTable('getData');
+        var montos = [];
+        var cantidades = [];
+        var codes = [];
+
+        for (let i = 0; i < rows.length; i++) {
+            currPrecio = (rows[i].check_prec == 0) ? rows[i].prec_min : rows[i].prec_may;
+            montos.push(parseFloat(rows[i].monto));
+            cantidades.push(parseInt(rows[i].cantidad));
+            codes.push(rows[i].code);
+        }
+
+        $.each($('#ModalMakePedido #table #Cantidad'), function(index, valor) {
+            if (cantidades[index] != parseInt(valor.value)) {
+                $.post("../../php/updCantOneProdCarrito.php",
+                { 
+                    cantidad: valor.value, 
+                    code: codes[index] 
+                }, 
+                function(data, status) {
+                    if (data == 1) {
+                        refreshCarritoTable().then(() => {
+                            updateTotal();
+                        });
+                    }
+                });
+            }
+        });
+    }
+
+    const processCatidadCambia = debounce(() => catidadCambia());
 
     function updateTotal() {
-        const rows = $('#table-pedido').bootstrapTable('getData') || [];
-        let total = 0;
+        var rows = $tableMakePedido.bootstrapTable('getData');
+        var montos = [];
         
         for (let i = 0; i < rows.length; i++) {
-            const cantidad = parseInt(rows[i].cantidad) || 0;
-            const precio = parseFloat(rows[i].prec_min) || 0;
-            total += cantidad * precio;
+            currPrecio = (rows[i].check_prec == 0) ? rows[i].prec_min : rows[i].prec_may;
+            currMonto = parseFloat(currPrecio) * parseInt(rows[i].cantidad);
+            montos.push(currMonto);
         }
         
-        $('#ModalMakePedido #MontoTotal').html('Total: $' + total.toFixed(3).replace('.', ','));
+        var currTot = (Math.round(montos.reduce((a, b) => a + b, 0) * 1000) / 1000).toFixed(3).toString().replace('.', ',');
+        $('#ModalMakePedido #MontoTotal').html('Total: $' + currTot);
     }
 
-    const processCatidadCambia = debounce(() => {
-        updateTotal();
-    });
+    function showPedidoClient() {
+        $.post("../../php/getInputGroupPedidosClient.php", {}, 
+            function(data, status) {
+                $('#ModalShowPedido #inputGroupPedidos').html(data);
+                $('#ModalShowPedido').modal({show:true});
+            });
 
-    $(window).on("load", function() {
-        console.log("Página cargada correctamente");
+        $.post("../../php/getMaxNumStsPedido.php", {}, 
+            function(data, status) {
+                if (status === 'success') {
+                    const obj = JSON.parse(data);
+                    numPedido = obj.num_pedido;
+                    pedSts = obj.ped_sts;
+                    $tableShowPedido.bootstrapTable('refreshOptions', {
+                        exportOptions: {
+                            fileName: function() {
+                                return 'ket' + numPedido;
+                            }
+                        }  
+                    });
+                }
+            });
+    }
+
+    // Event handlers de las tablas
+    $(function() {
+        $tableMain.bootstrapTable({})
+            .on('check.bs.table', function(e, row) {
+                $.post("../../php/insDelOneProdCarrito.php", { action: 1, code: row.code }, 
+                    function(data, status) {
+                        console.log('insert one prod. messg from Srv: ' + data);
+                    });
+                eventHandCliVend();
+            })
+            .on('uncheck.bs.table', function(e, row) {
+                $.post("../../php/insDelOneProdCarrito.php", { action: 0, code: row.code }, 
+                    function(data, status) {
+                        console.log('delete one prod. messg from Srv: ' + data);
+                        if (data == 1) {
+                            if ($tableMain.bootstrapTable('getSelections').length == 0) {
+                                backToSelfAlt();
+                            }
+                        }
+                    });
+            });
+
+        $('#inputGroupPedidos').change(function() {
+            var selectedItem = $('#inputGroupPedidos').val();
+            var newUrl = '../../php/getDataOnePedido.php?num=' + selectedItem;
+            $tableShowPedido.bootstrapTable('refresh', { url: newUrl });
+
+            $.post("../../php/getNumStsPedido.php", { num: selectedItem }, 
+                function(data, status) {
+                    if (status === 'success') {
+                        const obj = JSON.parse(data);
+                        numPedido = obj.num_pedido;
+                        pedSts = obj.ped_sts;
+                        $tableShowPedido.bootstrapTable('refreshOptions', {
+                            exportOptions: {
+                                fileName: function() {
+                                    return 'ket' + numPedido;
+                                }
+                            }  
+                        });
+                    }
+                });
+        });
+
+        // Mejorar la barra de búsqueda
+        $('.float-right.search.btn-group').find('input').attr('placeholder', '....');
+        $('.float-right.search.btn-group').find('input').wrap("<div class='input-group' id='awsearch'> </div>"); 
+        $('#awsearch').prepend("<span class='input-group-addon'><i class='bi bi-search icon-dark-blue'></i> Buscar</span>");
+
+        // Limpiar modales al cerrar
+        $('#myModal').on("hide.bs.modal", function() {
+            $(".modal-body").html("");
+        });
     });
 </script>
 </body>
