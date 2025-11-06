@@ -225,6 +225,15 @@ $tituloLista = '<h2 style="background-color: #037C79; padding-bottom: 14px; colo
         .precio-input, .tiempo-input {
             width: 100px;
         }
+        .form-check {
+            margin-bottom: 2px;
+        }
+        .form-check-label {
+            font-size: 0.8rem;
+        }
+        .badge {
+            font-size: 0.75rem;
+        }
     </style>
 </head>
 
@@ -307,7 +316,7 @@ $tituloLista = '<h2 style="background-color: #037C79; padding-bottom: 14px; colo
 
 <!-- Modal Definir Presupuesto -->
 <div class="modal fade" id="ModalMakePedido" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-    <div class="modal-dialog" style="max-width: 90%;" role="document">
+    <div class="modal-dialog" style="max-width: 95%;" role="document">
         <div class="modal-content">
             <div class="modal-header">
                 <button type="button" class="close" data-bs-dismiss="modal">&times;</button>
@@ -338,36 +347,39 @@ $tituloLista = '<h2 style="background-color: #037C79; padding-bottom: 14px; colo
                     class="bootstrap-table"
                     data-table-type="make-pedido"
                     data-toggle="table"  
-                    data-height="300"
+                    data-height="400"
                     data-checkbox-header="false"
                     data-url="../../php/getCarritoCurrentData.php">
                     <thead>
                         <tr>
-                            <th data-field="edo" data-formatter="edoFormater"></th>
-                            <th data-field="code" data-halign="center" data-align="left">Código</th>
-                            <th data-field="cantidad" data-halign="center" data-align="right" data-width="125" data-formatter="cantidadFormater">Cantidad</th>
-                            <th data-field="unidad" data-halign="center" data-align="left">Unidad</th>
-                            <th data-field="precio" data-halign="center" data-align="right" data-width="125" data-formatter="precioFormaterPresupModal">Precio</th>
-                            <th data-field="tiempo_entrega" data-halign="center" data-align="right" data-width="125" data-formatter="tiempoEntregaFormater">Tiempo Entrega</th>
-                            <th data-field="monto" data-halign="center" data-align="right" data-formatter="montoFormater">Monto</th>
-                            <th data-field="comentario" data-halign="center" data-align="left" data-width="500" data-formatter="comentarioFormater">Descripción</th>
+                            <th data-field="edo" data-formatter="edoFormater" data-width="40"></th>
+                            <th data-field="code" data-halign="center" data-align="left" data-width="100">Código</th>
+                            <th data-field="name" data-halign="center" data-align="left" data-width="300">Descripción</th>
+                            <th data-field="stock" data-halign="center" data-align="center" data-width="80" data-formatter="stockFormater">Stock</th>
+                            <th data-field="llegando" data-halign="center" data-align="center" data-width="90" data-formatter="llegandoFormater">Llegando</th>
+                            <th data-field="precio_opciones" data-halign="center" data-align="center" data-width="200" data-formatter="precioOpcionesFormater">Precio</th>
+                            <th data-field="precio_manual" data-halign="center" data-align="center" data-width="120" data-formatter="precioManualFormater">Precio Manual</th>
+                            <th data-field="cantidad" data-halign="center" data-align="center" data-width="100" data-formatter="cantidadFormater">Cantidad</th>
+                            <th data-field="unidad" data-halign="center" data-align="center" data-width="80">Unidad</th>
+                            <th data-field="tiempo_entrega" data-halign="center" data-align="center" data-width="120" data-formatter="tiempoEntregaFormater">Tiempo Entrega</th>
+                            <th data-field="monto" data-halign="center" data-align="right" data-width="100" data-formatter="montoFormater">Monto</th>
                         </tr>
                     </thead>
                 </table>
                 
-                <div style="text-align: right;">
+                <div style="text-align: right; margin-top: 20px;">
                     <a class="updTot" href="javascript:void(0)" onClick="updateTotal()" title="update">
                         <i class="bi bi-arrow-clockwise"></i>
-                        <h5 id="MontoTotal"></h5>
+                        <h4 id="MontoTotal" style="color: #037C79; font-weight: bold;"></h4>
                     </a>
                 </div>
 
-                <div class="input-group">
+                <div class="input-group mt-3">
                     <span class="input-group-text">Comentarios del Presupuesto:</span>
-                    <input type="text" aria-label="Last name" class="form-control" id="comentarioPresupuesto">
+                    <textarea class="form-control" id="comentarioPresupuesto" rows="2"></textarea>
                 </div>
 
-                <button type="button" class="btn btn-primary btn-sm" id="reg-presupuesto" onClick="guardarPresupuesto()" style="margin: 10px 40px 1px;">
+                <button type="button" class="btn btn-success btn-lg" id="reg-presupuesto" onClick="guardarPresupuesto()" style="margin: 20px 40px 10px;">
                     <i class="bi bi-save"></i> Guardar Presupuesto
                 </button>
             </div>
@@ -527,7 +539,7 @@ $tituloLista = '<h2 style="background-color: #037C79; padding-bottom: 14px; colo
         });
     }
 
-    // Funciones de formateo
+    // Funciones de formateo para tabla principal
     function fotoFormater(value, row) {
         var strReturn = '<i class="bi bi-x-circle-fill icon-red" title="no disponible"></i>';
         if (value != 'empty.jpg') {
@@ -563,18 +575,6 @@ $tituloLista = '<h2 style="background-color: #037C79; padding-bottom: 14px; colo
         return '$'+value.replace(/[.]/, ",");
     }
 
-    function precioFormaterPresupModal(value, row) {
-        return '<input class="form-control precio-input" type="number" step="0.001" min="0" value="'+(value || 0)+'" data-code="'+row.code+'" onfocus="this.select()" oninput="actualizarPrecioCarrito(this)"/>';
-    }
-
-    function tiempoEntregaFormater(value, row) {
-        return '<input class="form-control tiempo-input" type="number" min="0" value="'+(value || 0)+'" data-code="'+row.code+'" onfocus="this.select()" oninput="actualizarTiempoCarrito(this)"/>';
-    }
-
-    function comentarioFormater(value, row) {
-        return '<input class="form-control comentario-input" type="text" value="'+(row.comentario || row.name)+'" data-code="'+row.code+'" onfocus="this.select()" oninput="actualizarComentarioCarrito(this)"/>';
-    }
-
     function precioFormaterPed(value, row) {
         if (parseFloat(value) == 0) {
             return '<i style="color: #003272; font-style: normal;font-weight: bold">TOTAL:</i>';
@@ -582,27 +582,11 @@ $tituloLista = '<h2 style="background-color: #037C79; padding-bottom: 14px; colo
         return '$'+value.replace(/[.]/, ",");
     }
 
-    function montoFormater(value, row) {
-        currPrec = parseFloat(row.precio) || 0;
-        return '$' + ((parseInt(row.cantidad) * currPrec).toFixed(3)).toString().replace(/[.]/, ",");
-    }
-
     function montoFormaterPed(value, row) {
         if (parseFloat(value)) {
             return '$' + (parseFloat(value).toFixed(3)).toString().replace(/[.]/, ",");
         }
         return '$'+((parseInt(row.cantidad)*parseFloat(row.precio)).toFixed(3)).toString().replace(/[.]/, ",");
-    }
-
-    function cantidadFormater(value, row) {
-        return '<input class="form-control" id="Cantidad" type="number" min="0" value="'+value+'" autofocus onfocus="this.select()" oninput="processCatidadCambia()"/>';
-    }
-
-    function edoFormater(value, row) {
-        if (row.cantidad > 0) {
-            return '<i class="bi bi-check-circle-fill icon-green" title="normal"></i>';
-        }
-        return '<i class="bi bi-x-circle-fill icon-red" title="quitar de presupuesto"></i>';
     }
 
     function rowStyle(row, index) {
@@ -619,10 +603,141 @@ $tituloLista = '<h2 style="background-color: #037C79; padding-bottom: 14px; colo
         return { css: { color: 'black', background: '#DDDDDD' } };
     }
 
-    // Funciones para actualizar el carrito
-    function actualizarPrecioCarrito(input) {
-        const code = input.getAttribute('data-code');
-        const precio = parseFloat(input.value) || 0;
+    // NUEVOS FORMATEADORES PARA EL MODAL DE PRESUPUESTO
+    function stockFormater(value, row) {
+        const stock = parseInt(value) || 0;
+        if (stock > 0) {
+            return '<span class="badge bg-success">' + stock + '</span>';
+        } else {
+            return '<span class="badge bg-danger">' + stock + '</span>';
+        }
+    }
+
+    function llegandoFormater(value, row) {
+        const llegando = parseInt(value) || 0;
+        if (llegando > 0) {
+            return '<span class="badge bg-warning text-dark">' + llegando + '</span>';
+        } else {
+            return '<span class="badge bg-secondary">0</span>';
+        }
+    }
+
+    function precioOpcionesFormater(value, row) {
+        const precMin = parseFloat(row.prec_min) || 0;
+        const precMay = parseFloat(row.prec_may) || 0;
+        const precioActual = parseFloat(row.precio) || 0;
+        
+        let selectedMin = '';
+        let selectedMay = '';
+        
+        if (precioActual === precMin) {
+            selectedMin = 'checked';
+        } else if (precioActual === precMay) {
+            selectedMay = 'checked';
+        }
+        
+        return `
+            <div class="form-check">
+                <input class="form-check-input precio-radio" type="radio" name="precio_${row.code}" 
+                       value="${precMin}" ${selectedMin} onchange="seleccionarPrecio(this, '${row.code}')">
+                <label class="form-check-label small">Precio 1: $${precMin.toFixed(3).replace('.', ',')}</label>
+            </div>
+            <div class="form-check">
+                <input class="form-check-input precio-radio" type="radio" name="precio_${row.code}" 
+                       value="${precMay}" ${selectedMay} onchange="seleccionarPrecio(this, '${row.code}')">
+                <label class="form-check-label small">Precio 2: $${precMay.toFixed(3).replace('.', ',')}</label>
+            </div>
+        `;
+    }
+
+    function precioManualFormater(value, row) {
+        const precioActual = parseFloat(row.precio) || 0;
+        const precMin = parseFloat(row.prec_min) || 0;
+        const precMay = parseFloat(row.prec_may) || 0;
+        
+        // Si el precio actual no coincide con ninguno de los precios fijos, mostrar en manual
+        const mostrarManual = (precioActual !== precMin && precioActual !== precMay && precioActual > 0);
+        
+        return `
+            <input class="form-control precio-manual-input" type="number" step="0.001" min="0" 
+                   value="${mostrarManual ? precioActual : ''}" 
+                   data-code="${row.code}" 
+                   placeholder="Manual..."
+                   onfocus="this.select()" 
+                   oninput="actualizarPrecioManual(this)"/>
+        `;
+    }
+
+    function cantidadFormater(value, row) {
+        return `
+            <input class="form-control cantidad-input" type="number" min="0" 
+                   value="${value}" 
+                   data-code="${row.code}" 
+                   onfocus="this.select()" 
+                   oninput="actualizarCantidad(this)"/>
+        `;
+    }
+
+    function tiempoEntregaFormater(value, row) {
+        const stock = parseInt(row.stock) || 0;
+        const llegando = parseInt(row.llegando) || 0;
+        const cantidad = parseInt(row.cantidad) || 0;
+        const tiempoActual = parseInt(value) || 0;
+        
+        // Calcular tiempo de entrega automático basado en stock
+        let tiempoSugerido = 0;
+        if (cantidad > 0) {
+            if (stock >= cantidad) {
+                tiempoSugerido = 0; // Inmediato
+            } else if (llegando >= cantidad) {
+                tiempoSugerido = 7; // 7 días si está llegando
+            } else {
+                tiempoSugerido = 30; // 30 días si no hay stock
+            }
+        }
+        
+        // Usar el tiempo actual si existe, sino el sugerido
+        const tiempoMostrar = tiempoActual > 0 ? tiempoActual : tiempoSugerido;
+        
+        return `
+            <select class="form-control tiempo-select" data-code="${row.code}" onchange="actualizarTiempoEntrega(this)">
+                <option value="0" ${tiempoMostrar === 0 ? 'selected' : ''}>Inmediato</option>
+                <option value="7" ${tiempoMostrar === 7 ? 'selected' : ''}>7 días</option>
+                <option value="15" ${tiempoMostrar === 15 ? 'selected' : ''}>15 días</option>
+                <option value="30" ${tiempoMostrar === 30 ? 'selected' : ''}>30 días</option>
+                <option value="45" ${tiempoMostrar === 45 ? 'selected' : ''}>45 días</option>
+                <option value="60" ${tiempoMostrar === 60 ? 'selected' : ''}>60 días</option>
+                <option value="90" ${tiempoMostrar === 90 ? 'selected' : ''}>90 días</option>
+            </select>
+        `;
+    }
+
+    function montoFormater(value, row) {
+        const cantidad = parseInt(row.cantidad) || 0;
+        const precio = parseFloat(row.precio) || 0;
+        const monto = cantidad * precio;
+        
+        if (monto > 0) {
+            return `<strong>$${monto.toFixed(3).replace('.', ',')}</strong>`;
+        } else {
+            return '$0,000';
+        }
+    }
+
+    function edoFormater(value, row) {
+        const cantidad = parseInt(row.cantidad) || 0;
+        if (cantidad > 0) {
+            return '<i class="bi bi-check-circle-fill icon-green" title="En presupuesto"></i>';
+        }
+        return '<i class="bi bi-dash-circle icon-secondary" title="Sin cantidad"></i>';
+    }
+
+    // Funciones para manejar las interacciones del modal
+    function seleccionarPrecio(radio, code) {
+        const precio = parseFloat(radio.value) || 0;
+        
+        // Limpiar campo manual cuando se selecciona un radio
+        $(`.precio-manual-input[data-code="${code}"]`).val('');
         
         debounce(() => {
             $.post("../../php/updPrecioOneProdCarrito.php", {
@@ -630,15 +745,50 @@ $tituloLista = '<h2 style="background-color: #037C79; padding-bottom: 14px; colo
                 precio: precio
             }, function(data) {
                 if (data == '1') {
-                    updateTotal();
+                    updateFilaCarrito(code);
                 }
             });
         })();
     }
 
-    function actualizarTiempoCarrito(input) {
+    function actualizarPrecioManual(input) {
         const code = input.getAttribute('data-code');
-        const tiempo = parseInt(input.value) || 0;
+        const precio = parseFloat(input.value) || 0;
+        
+        // Desmarcar radios cuando se escribe manualmente
+        $(`.precio-radio[name="precio_${code}"]`).prop('checked', false);
+        
+        debounce(() => {
+            $.post("../../php/updPrecioOneProdCarrito.php", {
+                code: code,
+                precio: precio
+            }, function(data) {
+                if (data == '1') {
+                    updateFilaCarrito(code);
+                }
+            });
+        })();
+    }
+
+    function actualizarCantidad(input) {
+        const code = input.getAttribute('data-code');
+        const cantidad = parseInt(input.value) || 0;
+        
+        debounce(() => {
+            $.post("../../php/updCantOneProdCarrito.php", {
+                code: code,
+                cantidad: cantidad
+            }, function(data) {
+                if (data == '1') {
+                    updateFilaCarrito(code);
+                }
+            });
+        })();
+    }
+
+    function actualizarTiempoEntrega(select) {
+        const code = select.getAttribute('data-code');
+        const tiempo = parseInt(select.value) || 0;
         
         debounce(() => {
             $.post("../../php/updTiempoOneProdCarrito.php", {
@@ -650,18 +800,46 @@ $tituloLista = '<h2 style="background-color: #037C79; padding-bottom: 14px; colo
         })();
     }
 
-    function actualizarComentarioCarrito(input) {
-        const code = input.getAttribute('data-code');
-        const comentario = input.value;
+    // Función para actualizar una fila específica del carrito
+    function updateFilaCarrito(code) {
+        refreshCarritoTable().then(() => {
+            updateTotal();
+        });
+    }
+
+    // Función para inicializar tiempos de entrega automáticamente
+    function inicializarTiemposEntrega() {
+        var rows = $tableMakePedido.bootstrapTable('getData');
         
-        debounce(() => {
-            $.post("../../php/updComentarioOneProdCarrito.php", {
-                code: code,
-                comentario: comentario
-            }, function(data) {
-                console.log('Comentario actualizado: ' + data);
-            });
-        })();
+        for (let i = 0; i < rows.length; i++) {
+            const row = rows[i];
+            const stock = parseInt(row.stock) || 0;
+            const llegando = parseInt(row.llegando) || 0;
+            const cantidad = parseInt(row.cantidad) || 0;
+            const tiempoActual = parseInt(row.tiempo_entrega) || 0;
+            
+            if (cantidad > 0 && tiempoActual === 0) {
+                let tiempoSugerido = 0;
+                
+                if (stock >= cantidad) {
+                    tiempoSugerido = 0; // Inmediato
+                } else if (llegando >= cantidad) {
+                    tiempoSugerido = 7; // 7 días si está llegando
+                } else {
+                    tiempoSugerido = 30; // 30 días si no hay stock
+                }
+                
+                // Actualizar tiempo si es diferente al actual
+                if (tiempoSugerido !== tiempoActual) {
+                    $.post("../../php/updTiempoOneProdCarrito.php", {
+                        code: row.code,
+                        tiempo_entrega: tiempoSugerido
+                    }, function(data) {
+                        console.log('Tiempo inicializado para ' + row.code + ': ' + data);
+                    });
+                }
+            }
+        }
     }
 
     // Funciones de navegación
@@ -685,6 +863,8 @@ $tituloLista = '<h2 style="background-color: #037C79; padding-bottom: 14px; colo
     function getSelected() {
         refreshCarritoTable().then(() => {
             updateTotal();
+            // Inicializar tiempos de entrega automáticamente después de cargar
+            setTimeout(inicializarTiemposEntrega, 500);
         });
         $('#ModalMakePedido').modal({show:true});
     }
@@ -712,10 +892,15 @@ $tituloLista = '<h2 style="background-color: #037C79; padding-bottom: 14px; colo
             if (parseInt(rows[i].cantidad) > 0) {
                 const producto = {
                     code: rows[i].code,
+                    name: rows[i].name,
                     cantidad: parseInt(rows[i].cantidad),
                     precio: parseFloat(rows[i].precio) || 0,
                     tiempo_entrega: parseInt(rows[i].tiempo_entrega) || 0,
-                    comentario: rows[i].comentario || rows[i].name
+                    unidad: rows[i].unidad,
+                    stock: parseInt(rows[i].stock) || 0,
+                    llegando: parseInt(rows[i].llegando) || 0,
+                    prec_min: parseFloat(rows[i].prec_min) || 0,
+                    prec_may: parseFloat(rows[i].prec_may) || 0
                 };
                 productos.push(producto);
             }
@@ -731,7 +916,8 @@ $tituloLista = '<h2 style="background-color: #037C79; padding-bottom: 14px; colo
             cliente: selectedClientNum,
             productos: productos,
             comentario: comentarioPresupuesto,
-            usuario: numUsr
+            usuario: numUsr,
+            total: calcularTotalPresupuesto()
         };
 
         const paramJSON = JSON.stringify(presupuesto);
@@ -755,35 +941,18 @@ $tituloLista = '<h2 style="background-color: #037C79; padding-bottom: 14px; colo
         });
     }
 
-    function catidadCambia() {
+    function calcularTotalPresupuesto() {
         var rows = $tableMakePedido.bootstrapTable('getData');
-        var cantidades = [];
-        var codes = [];
-
+        let total = 0;
+        
         for (let i = 0; i < rows.length; i++) {
-            cantidades.push(parseInt(rows[i].cantidad));
-            codes.push(rows[i].code);
+            const cantidad = parseInt(rows[i].cantidad) || 0;
+            const precio = parseFloat(rows[i].precio) || 0;
+            total += cantidad * precio;
         }
-
-        $.each($('#ModalMakePedido #table #Cantidad'), function(index, valor) {
-            if (cantidades[index] != parseInt(valor.value)) {
-                $.post("../../php/updCantOneProdCarrito.php",
-                { 
-                    cantidad: valor.value, 
-                    code: codes[index] 
-                }, 
-                function(data, status) {
-                    if (data == 1) {
-                        refreshCarritoTable().then(() => {
-                            updateTotal();
-                        });
-                    }
-                });
-            }
-        });
+        
+        return total;
     }
-
-    const processCatidadCambia = debounce(() => catidadCambia());
 
     function updateTotal() {
         var rows = $tableMakePedido.bootstrapTable('getData');
@@ -796,7 +965,7 @@ $tituloLista = '<h2 style="background-color: #037C79; padding-bottom: 14px; colo
         }
         
         const totalFormateado = total.toFixed(3).replace('.', ',');
-        $('#MontoTotal').html('Total: $' + totalFormateado);
+        $('#MontoTotal').html('Total Presupuesto: $' + totalFormateado);
     }
 
     function showPedidoClient() {
