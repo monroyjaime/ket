@@ -1,58 +1,62 @@
 <?php
 require_once("config.php"); /* Configuration File */
 
-session_start();
+// SOLO iniciar session si no está activa
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
 class DB{
-	
-	private $link;
-	
-	public function __construct(){
-		$conn_string = "host=".DB_SERVER." port=".DB_PORT." dbname=".DB_NAME." user=".DB_USER." password=".DB_PASS."\n";
-		//echo "conn_string: ".$conn_string."\n";
-		$this->link = pg_connect($conn_string);
-		if (!$this->link)
-		{
-			//$errormessage=pg_last_error();
-			echo "Error conectandose a BD, error:".$errormessage."\n";
-			exit();
-		}
-		    
-	}
-	
-	public function __destruct() {
-		pg_close($this->link);
-	}
+    
+    private $link;
+    
+    public function __construct(){
+        $conn_string = "host=".DB_SERVER." port=".DB_PORT." dbname=".DB_NAME." user=".DB_USER." password=".DB_PASS."\n";
+        //echo "conn_string: ".$conn_string."\n";
+        $this->link = pg_connect($conn_string);
+        if (!$this->link)
+        {
+            //$errormessage=pg_last_error();
+            echo "Error conectandose a BD, error:".$errormessage."\n";
+            exit();
+        }
+            
+    }
+    
+    public function __destruct() {
+        pg_close($this->link);
+    }
 
-	public function consultas($consulta)
-	{
-		$return = array();
-		$Qu=pg_query($this->link,$consulta);
-		while ($row = pg_fetch_object ($Qu))
-		{
-			$return[] = $row;
-		}
-		pg_free_result($Qu);
+    public function consultas($consulta)
+    {
+        $return = array();
+        $Qu=pg_query($this->link,$consulta);
+        while ($row = pg_fetch_object ($Qu))
+        {
+            $return[] = $row;
+        }
+        pg_free_result($Qu);
         return $return;
-	}
+    }
 
-	public function querySet($consulta)
-	{
-		$return = -1;
-		$Qu=pg_query($this->link,$consulta);
-		$status = pg_result_status($Qu);
-		if($status == PGSQL_COMMAND_OK)
-			$return = 1;
-		pg_free_result($Qu);	
-			
-		
-			
-		return $return;
-	}
+    public function querySet($consulta)
+    {
+        $return = -1;
+        $Qu=pg_query($this->link,$consulta);
+        $status = pg_result_status($Qu);
+        if($status == PGSQL_COMMAND_OK)
+            $return = 1;
+        pg_free_result($Qu);	
+            
+        
+            
+        return $return;
+    }
 
-	
+    
 
-	public function getProdCat($catId)
-	{
+    public function getProdCat($catId)
+    {
         if($catId>0)
         {
             $tags  = '<div class="container text-center">';
@@ -92,23 +96,28 @@ class DB{
         return $tags;    
     }
 
-	public function getListaPrecDpto($dptoId)
-	{
-		if($dptoId>0)
-		{
-			$query ="SELECT code,name,cost_max,photo_url FROM productos WHERE dpto_id=".$dptoId." AND cost_max > 0 ORDER BY code";
-			$consult = $db->consultas($query);
-			foreach ($consult as $value){
-				$objRtn = new stdClass();
-				$objRtn->code = $value->code;
-				$objRtn->name = $value->name;
-				$objRtn->cost_max = $value->cot_max;
-				$objRtn->photo_url = $value->photo_url;
-				$return[] = $objRtn;
-			}
-			return $return;
-		}	
-		return null;
-	}
+    public function getListaPrecDpto($dptoId)
+    {
+        if($dptoId>0)
+        {
+            $query ="SELECT code,name,cost_max,photo_url FROM productos WHERE dpto_id=".$dptoId." AND cost_max > 0 ORDER BY code";
+            $consult = $db->consultas($query);
+            foreach ($consult as $value){
+                $objRtn = new stdClass();
+                $objRtn->code = $value->code;
+                $objRtn->name = $value->name;
+                $objRtn->cost_max = $value->cot_max;
+                $objRtn->photo_url = $value->photo_url;
+                $return[] = $objRtn;
+            }
+            return $return;
+        }	
+        return null;
+    }
+
+    // Método para obtener la conexión (para DBAsync)
+    public function getLink() {
+        return $this->link;
+    }
 }
 ?>

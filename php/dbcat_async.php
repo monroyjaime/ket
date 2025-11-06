@@ -16,11 +16,20 @@ class DBAsync extends DB {
         $this->last_error = null;
         
         try {
+            // Obtener la conexión del padre
+            $link = $this->getLink();
+            
+            if (!$link) {
+                $this->last_error = "No hay conexión a la base de datos";
+                error_log("DBAsync Error: No hay conexión a la base de datos");
+                return [];
+            }
+            
             // Usar pg_query_params para consultas preparadas
-            $result = pg_query_params($this->link, $sql, $params);
+            $result = pg_query_params($link, $sql, $params);
             
             if (!$result) {
-                $this->last_error = pg_last_error($this->link);
+                $this->last_error = pg_last_error($link);
                 error_log("DBAsync Error: " . $this->last_error . " - SQL: " . $sql);
                 return [];
             }
@@ -47,9 +56,16 @@ class DBAsync extends DB {
         $this->last_error = null;
         
         try {
-            $result = pg_query_params($this->link, $sql, $params);
+            $link = $this->getLink();
+            
+            if (!$link) {
+                $this->last_error = "No hay conexión a la base de datos";
+                return -1;
+            }
+            
+            $result = pg_query_params($link, $sql, $params);
             if (!$result) {
-                $this->last_error = pg_last_error($this->link);
+                $this->last_error = pg_last_error($link);
                 error_log("DBAsync Error querySetSeguro: " . $this->last_error);
                 return -1;
             }
