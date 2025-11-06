@@ -21,31 +21,13 @@ $vendedorCode = "";
 $ganan_glob = 0;
 $desc_glob = 0;
 
-// Validación robusta de parámetros
-$tipoPrecio = filter_var($_SESSION['prec'] ?? 0, FILTER_VALIDATE_INT, [
-    'options' => ['default' => 0, 'min_range' => 0, 'max_range' => 1]
-]);
+
 
 $numUsr = filter_var($_SESSION['usr_num'] ?? -1, FILTER_VALIDATE_INT) ?: -1;
 $role = filter_var($_SESSION['role'] ?? -1, FILTER_VALIDATE_INT) ?: -1;
-$onlyStock = filter_var($_SESSION['only_stock'] ?? 0, FILTER_VALIDATE_INT) ?: 0;
 
 $ableToPresupuesto = 'f';
 $showAllPres = 'f';
-
-// Manejo seguro del parámetro prec
-if (isset($_GET['prec'])) {
-    $tipoPrecio = filter_var($_GET['prec'], FILTER_VALIDATE_INT, [
-        'options' => ['default' => 0, 'min_range' => 0, 'max_range' => 1]
-    ]);
-    $_SESSION["prec"] = $tipoPrecio;
-}
-
-$otroPrecio = ($tipoPrecio == 0) ? 1 : 0;
-$textPrecio = ($tipoPrecio == 0) ? "selec. Precios al Mayor" : "selec. Precios Minorista";
-
-$btnTipoPrecio = '';
-$btnsPedido = '';
 
 // Consulta de datos de usuario con validación - USANDO DBAsync
 if ($numUsr > 0) {
@@ -76,12 +58,14 @@ if ($numUsr > 0) {
 $prodsCarrito = [];
 if ($numUsr > 0 && $ableToPresupuesto == 't') {
     try {
-        $consult = $db->consultaSegura("SELECT product_code, tipo_precio FROM pedido_carrito WHERE user_num = $1 ORDER BY product_code", [$numUsr]);
+        $consult = $db->consultaSegura("SELECT product_code,cantidad,precio,tiempo_entrega FROM presupuesto_carrito WHERE user_num = $1 ORDER BY product_code", [$numUsr]);
         
         foreach ($consult as $value) {
             $objRtn = new stdClass();
             $objRtn->code = $value->product_code;
-            $objRtn->tipo_prec = intval($value->tipo_precio);
+            $objRtn->cantidad = intval($value->cantidad);
+            $objRtn->precio = floatval($value->precio);
+            $objRtn->tiempo_entrega =intval($value->tiempo_entrega);
             $prodsCarrito[] = $objRtn;
         }
     } catch (Exception $e) {
