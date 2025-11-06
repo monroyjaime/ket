@@ -8,8 +8,8 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-require_once("../../php/dbcat_async.php"); // Cambiar a dbcat_async.php
-$db = new DBAsync(); // Usar DBAsync en lugar de DB
+require_once("../../php/dbcat_async.php");
+$db = new DBAsync();
 
 $clientNum = 0;
 $usrName = "Usuario no identificado";
@@ -24,10 +24,9 @@ $role = filter_var($_SESSION['role'] ?? -1, FILTER_VALIDATE_INT) ?: -1;
 $ableToPresupuesto = 'f';
 $showAllPres = 'f';
 
-// Consulta de datos de usuario con validación - USANDO DBAsync
+// Consulta de datos de usuario
 if ($numUsr > 0) {
     try {
-        // Usar consultaSegura de DBAsync
         $consult = $db->consultaSegura("SELECT do_presupuesto, show_all_pres, full_name, client FROM usuario WHERE num = $1", [$numUsr]);
         
         if (!empty($consult)) {
@@ -85,7 +84,6 @@ if ($clientNum > 0) {
     }
 }
 
-// Variables booleanas corregidas
 $clientDefined = ($clientNum > 0);
 
 $queUsuario = ($showAllPres == 't') ? "todos los usuarios" : htmlspecialchars($usrName);
@@ -219,12 +217,6 @@ $tituloLista = '<h2 style="background-color: #037C79; padding-bottom: 14px; colo
         input[type="number"] {
             -moz-appearance: textfield;
         }
-        #Cantidad {
-            width: 75px;
-        }
-        .precio-input, .tiempo-input {
-            width: 100px;
-        }
         .form-check {
             margin-bottom: 2px;
         }
@@ -233,6 +225,15 @@ $tituloLista = '<h2 style="background-color: #037C79; padding-bottom: 14px; colo
         }
         .badge {
             font-size: 0.75rem;
+        }
+        .precio-manual-input {
+            width: 100px;
+        }
+        .cantidad-input {
+            width: 80px;
+        }
+        .tiempo-select {
+            width: 110px;
         }
     </style>
 </head>
@@ -504,11 +505,6 @@ $tituloLista = '<h2 style="background-color: #037C79; padding-bottom: 14px; colo
         console.log("on load Tom Select client num: " + ctrlClientSel.getValue());
         console.log("from php client num: " + client_num);
 
-        // Mostrar productos en carrito
-        for (i = 0; i < codes_carrito.length; i++) {
-            console.log((i+1) + ": " + codes_carrito[i].code + " cantidad:" + codes_carrito[i].cantidad);
-        }
-
         // Configurar valor por defecto y deshabilitar si es necesario
         if (client_num > 0) {
             ctrlClientSel.setValue(client_num);
@@ -603,9 +599,9 @@ $tituloLista = '<h2 style="background-color: #037C79; padding-bottom: 14px; colo
         return { css: { color: 'black', background: '#DDDDDD' } };
     }
 
-    // NUEVOS FORMATEADORES PARA EL MODAL DE PRESUPUESTO
+    // NUEVOS FORMATEADORES CORREGIDOS PARA EL MODAL DE PRESUPUESTO
     function stockFormater(value, row) {
-        const stock = parseInt(value) || 0;
+        const stock = parseInt(row.stock) || 0; // CORREGIDO: usar row.stock en lugar de value
         if (stock > 0) {
             return '<span class="badge bg-success">' + stock + '</span>';
         } else {
@@ -614,7 +610,7 @@ $tituloLista = '<h2 style="background-color: #037C79; padding-bottom: 14px; colo
     }
 
     function llegandoFormater(value, row) {
-        const llegando = parseInt(value) || 0;
+        const llegando = parseInt(row.llegando) || 0; // CORREGIDO: usar row.llegando en lugar de value
         if (llegando > 0) {
             return '<span class="badge bg-warning text-dark">' + llegando + '</span>';
         } else {
@@ -732,12 +728,12 @@ $tituloLista = '<h2 style="background-color: #037C79; padding-bottom: 14px; colo
         return '<i class="bi bi-dash-circle icon-secondary" title="Sin cantidad"></i>';
     }
 
-    // Funciones para manejar las interacciones del modal
+    // FUNCIONES CORREGIDAS PARA MANEJAR INTERACCIONES
     function seleccionarPrecio(radio, code) {
         const precio = parseFloat(radio.value) || 0;
         
-        // Limpiar campo manual cuando se selecciona un radio
-        $(`.precio-manual-input[data-code="${code}"]`).val('');
+        // CORREGIDO: Actualizar campo manual con el precio seleccionado
+        $(`.precio-manual-input[data-code="${code}"]`).val(precio);
         
         debounce(() => {
             $.post("../../php/updPrecioOneProdCarrito.php", {
@@ -745,7 +741,10 @@ $tituloLista = '<h2 style="background-color: #037C79; padding-bottom: 14px; colo
                 precio: precio
             }, function(data) {
                 if (data == '1') {
-                    updateFilaCarrito(code);
+                    // CORREGIDO: Actualizar toda la tabla para recalcular montos
+                    refreshCarritoTable().then(() => {
+                        updateTotal();
+                    });
                 }
             });
         })();
@@ -755,7 +754,7 @@ $tituloLista = '<h2 style="background-color: #037C79; padding-bottom: 14px; colo
         const code = input.getAttribute('data-code');
         const precio = parseFloat(input.value) || 0;
         
-        // Desmarcar radios cuando se escribe manualmente
+        // CORREGIDO: Desmarcar radios cuando se escribe manualmente
         $(`.precio-radio[name="precio_${code}"]`).prop('checked', false);
         
         debounce(() => {
@@ -764,7 +763,10 @@ $tituloLista = '<h2 style="background-color: #037C79; padding-bottom: 14px; colo
                 precio: precio
             }, function(data) {
                 if (data == '1') {
-                    updateFilaCarrito(code);
+                    // CORREGIDO: Actualizar toda la tabla para recalcular montos
+                    refreshCarritoTable().then(() => {
+                        updateTotal();
+                    });
                 }
             });
         })();
@@ -780,7 +782,12 @@ $tituloLista = '<h2 style="background-color: #037C79; padding-bottom: 14px; colo
                 cantidad: cantidad
             }, function(data) {
                 if (data == '1') {
-                    updateFilaCarrito(code);
+                    // CORREGIDO: Actualizar toda la tabla para recalcular montos y tiempos
+                    refreshCarritoTable().then(() => {
+                        updateTotal();
+                        // Recalcular tiempos de entrega basados en la nueva cantidad
+                        recalcularTiempoEntrega(code, cantidad);
+                    });
                 }
             });
         })();
@@ -800,11 +807,37 @@ $tituloLista = '<h2 style="background-color: #037C79; padding-bottom: 14px; colo
         })();
     }
 
-    // Función para actualizar una fila específica del carrito
-    function updateFilaCarrito(code) {
-        refreshCarritoTable().then(() => {
-            updateTotal();
-        });
+    // Función para recalcular tiempo de entrega basado en cantidad
+    function recalcularTiempoEntrega(code, cantidad) {
+        var rows = $tableMakePedido.bootstrapTable('getData');
+        const row = rows.find(r => r.code === code);
+        
+        if (row) {
+            const stock = parseInt(row.stock) || 0;
+            const llegando = parseInt(row.llegando) || 0;
+            let tiempoSugerido = 0;
+            
+            if (cantidad > 0) {
+                if (stock >= cantidad) {
+                    tiempoSugerido = 0; // Inmediato
+                } else if (llegando >= cantidad) {
+                    tiempoSugerido = 7; // 7 días si está llegando
+                } else {
+                    tiempoSugerido = 30; // 30 días si no hay stock
+                }
+                
+                // Actualizar el select de tiempo de entrega
+                $(`.tiempo-select[data-code="${code}"]`).val(tiempoSugerido);
+                
+                // Actualizar en base de datos
+                $.post("../../php/updTiempoOneProdCarrito.php", {
+                    code: code,
+                    tiempo_entrega: tiempoSugerido
+                }, function(data) {
+                    console.log('Tiempo recalculado para ' + code + ': ' + data);
+                });
+            }
+        }
     }
 
     // Función para inicializar tiempos de entrega automáticamente
@@ -818,7 +851,7 @@ $tituloLista = '<h2 style="background-color: #037C79; padding-bottom: 14px; colo
             const cantidad = parseInt(row.cantidad) || 0;
             const tiempoActual = parseInt(row.tiempo_entrega) || 0;
             
-            if (cantidad > 0 && tiempoActual === 0) {
+            if (cantidad > 0) {
                 let tiempoSugerido = 0;
                 
                 if (stock >= cantidad) {
@@ -840,6 +873,9 @@ $tituloLista = '<h2 style="background-color: #037C79; padding-bottom: 14px; colo
                 }
             }
         }
+        
+        // Refrescar tabla para mostrar los tiempos actualizados
+        refreshCarritoTable();
     }
 
     // Funciones de navegación
