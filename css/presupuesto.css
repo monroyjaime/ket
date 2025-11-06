@@ -1,0 +1,30 @@
+/* presupuesto.css - Estilos específicos para presupuestos */
+.form-check {
+    margin-bottom: 2px;
+}
+
+.form-check-label {
+    font-size: 0.8rem;
+}
+
+.badge {
+    font-size: 0.75rem;
+}
+
+.precio-manual-input {
+    width: 100px;
+}
+
+.cantidad-input {
+    width: 80px;
+}
+
+.tiempo-select {
+    width: 110px;
+}
+
+.presupuesto-total {
+    color: #037C79;
+    font-weight: bold;
+    font-size: 1.2rem;
+}
