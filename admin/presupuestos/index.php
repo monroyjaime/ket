@@ -66,6 +66,24 @@ $tituloLista = '<h2 style="background-color: #037C79; padding-bottom: 14px; colo
         .icon-dark-blue {
             color: #003272;
         }
+        .form-check {
+            margin-bottom: 2px;
+        }
+        .form-check-label {
+            font-size: 0.8rem;
+        }
+        .badge {
+            font-size: 0.75rem;
+        }
+        .precio-manual-input {
+            width: 100px;
+        }
+        .cantidad-input {
+            width: 80px;
+        }
+        .tiempo-select {
+            width: 110px;
+        }
     </style>
 </head>
 
@@ -118,7 +136,7 @@ $tituloLista = '<h2 style="background-color: #037C79; padding-bottom: 14px; colo
     </div>
 </div>
 
-<!-- Modal Definir Presupuesto (SIMPLIFICADO) -->
+<!-- Modal Definir Presupuesto (COMPLETO) -->
 <div class="modal fade" id="ModalMakePedido" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
     <div class="modal-dialog" style="max-width: 95%;" role="document">
         <div class="modal-content">
@@ -127,18 +145,98 @@ $tituloLista = '<h2 style="background-color: #037C79; padding-bottom: 14px; colo
                 <h4 class="modal-title">Definir Presupuesto</h4>
             </div>
             <div class="modal-body">
-                <p>Modal de presupuesto - Funcionando correctamente</p>
-                <button type="button" class="btn btn-success" onClick="guardarPresupuesto()">
+                <div class="container">
+                    <div class="row">
+                        <div class="col">
+                            <div class="p-4">
+                                <h6>Cliente:</h6>
+                                <select id="clients-tom-sel" placeholder="Seleccione Cliente..." autocomplete="off">
+                                    <option value="0">Seleccione Cliente...</option>
+                                </select> 
+                            </div> 
+                        </div>
+                        <div class="col">
+                            <div class="p-4">
+                                <h6>Número de Presupuesto:</h6>
+                                <input type="text" class="form-control" id="numero-presupuesto" placeholder="Número automático o manual">
+                            </div>
+                        </div>  
+                    </div>
+                </div> 
+
+                <table
+                    id="table-carrito"
+                    class="bootstrap-table"
+                    data-table-type="make-pedido"
+                    data-toggle="table"  
+                    data-height="400"
+                    data-checkbox-header="false"
+                    data-url="../../php/getCarritoCurrentData.php">
+                    <thead>
+                        <tr>
+                            <th data-field="edo" data-formatter="edoFormater" data-width="40"></th>
+                            <th data-field="code" data-halign="center" data-align="left" data-width="100">Código</th>
+                            <th data-field="name" data-halign="center" data-align="left" data-width="300">Descripción</th>
+                            <th data-field="stock" data-halign="center" data-align="center" data-width="80" data-formatter="stockFormater">Stock</th>
+                            <th data-field="llegando" data-halign="center" data-align="center" data-width="90" data-formatter="llegandoFormater">Llegando</th>
+                            <th data-field="precio_opciones" data-halign="center" data-align="center" data-width="200" data-formatter="precioOpcionesFormater">Precio</th>
+                            <th data-field="precio_manual" data-halign="center" data-align="center" data-width="120" data-formatter="precioManualFormater">Precio Manual</th>
+                            <th data-field="cantidad" data-halign="center" data-align="center" data-width="100" data-formatter="cantidadFormater">Cantidad</th>
+                            <th data-field="unidad" data-halign="center" data-align="center" data-width="80">Unidad</th>
+                            <th data-field="tiempo_entrega" data-halign="center" data-align="center" data-width="120" data-formatter="tiempoEntregaFormater">Tiempo Entrega</th>
+                            <th data-field="monto" data-halign="center" data-align="right" data-width="100" data-formatter="montoFormater">Monto</th>
+                        </tr>
+                    </thead>
+                </table>
+                
+                <div style="text-align: right; margin-top: 20px;">
+                    <a class="updTot" href="javascript:void(0)" onClick="updateTotal()" title="update">
+                        <i class="bi bi-arrow-clockwise"></i>
+                        <h4 id="MontoTotal" style="color: #037C79; font-weight: bold;"></h4>
+                    </a>
+                </div>
+
+                <div class="input-group mt-3">
+                    <span class="input-group-text">Comentarios del Presupuesto:</span>
+                    <textarea class="form-control" id="comentarioPresupuesto" rows="2"></textarea>
+                </div>
+
+                <button type="button" class="btn btn-success btn-lg" id="reg-presupuesto" onClick="guardarPresupuesto()" style="margin: 20px 40px 10px;">
                     <i class="bi bi-save"></i> Guardar Presupuesto
                 </button>
             </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-bs-dismiss="modal"><i class="bi bi-arrow-return-left"></i> Regresar</button>
+            </div>
         </div>
+    </div>
+</div>
+
+<!-- Modal Mostrar Pedidos (SIMPLIFICADO) -->
+<div class="modal fade" id="ModalShowPedido" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog" style="max-width: 90%;" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-bs-dismiss="modal">&times;</button>
+                <h4 class="modal-title">Mostrar Presupuestos</h4>
+            </div>
+            <div class="modal-body">
+                <p>Modal para mostrar presupuestos - En desarrollo</p>
+            </div>
+        </div> 
     </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/jquery/dist/jquery.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://unpkg.com/bootstrap-table@1.22.1/dist/bootstrap-table.min.js"></script>
+<script src="https://unpkg.com/bootstrap-table@1.22.1/dist/extensions/mobile/bootstrap-table-mobile.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/tableexport.jquery.plugin@1.10.21/tableExport.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/tableexport.jquery.plugin@1.10.21/libs/jsPDF/jspdf.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/tableexport.jquery.plugin@1.10.21/libs/jsPDF-AutoTable/jspdf.plugin.autotable.js"></script>
+<script src="https://unpkg.com/bootstrap-table@1.22.1/dist/extensions/export/bootstrap-table-export.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/tom-select@2.0.0-rc.4/dist/js/tom-select.complete.min.js"></script>
+<script src="../../js/jquery.redirect.js" type="text/javascript"></script>
 
 <!-- JavaScript específico de presupuestos -->
 <script src="../../js/presupuesto.js" type="text/javascript"></script>
