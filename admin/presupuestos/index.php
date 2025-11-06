@@ -17,7 +17,7 @@ $usrName = "Usuario no identificado";
 
 // Solo mostrar botones si el usuario puede hacer presupuestos
 if ($numUsr > 0) {
-    $ableToPresupuesto = 't'; // Temporalmente forzamos a true para testing
+    $ableToPresupuesto = 't';
     $btnsPedido  = '<button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#ModalMakePedido" onClick="getSelected()" style="margin: 1px 2px 1px;"><i class="bi bi-gear"></i> Def. Presup.</button> ';
     $btnsPedido .= '<button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#ModalShowPedido" onClick="showPedidoClient()" style="margin: 1px 2px 1px;"><i class="bi bi-file-earmark-ppt"></i> Ver Presup.</button> ';
 }
@@ -41,6 +41,7 @@ $tituloLista = '<h2 style="background-color: #037C79; padding-bottom: 14px; colo
         var roleNum = <?php echo $role; ?>;  
         var numUsr = <?php echo $numUsr; ?>;
         var codes_carrito = [];
+        var ableToPresupuesto = '<?php echo $ableToPresupuesto; ?>';
     </script>
 
     <style>
@@ -115,24 +116,56 @@ $tituloLista = '<h2 style="background-color: #037C79; padding-bottom: 14px; colo
             class="bootstrap-table"
             data-toggle="table"
             data-show-export="false"
-            data-click-to-select="false"
+            data-click-to-select="true"
+            data-maintain-meta-data="true"
             data-show-columns="false"
             data-search="true"
+            data-searchable="true"
             data-height="600"
             data-pagination="true"
             data-page-size="100" 
+            data-page-list="[100]"
             data-url="../../php/getListaProdAllPresup.php"
-            data-mobile-responsive="false">
+            data-mobile-responsive="false"
+            data-check-on-init="true"
+            data-row-style="rowStyle">
             <thead>
                 <tr>
+                    <?php 
+                    // Mostrar columna de check solo si el usuario puede hacer presupuestos
+                    if ($numUsr > 0 && $ableToPresupuesto == 't') {
+                        echo '<th data-field="checked" data-checkbox="true" data-formatter="checkFormater"></th>';
+                    }
+                    ?>
                     <th data-field="code" data-halign="center" data-align="left">CODIGO</th>
-                    <th data-field="name" data-halign="center" data-align="left" data-width="500">DESCRIPCION</th>
+                    <th data-field="relacionado" data-halign="center" data-align="left">RELACIONADO</th>
                     <th data-field="stock" data-halign="center" data-align="left">STOCK</th>
-                    <th data-field="prec_min" data-halign="center" data-align="left">PREC 1</th>
-                    <th data-field="prec_may" data-halign="center" data-align="left">PREC 2</th>
+                    <th data-field="llegando" data-halign="center" data-align="left">LLEGANDO</th>
+                    <th data-field="prec_min" data-formatter="precioFormaterPresup" data-halign="center" data-align="left">PREC 1</th>
+                    <th data-field="prec_may" data-formatter="precioFormaterPresup" data-halign="center" data-align="left">PREC 2</th>
+                    <th data-field="costo" data-formatter="precioFormatergen" data-halign="center" data-align="left">COSTO</th>
+                    <th data-field="unit">UNIDAD</th>
+                    <th data-field="name" data-halign="center" data-align="left" data-width="500">. . . . . . DESCRIPCION . . . . . .</th>
+                    <th data-field="photo_url" data-formatter="fotoFormater">FOTO</th>
                 </tr>
             </thead>
         </table>
+    </div>
+</div>
+
+<!-- Modal Detalle Producto -->
+<div class="modal fade" id="myModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-bs-dismiss="modal">&times;</button>
+                <h4 class="modal-title">Detalle de Producto</h4>
+            </div>
+            <div class="modal-body"></div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-bs-dismiss="modal"><i class="bi bi-x-circle-fill"></i> Cerrar</button>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -242,6 +275,61 @@ $tituloLista = '<h2 style="background-color: #037C79; padding-bottom: 14px; colo
 <script src="../../js/presupuesto.js" type="text/javascript"></script>
 
 <script type="text/javascript">
+    // Variables globales
+    var $tableMain = $('#table-main');
+    var $tableShowPedido = $('#table-pedidos');
+
+    // Formateadores para la tabla principal
+    function fotoFormater(value, row) {
+        var strReturn = '<i class="bi bi-x-circle-fill icon-red" title="no disponible"></i>';
+        if (value != 'empty.jpg') {
+            strReturn = '<a class="ver" data-bs-toggle="modal" data-bs-target="#myModal" href="#" onClick="verFoto(\''+row.code+'\')" title="click para ver"><i class="bi bi-check-circle-fill icon-yellow"></i></a>';
+        }
+        return strReturn;
+    }
+
+    function checkFormater(value, row) {
+        if (codes_carrito.length > 0) {
+            for (i = 0; i < codes_carrito.length; i++) {
+                if (row.code === codes_carrito[i].code) {
+                    return { checked: true };
+                }
+            }
+        }
+        return { checked: false };
+    }
+
+    function precioFormatergen(value, row) {
+        return '$' + value.replace(/[.]/, ",");
+    }
+
+    function precioMayorFormater(value, row) {
+        if (value == 0) return '---';
+        return '$' + value.replace(/[.]/, ",");
+    }
+
+    function precioFormaterPresup(value, row) {
+        if (parseFloat(row.monto) * 2 < parseFloat(value)) {
+            return '<i style="color: #720000ff; font-style: normal;font-weight: bold">$'+value.replace(/[.]/, ",")+'</i>';
+        }
+        return '$'+value.replace(/[.]/, ",");
+    }
+
+    function rowStyle(row, index) {
+        if (index % 2 === 0) {
+            return { css: { color: 'white', background: '#037C79' } };
+        }
+        return { css: { color: 'black', background: '#00CCCC' } };
+    }
+
+    // Función para ver foto
+    function verFoto(val) {
+        urlString = "../../php/getOneProductPhoto.php?code=" + val;
+        $('.modal-body').load(urlString, function() {
+            $('#myModal').modal({show:true});
+        });
+    }
+
     // Funciones básicas
     function backHome() {      
         window.location.href = "../../";
@@ -254,6 +342,42 @@ $tituloLista = '<h2 style="background-color: #037C79; padding-bottom: 14px; colo
     function showPedidoClient() {
         alert('Función mostrar pedidos - En desarrollo');
     }
+
+    // Event handlers para checkboxes de la tabla principal
+    $(function() {
+        $tableMain.bootstrapTable({})
+            .on('check.bs.table', function(e, row) {
+                $.post("../../php/insDelOneProdCarrito.php", { 
+                    action: 1, 
+                    code: row.code 
+                }, function(data) {
+                    console.log('Producto agregado al carrito: ' + data);
+                });
+            })
+            .on('uncheck.bs.table', function(e, row) {
+                $.post("../../php/insDelOneProdCarrito.php", { 
+                    action: 0, 
+                    code: row.code 
+                }, function(data) {
+                    console.log('Producto eliminado del carrito: ' + data);
+                    if (data == 1) {
+                        if ($tableMain.bootstrapTable('getSelections').length == 0) {
+                            backToSelfAlt();
+                        }
+                    }
+                });
+            });
+
+        // Mejorar la barra de búsqueda
+        $('.float-right.search.btn-group').find('input').attr('placeholder', '....');
+        $('.float-right.search.btn-group').find('input').wrap("<div class='input-group' id='awsearch'> </div>"); 
+        $('#awsearch').prepend("<span class='input-group-addon'><i class='bi bi-search icon-dark-blue'></i> Buscar</span>");
+
+        // Limpiar modales al cerrar
+        $('#myModal').on("hide.bs.modal", function() {
+            $(".modal-body").html("");
+        });
+    });
 
     console.log('Página cargada correctamente');
 </script>
