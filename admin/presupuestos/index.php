@@ -16,26 +16,42 @@ $showAllPres = 'f'; // INICIALIZAR
 $ableToPresupuesto = 'f';
 $usrName = "Usuario no identificado";
 
-// Solo mostrar botones si el usuario puede hacer presupuestos
-if ($numUsr > 0) {
-    $ableToPresupuesto = 't';
-    $btnsPedido  = '<button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#ModalMakePedido" onClick="getSelected()" style="margin: 1px 2px 1px;"><i class="bi bi-gear"></i> Def. Presup.</button> ';
-    $btnsPedido .= '<button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#ModalShowPedido" onClick="showPedidoClient()" style="margin: 1px 2px 1px;"><i class="bi bi-file-earmark-ppt"></i> Ver Presup.</button> ';
+
+
+// CONSULTAR MÁRGENES DIRECTAMENTE DESDE PHP
+$ganancia_min_glob = 1.2; // valor por defecto
+$descuento_max_glob = 0.4; // valor por defecto
+
+try {
+    require_once("../../php/dbcat_async.php");
+    $db = new DBAsync();
     
-    // Si necesitas consultar datos del usuario desde BD, hazlo aquí
-    try {
-        require_once("../../php/dbcat_async.php");
-        $db = new DBAsync();
+    // Consultar márgenes
+    $margenes = $db->consultaSegura("SELECT ganancia_min_glob, descuento_max_glob FROM all_ket_values LIMIT 1");
+    
+    if (!empty($margenes)) {
+        $ganancia_min_glob = floatval($margenes[0]->ganancia_min_glob);
+        $descuento_max_glob = floatval($margenes[0]->descuento_max_glob);
+    }
+    
+    // Solo mostrar botones si el usuario puede hacer presupuestos
+    if ($numUsr > 0) {
+        $ableToPresupuesto = 't';
+        $btnsPedido  = '<button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#ModalMakePedido" onClick="getSelected()" style="margin: 1px 2px 1px;"><i class="bi bi-gear"></i> Def. Presup.</button> ';
+        $btnsPedido .= '<button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#ModalShowPedido" onClick="showPedidoClient()" style="margin: 1px 2px 1px;"><i class="bi bi-file-earmark-ppt"></i> Ver Presup.</button> ';
+        
+        // Consultar datos del usuario
         $usuario = $db->consultaSegura("SELECT client, show_all_pres FROM usuario WHERE num = $1", [$numUsr]);
         
         if (!empty($usuario)) {
             $clientNum = intval($usuario[0]->client);
             $showAllPres = $usuario[0]->show_all_pres;
         }
-    } catch (Exception $e) {
-        error_log("Error consultando usuario: " . $e->getMessage());
     }
+} catch (Exception $e) {
+    error_log("Error en consultas: " . $e->getMessage());
 }
+
 
 // AHORA SÍ preparar opciones de clientes para Tom Select
 $optionsClientes = '';
@@ -94,6 +110,12 @@ $tituloLista = '<h2 style="background-color: #037C79; padding-bottom: 14px; colo
         var numUsr = <?php echo $numUsr; ?>;
         var codes_carrito = [];
         var ableToPresupuesto = '<?php echo $ableToPresupuesto; ?>';
+
+        // MÁRGENES CARGADOS DIRECTAMENTE DESDE PHP
+        var ganancia_min_glob = <?php echo $ganancia_min_glob; ?>;
+        var descuento_max_glob = <?php echo $descuento_max_glob; ?>;
+        
+        console.log('✅ Márgenes cargados desde PHP:', ganancia_min_glob, descuento_max_glob);
     </script>
 
     <style>

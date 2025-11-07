@@ -1,44 +1,21 @@
-// presupuesto.js - Versión simplificada con márgenes desde PHP
-console.log('✅ presupuesto.js cargado - Márgenes disponibles:', ganancia_min_glob, descuento_max_glob);
+// presupuesto.js - Funciones específicas para el módulo de presupuestos
 
-// Variables globales
+// Variables globales para presupuestos
 var $tableMakePedido, ctrlClientSel;
 
-// Función simplificada para verificar márgenes
-function verificarMargenPrecio(costo, precio) {
-    if (precio <= 0) {
-        return { cumpleMargen: false, esCero: true };
-    }
-    
-    if (costo <= 0) {
-        return { cumpleMargen: true, esCero: false };
-    }
-    
-    const precioMinimoRequerido = costo * ganancia_min_glob;
-    const cumpleMargen = precio >= precioMinimoRequerido;
-    
-    console.log(`💰 Margen verificado: ${costo} × ${ganancia_min_glob} = ${precioMinimoRequerido.toFixed(3)} vs ${precio} → ${cumpleMargen ? '✅' : '❌'}`);
-    
-    return { cumpleMargen: cumpleMargen, esCero: false };
-}
+// Variables globales para márgenes
+var ganancia_min_glob = 0;
+var descuento_max_glob = 0;
 
-// Función getSelected simplificada
-function getSelected() {
-    console.log('🎯 getSelected ejecutado - Márgenes:', ganancia_min_glob, descuento_max_glob);
-    
-    // Forzar actualización del carrito antes de abrir el modal
-    forzarActualizacionCarrito();
-    
-    $('#ModalMakePedido').modal('show');
-}
+// Configuración inicial del modal de presupuesto - CORREGIDO
 
-// Función para inicializar el Tom Select en el modal
+// CORREGIR esta función en presupuesto.js
 function initPresupuestoModal() {
-    console.log('🔧 Inicializando Tom Select...');
+    console.log('Inicializando modal de presupuesto...');
     
     // VERIFICAR si Tom Select ya está inicializado y destruirlo primero
     if (ctrlClientSel && ctrlClientSel.initialized) {
-        console.log('🔄 Tom Select ya inicializado, destruyendo...');
+        console.log('Tom Select ya inicializado, destruyendo...');
         ctrlClientSel.destroy();
     }
     
@@ -56,41 +33,25 @@ function initPresupuestoModal() {
             });
             // Marcar como inicializado
             ctrlClientSel.initialized = true;
-            console.log('✅ Tom Select inicializado correctamente');
+            console.log('Tom Select inicializado correctamente');
         } catch (e) {
-            console.error('❌ Error inicializando Tom Select:', e);
+            console.error('Error inicializando Tom Select:', e);
         }
     } else {
-        console.error('❌ Elemento #clients-tom-sel no encontrado');
+        console.error('Elemento #clients-tom-sel no encontrado');
+    }
+
+    // Generar número de presupuesto automáticamente
+    if ($('#numero-presupuesto').length > 0) {
+        $('#numero-presupuesto').val(generarNumeroPresupuesto());
     }
 }
 
-// Función para forzar actualización del carrito
-function forzarActualizacionCarrito() {
-    console.log('🔄 Forzando actualización del carrito...');
-    $.get("../../php/getCarritoCurrentData.php", function(data) {
-        try {
-            const carritoData = JSON.parse(data);
-            codes_carrito = carritoData.map(item => ({
-                code: item.code,
-                cantidad: item.cantidad,
-                precio: item.precio,
-                tiempo_entrega: item.tiempo_entrega
-            }));
-            console.log('✅ Carrito sincronizado:', codes_carrito.length, 'productos');
-            
-            // Refrescar tabla principal para actualizar checks
-            if (typeof $tableMain !== 'undefined' && $tableMain.length > 0) {
-                $tableMain.bootstrapTable('refresh');
-            }
-        } catch (e) {
-            console.error('Error parseando carrito:', e);
-            codes_carrito = [];
-        }
-    }).fail(function() {
-        console.error('Error cargando carrito');
-        codes_carrito = [];
-    });
+// Función para generar número de presupuesto automático
+function generarNumeroPresupuesto() {
+    const timestamp = new Date().getTime();
+    const random = Math.floor(Math.random() * 1000);
+    return `PRES-${timestamp}-${random}`;
 }
 
 // Función debounce optimizada
@@ -154,15 +115,10 @@ function precioOpcionesFormater(value, row) {
         selected3 = 'checked';
     }
     
-    // Verificar márgenes para cada precio
+    // Verificar márgenes para cada precio - CON LOGICA CORREGIDA
     const resultadoMin = verificarMargenPrecio(costo, precMin);
     const resultadoMay = verificarMargenPrecio(costo, precMay);
     const resultado3 = verificarMargenPrecio(costo, prec3);
-    
-    // Calcular el factor de ganancia actual para cada precio
-    const factorMin = costo > 0 ? (precMin / costo).toFixed(2) : 'N/A';
-    const factorMay = costo > 0 ? (precMay / costo).toFixed(2) : 'N/A';
-    const factor3 = costo > 0 ? (prec3 / costo).toFixed(2) : 'N/A';
     
     return `
         <div class="form-check">
@@ -170,7 +126,6 @@ function precioOpcionesFormater(value, row) {
                    value="${precMin}" ${selectedMin} ${!resultadoMin.cumpleMargen ? 'disabled' : ''} onchange="seleccionarPrecio(this, '${row.code}')">
             <label class="form-check-label small">
                 Precio 1: $${precMin.toFixed(3).replace('.', ',')}
-                ${costo > 0 ? `<span class="badge badge-margen ${resultadoMin.cumpleMargen ? 'bg-success' : 'bg-danger'}">${factorMin}x</span>` : ''}
                 ${!resultadoMin.cumpleMargen && !resultadoMin.esCero ? '<span class="badge bg-danger ms-1">Margen</span>' : ''}
                 ${resultadoMin.esCero ? '<span class="badge bg-secondary ms-1">Cero</span>' : ''}
             </label>
@@ -180,7 +135,6 @@ function precioOpcionesFormater(value, row) {
                    value="${precMay}" ${selectedMay} ${!resultadoMay.cumpleMargen ? 'disabled' : ''} onchange="seleccionarPrecio(this, '${row.code}')">
             <label class="form-check-label small">
                 Precio 2: $${precMay.toFixed(3).replace('.', ',')}
-                ${costo > 0 ? `<span class="badge badge-margen ${resultadoMay.cumpleMargen ? 'bg-success' : 'bg-danger'}">${factorMay}x</span>` : ''}
                 ${!resultadoMay.cumpleMargen && !resultadoMay.esCero ? '<span class="badge bg-danger ms-1">Margen</span>' : ''}
                 ${resultadoMay.esCero ? '<span class="badge bg-secondary ms-1">Cero</span>' : ''}
             </label>
@@ -190,13 +144,12 @@ function precioOpcionesFormater(value, row) {
                    value="${prec3}" ${selected3} ${!resultado3.cumpleMargen ? 'disabled' : ''} onchange="seleccionarPrecio(this, '${row.code}')">
             <label class="form-check-label small">
                 Precio 3: $${prec3.toFixed(3).replace('.', ',')}
-                ${costo > 0 ? `<span class="badge badge-margen ${resultado3.cumpleMargen ? 'bg-success' : 'bg-danger'}">${factor3}x</span>` : ''}
                 ${!resultado3.cumpleMargen && !resultado3.esCero ? '<span class="badge bg-danger ms-1">Margen</span>' : ''}
                 ${resultado3.esCero ? '<span class="badge bg-secondary ms-1">Cero</span>' : ''}
             </label>
         </div>
         <div class="small text-muted mt-1">
-            Costo: $${costo.toFixed(3).replace('.', ',')} | Mínimo requerido: ${ganancia_min_glob}x
+            Costo: $${costo.toFixed(3).replace('.', ',')}
         </div>
     `;
 }
@@ -442,7 +395,20 @@ function inicializarTiemposEntrega() {
     }
 }
 
-// Función para guardar presupuesto
+// Funciones principales de presupuesto
+
+
+
+// Función getSelected simplificada
+function getSelected() {
+    console.log('🎯 getSelected ejecutado - Márgenes:', ganancia_min_glob, descuento_max_glob);
+    $('#ModalMakePedido').modal('show');
+}
+
+
+
+
+
 function guardarPresupuesto() {
     const selectedClientNum = parseInt(ctrlClientSel.getValue()) || 0;
     const numeroPresupuesto = $('#numero-presupuesto').val();
@@ -530,24 +496,146 @@ function calcularTotalPresupuesto() {
     return 0;
 }
 
-// Inicialización
+// Inicialización - CORREGIDO
+$(document).ready(function() {
+    console.log('Documento listo, inicializando presupuesto.js');
+    $tableMakePedido = $('#table-carrito');
+    
+    // Solo inicializar elementos que existen en el DOM principal
+    if ($('#numero-presupuesto').length > 0) {
+        $('#numero-presupuesto').val(generarNumeroPresupuesto());
+    }
+    
+    // Inicializar Tom Select solo cuando se abre el modal
+    $('#ModalMakePedido').on('show.bs.modal', function() {
+        console.log('Modal de presupuesto abriéndose...');
+        setTimeout(initPresupuestoModal, 100);
+    });
+});
+
+
 $(document).ready(function() {
     console.log('🚀 presupuesto.js inicializado');
     $tableMakePedido = $('#table-carrito');
     
     // Los márgenes ya están disponibles desde index.php
     console.log('📊 Márgenes en presupuesto.js:', {ganancia_min_glob, descuento_max_glob});
-    
-    // Inicializar Tom Select cuando se abre el modal
-    $('#ModalMakePedido').on('show.bs.modal', function() {
-        console.log('🎯 Modal de presupuesto abriéndose...');
-        setTimeout(initPresupuestoModal, 100);
-    });
 });
 
-// Función para generar número de presupuesto automático
-function generarNumeroPresupuesto() {
-    const timestamp = new Date().getTime();
-    const random = Math.floor(Math.random() * 1000);
-    return `PRES-${timestamp}-${random}`;
+
+
+// AGREGAR esta función en presupuesto.js
+function forzarActualizacionCarrito() {
+    console.log('Forzando actualización del carrito...');
+    // Recargar datos del carrito desde el servidor
+    $.post("../../php/getCarritoCurrentData.php", function(data) {
+        console.log('Respuesta cruda del servidor:', data);
+        
+        try {
+            // Verificar si la respuesta es JSON válido
+            if (data.trim().startsWith('{') || data.trim().startsWith('[')) {
+                const carritoData = JSON.parse(data);
+                codes_carrito = carritoData.map(item => ({
+                    code: item.code,
+                    cantidad: item.cantidad,
+                    precio: item.precio,
+                    tiempo_entrega: item.tiempo_entrega
+                }));
+                console.log('Carrito sincronizado con servidor:', codes_carrito);
+                
+                // Refrescar tabla visual del modal
+                if ($tableMakePedido && $tableMakePedido.length > 0) {
+                    $tableMakePedido.bootstrapTable('refresh');
+                }
+                
+                // También refrescar tabla principal para actualizar checks
+                if ($tableMain && $tableMain.length > 0) {
+                    $tableMain.bootstrapTable('refresh');
+                }
+            } else {
+                console.error('El servidor no devolvió JSON:', data);
+                codes_carrito = [];
+            }
+        } catch (e) {
+            console.error('Error parseando carrito:', e);
+            console.error('Datos recibidos:', data);
+            codes_carrito = [];
+        }
+    }).fail(function(xhr, status, error) {
+        console.error('Error en la petición AJAX:', status, error);
+    });
 }
+
+// Función para cargar márgenes globales
+function cargarMargenesGlobales() {
+    return new Promise((resolve) => {
+        $.post("../../php/getMargenesGlobales.php", function(data) {
+            try {
+                const margenes = JSON.parse(data);
+                ganancia_min_glob = parseFloat(margenes.ganancia_min_glob) || 1.2;
+                descuento_max_glob = parseFloat(margenes.descuento_max_glob) || 0.4;
+                console.log('✅ Márgenes cargados:', ganancia_min_glob, descuento_max_glob);
+                
+                // Refrescar la tabla principal para que se recalcule el formateo
+                if (typeof $tableMain !== 'undefined' && $tableMain.length > 0) {
+                    $tableMain.bootstrapTable('refresh');
+                }
+                resolve();
+            } catch (e) {
+                console.error('Error cargando márgenes:', e);
+                resolve();
+            }
+        }).fail(function() {
+            console.error('Error en petición de márgenes');
+            resolve();
+        });
+    });
+}
+
+// Función para verificar si un precio cumple con los márgenes
+// Función mejorada con más información de depuración
+/*function verificarMargenPrecio(costo, precio) {
+    // Si el precio es 0, no es válido para selección
+    // Si los márgenes globales son 0, usar valores por defecto
+    const ganancia = (ganancia_min_glob > 0) ? ganancia_min_glob : 1.2;
+    const descuento = (descuento_max_glob > 0) ? descuento_max_glob : 0.4;
+
+    if (precio <= 0) {
+        console.log(`Precio ${precio} es 0 - deshabilitado`);
+        return { cumpleMargen: false, esCero: true };
+    }
+    
+    if (costo <= 0) {
+        console.log(`Costo ${costo} es 0 - siempre válido`);
+        return { cumpleMargen: true, esCero: false };
+    }
+    
+    // Fórmula CORREGIDA: precio * ganancia_min_glob / (1 - descuento_max_glob) > costo
+    const limiteMinimo = precio * ganancia_min_glob / (1 - descuento_max_glob);
+    const cumpleMargen = limiteMinimo > costo;
+    
+    console.log(`Verificación margen - Costo: ${costo}, Precio: ${precio}, Límite: ${limiteMinimo}, Cumple: ${cumpleMargen}`);
+    console.log(`Fórmula: ${precio} * ${ganancia_min_glob} / (1 - ${descuento_max_glob}) = ${limiteMinimo} > ${costo} = ${cumpleMargen}`);
+    
+    return { cumpleMargen: cumpleMargen, esCero: false };
+}*/
+
+
+// Función simplificada para verificar márgenes
+function verificarMargenPrecio(costo, precio) {
+    if (precio <= 0) {
+        return { cumpleMargen: false, esCero: true };
+    }
+    
+    if (costo <= 0) {
+        return { cumpleMargen: true, esCero: false };
+    }
+    
+    const precioMinimoRequerido = costo * ganancia_min_glob;
+    const cumpleMargen = precio >= precioMinimoRequerido;
+    
+    console.log(`💰 Margen verificado: ${costo} × ${ganancia_min_glob} = ${precioMinimoRequerido.toFixed(3)} vs ${precio} → ${cumpleMargen ? '✅' : '❌'}`);
+    
+    return { cumpleMargen: cumpleMargen, esCero: false };
+}
+
