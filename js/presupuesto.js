@@ -199,6 +199,13 @@ function edoFormater(value, row) {
     return '<i class="bi bi-dash-circle icon-secondary" title="Sin cantidad"></i>';
 }
 
+function relacionadoFormater(value, row) {
+    if (value && value.trim() !== '') {
+        return '<span class="badge bg-info text-dark" title="Productos relacionados">' + value + '</span>';
+    }
+    return '';
+}
+
 // Funciones de interacción del carrito
 function seleccionarPrecio(radio, code) {
     const precio = parseFloat(radio.value) || 0;

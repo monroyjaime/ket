@@ -325,7 +325,7 @@ $tituloLista = '<h2 style="background-color: #037C79; padding-bottom: 14px; colo
                         <tr>
                             <th data-field="edo" data-formatter="edoFormater" data-width="40"></th>
                             <th data-field="code" data-halign="center" data-align="left" data-width="100">Código</th>
-                            <th data-field="name" data-halign="center" data-align="left" data-width="300">Descripción</th>
+                            <th data-field="relacionado" data-halign="center" data-align="left" data-width="100" data-formatter="relacionadoFormater">Relacionado</th> <!-- NUEVA COLUMNA -->                            <th data-field="name" data-halign="center" data-align="left" data-width="300">Descripción</th>
                             <th data-field="stock" data-halign="center" data-align="center" data-width="80" data-formatter="stockFormater">Stock</th>
                             <th data-field="llegando" data-halign="center" data-align="center" data-width="90" data-formatter="llegandoFormater">Llegando</th>
                             <th data-field="precio_opciones" data-halign="center" data-align="center" data-width="200" data-formatter="precioOpcionesFormater">Precio</th>
