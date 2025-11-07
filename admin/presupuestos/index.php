@@ -13,6 +13,45 @@ $numUsr = isset($_SESSION['usr_num']) ? intval($_SESSION['usr_num']) : -1;
 $role = isset($_SESSION['role']) ? intval($_SESSION['role']) : -1;
 
 $ableToPresupuesto = 'f';
+
+// Preparar opciones de clientes para Tom Select
+$optionsClientes = '';
+
+// Si el usuario tiene un cliente asignado, mostrarlo como opción por defecto
+if ($clientNum > 0) {
+    try {
+        require_once("../../php/dbcat_async.php");
+        $db = new DBAsync();
+        $cliente = $db->consultaSegura("SELECT code, full_name FROM cliente WHERE num = $1", [$clientNum]);
+        
+        if (!empty($cliente)) {
+            $optionsClientes .= '<option value="'.$clientNum.'" selected>'.
+                               htmlspecialchars($cliente[0]->code.' --- '.$cliente[0]->full_name).
+                               '</option>';
+        }
+    } catch (Exception $e) {
+        error_log("Error consultando cliente: " . $e->getMessage());
+    }
+} else {
+    $optionsClientes .= '<option value="0">Seleccione Cliente...</option>';
+}
+
+// Si el usuario puede ver todos los presupuestos, cargar todos los clientes
+if ($showAllPres == 't' && $numUsr > 0) {
+    try {
+        $clientes = $db->consultaSegura("SELECT num, code, full_name FROM cliente ORDER BY code");
+        foreach ($clientes as $cliente) {
+            if ($cliente->num != $clientNum) {
+                $optionsClientes .= '<option value="'.$cliente->num.'">'.
+                                   htmlspecialchars($cliente->code.' --- '.$cliente->full_name).
+                                   '</option>';
+            }
+        }
+    } catch (Exception $e) {
+        error_log("Error consultando clientes: " . $e->getMessage());
+    }
+}
+
 $usrName = "Usuario no identificado";
 
 // Solo mostrar botones si el usuario puede hacer presupuestos
@@ -184,7 +223,7 @@ $tituloLista = '<h2 style="background-color: #037C79; padding-bottom: 14px; colo
                             <div class="p-4">
                                 <h6>Cliente:</h6>
                                 <select id="clients-tom-sel" placeholder="Seleccione Cliente..." autocomplete="off">
-                                    <option value="0">Seleccione Cliente...</option>
+                                    <?php echo $optionsClientes; ?>                                
                                 </select> 
                             </div> 
                         </div>
