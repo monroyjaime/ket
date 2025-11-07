@@ -424,7 +424,7 @@ $tituloLista = '<h2 style="background-color: #037C79; padding-bottom: 14px; colo
                 }
             }
         }
-        console.log('Producto NO encontrado en carrito');
+        //console.log('Producto NO encontrado en carrito');
         return { checked: false };
     }
 
@@ -503,7 +503,6 @@ $tituloLista = '<h2 style="background-color: #037C79; padding-bottom: 14px; colo
     // Event handlers para checkboxes de la tabla principal - CORREGIDOS
     $(function() {
         // Cargar carrito al iniciar
-        cargarCarritoInicial();
         cargarCarritoInicial();
     
     $tableMain.bootstrapTable({})
