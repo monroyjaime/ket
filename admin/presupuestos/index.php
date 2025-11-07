@@ -137,6 +137,68 @@ $tituloLista = '<h2 style="background-color: #037C79; padding-bottom: 14px; colo
         .tiempo-select {
             width: 110px;
         }
+
+        /* NUEVOS ESTILOS PARA TOM SELECT MEJORADO */
+        .ts-control {
+            text-align: left !important;
+            border: 1px solid #037C79 !important;
+            border-radius: 4px !important;
+            padding: 8px 12px !important;
+            background: white !important;
+        }
+        
+        .ts-wrapper.single .ts-control {
+            background: white !important;
+        }
+        
+        .ts-dropdown {
+            text-align: left !important;
+            border: 1px solid #037C79 !important;
+            border-top: none !important;
+            border-radius: 0 0 4px 4px !important;
+            background: white !important;
+        }
+        
+        /* Resaltado de coincidencias - MUY VISIBLE */
+        .ts-dropdown .option .highlight {
+            background-color: #ffeb3b !important;
+            color: #000 !important;
+            font-weight: bold !important;
+            padding: 2px 4px !important;
+            border-radius: 3px !important;
+        }
+        
+        /* Opción seleccionada y hover */
+        .ts-dropdown .active {
+            background-color: #037C79 !important;
+            color: white !important;
+        }
+        
+        .ts-dropdown .option:hover {
+            background-color: #025a57 !important;
+            color: white !important;
+        }
+        
+        /* Input de búsqueda dentro del dropdown */
+        .ts-dropdown .ts-input {
+            border-bottom: 1px solid #037C79 !important;
+            padding: 8px 12px !important;
+        }
+        
+        /* Contenedor del Tom Select alineado a la izquierda */
+        .tom-select-container {
+            text-align: left;
+        }
+        
+        /* Etiqueta del selector */
+        .selector-label {
+            text-align: left;
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #037C79;
+        }
+
     </style>
 </head>
 
@@ -234,11 +296,13 @@ $tituloLista = '<h2 style="background-color: #037C79; padding-bottom: 14px; colo
                     <div class="row">
                         <div class="col">
                             <div class="p-4">
-                                <h6>Cliente:</h6>
-                                <select id="clients-tom-sel" placeholder="Seleccione Cliente..." autocomplete="off">
-                                    <?php echo $optionsClientes; ?>                                
-                                </select> 
-                            </div> 
+                                <div class="tom-select-container">
+                                    <label class="selector-label">Cliente:</label>
+                                    <select id="clients-tom-sel" placeholder="Seleccione Cliente..." autocomplete="off">
+                                        <?php echo $optionsClientes; ?>
+                                    </select>
+                                </div>
+                            </div>
                         </div>
                         <div class="col">
                             <div class="p-4">
