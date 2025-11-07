@@ -401,15 +401,12 @@ function inicializarTiemposEntrega() {
 function getSelected() {
     console.log('Abriendo modal de presupuesto...');
     
-    // Cargar márgenes primero
     cargarMargenesGlobales().then(() => {
-        console.log('Márgenes cargados, ahora forzando actualización del carrito...');
+        console.log('Márgenes en getSelected:', ganancia_min_glob, descuento_max_glob);
         forzarActualizacionCarrito();
         
-        // Esperar a que el carrito se actualice y luego refrescar la tabla
         setTimeout(() => {
             refreshCarritoTable().then(() => {
-                console.log('Tabla refrescada, actualizando total e inicializando...');
                 updateTotal();
                 initPresupuestoModal();
                 inicializarTiemposEntrega();
@@ -590,17 +587,17 @@ function cargarMargenesGlobales() {
         $.post("../../php/getMargenesGlobales.php", function(data) {
             try {
                 const margenes = JSON.parse(data);
-                ganancia_min_glob = parseFloat(margenes.ganancia_min_glob) || 0;
-                descuento_max_glob = parseFloat(margenes.descuento_max_glob) || 0;
-                console.log('Márgenes cargados - Ganancia:', ganancia_min_glob, 'Descuento:', descuento_max_glob);
+                ganancia_min_glob = parseFloat(margenes.ganancia_min_glob);
+                descuento_max_glob = parseFloat(margenes.descuento_max_glob);
+                console.log('Márgenes cargados:', ganancia_min_glob, descuento_max_glob);
                 resolve();
             } catch (e) {
                 console.error('Error cargando márgenes:', e);
+                // Valores por defecto
+                ganancia_min_glob = 1.2;
+                descuento_max_glob = 0.4;
                 resolve();
             }
-        }).fail(function() {
-            console.error('Error al cargar márgenes');
-            resolve();
         });
     });
 }
