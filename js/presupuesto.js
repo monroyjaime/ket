@@ -399,22 +399,28 @@ function inicializarTiemposEntrega() {
 
 // CORREGIR esta función en presupuesto.js
 function getSelected() {
-    console.log('Abriendo modal de presupuesto...');
+    console.log('🎯 getSelected EJECUTADO');
     
+    // Mostrar el modal inmediatamente
+    $('#ModalMakePedido').modal('show');
+    
+    // Cargar márgenes y luego inicializar
     cargarMargenesGlobales().then(() => {
-        console.log('Márgenes en getSelected:', ganancia_min_glob, descuento_max_glob);
+        console.log('🔧 Inicializando modal con márgenes:', ganancia_min_glob, descuento_max_glob);
+        
+        // Forzar actualización del carrito
         forzarActualizacionCarrito();
         
+        // Inicializar componentes del modal
         setTimeout(() => {
-            refreshCarritoTable().then(() => {
+            initPresupuestoModal();
+            if ($tableMakePedido && $tableMakePedido.length > 0) {
+                $tableMakePedido.bootstrapTable('refresh');
                 updateTotal();
-                initPresupuestoModal();
                 inicializarTiemposEntrega();
-            });
-        }, 200);
+            }
+        }, 300);
     });
-    
-    $('#ModalMakePedido').modal({show:true});
 }
 
 function getSelected() {
@@ -587,17 +593,22 @@ function cargarMargenesGlobales() {
         $.post("../../php/getMargenesGlobales.php", function(data) {
             try {
                 const margenes = JSON.parse(data);
-                ganancia_min_glob = parseFloat(margenes.ganancia_min_glob);
-                descuento_max_glob = parseFloat(margenes.descuento_max_glob);
-                console.log('Márgenes cargados:', ganancia_min_glob, descuento_max_glob);
+                ganancia_min_glob = parseFloat(margenes.ganancia_min_glob) || 1.2;
+                descuento_max_glob = parseFloat(margenes.descuento_max_glob) || 0.4;
+                console.log('✅ Márgenes cargados:', ganancia_min_glob, descuento_max_glob);
+                
+                // Refrescar la tabla principal para que se recalcule el formateo
+                if (typeof $tableMain !== 'undefined' && $tableMain.length > 0) {
+                    $tableMain.bootstrapTable('refresh');
+                }
                 resolve();
             } catch (e) {
                 console.error('Error cargando márgenes:', e);
-                // Valores por defecto
-                ganancia_min_glob = 1.2;
-                descuento_max_glob = 0.4;
                 resolve();
             }
+        }).fail(function() {
+            console.error('Error en petición de márgenes');
+            resolve();
         });
     });
 }
@@ -606,6 +617,10 @@ function cargarMargenesGlobales() {
 // Función mejorada con más información de depuración
 function verificarMargenPrecio(costo, precio) {
     // Si el precio es 0, no es válido para selección
+    // Si los márgenes globales son 0, usar valores por defecto
+    const ganancia = (ganancia_min_glob > 0) ? ganancia_min_glob : 1.2;
+    const descuento = (descuento_max_glob > 0) ? descuento_max_glob : 0.4;
+
     if (precio <= 0) {
         console.log(`Precio ${precio} es 0 - deshabilitado`);
         return { cumpleMargen: false, esCero: true };
