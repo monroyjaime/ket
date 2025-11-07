@@ -4,21 +4,35 @@
 var $tableMakePedido, ctrlClientSel;
 
 // Configuración inicial del modal de presupuesto - CORREGIDO
+
+// CORREGIR esta función en presupuesto.js
 function initPresupuestoModal() {
     console.log('Inicializando modal de presupuesto...');
     
+    // VERIFICAR si Tom Select ya está inicializado y destruirlo primero
+    if (ctrlClientSel && ctrlClientSel.initialized) {
+        console.log('Tom Select ya inicializado, destruyendo...');
+        ctrlClientSel.destroy();
+    }
+    
     // Verificar que el elemento existe antes de inicializar Tom Select
     if ($('#clients-tom-sel').length > 0) {
-        ctrlClientSel = new TomSelect("#clients-tom-sel", {
-            sortField: { field: "text", direction: "asc" },
-            onChange: function() {
-                var selectedClient = parseInt(ctrlClientSel.getValue()) || 0;
-                $('#reg-presupuesto').prop('disabled', selectedClient <= 0);
-            },
-            create: true,
-            createOnBlur: true
-        });
-        console.log('Tom Select inicializado correctamente');
+        try {
+            ctrlClientSel = new TomSelect("#clients-tom-sel", {
+                sortField: { field: "text", direction: "asc" },
+                onChange: function() {
+                    var selectedClient = parseInt(ctrlClientSel.getValue()) || 0;
+                    $('#reg-presupuesto').prop('disabled', selectedClient <= 0);
+                },
+                create: true,
+                createOnBlur: true
+            });
+            // Marcar como inicializado
+            ctrlClientSel.initialized = true;
+            console.log('Tom Select inicializado correctamente');
+        } catch (e) {
+            console.error('Error inicializando Tom Select:', e);
+        }
     } else {
         console.error('Elemento #clients-tom-sel no encontrado');
     }
@@ -341,18 +355,42 @@ function inicializarTiemposEntrega() {
 }
 
 // Funciones principales de presupuesto
+
+// CORREGIR esta función en presupuesto.js
 function getSelected() {
     console.log('Abriendo modal de presupuesto...');
     
-    // Inicializar Tom Select solo cuando se abre el modal
-    setTimeout(() => {
-        initPresupuestoModal();
-    }, 100);
-    
+    // Forzar recarga completa del carrito
     refreshCarritoTable().then(() => {
+        console.log('Carrito recargado, actualizando total...');
         updateTotal();
-        setTimeout(inicializarTiemposEntrega, 500);
+        
+        // Inicializar Tom Select después de que el modal esté completamente visible
+        setTimeout(() => {
+            initPresupuestoModal();
+            inicializarTiemposEntrega();
+            console.log('Modal completamente inicializado');
+        }, 300);
     });
+    
+    $('#ModalMakePedido').modal({show:true});
+}
+
+function getSelected() {
+    console.log('Abriendo modal de presupuesto...');
+    
+    // Sincronizar carrito con servidor antes de abrir
+    forzarActualizacionCarrito();
+    
+    // Inicializar después de un breve delay
+    setTimeout(() => {
+        refreshCarritoTable().then(() => {
+            updateTotal();
+            initPresupuestoModal();
+            inicializarTiemposEntrega();
+        });
+    }, 200);
+    
     $('#ModalMakePedido').modal({show:true});
 }
 
@@ -459,3 +497,28 @@ $(document).ready(function() {
         setTimeout(initPresupuestoModal, 100);
     });
 });
+
+// AGREGAR esta función en presupuesto.js
+function forzarActualizacionCarrito() {
+    console.log('Forzando actualización del carrito...');
+    // Recargar datos del carrito desde el servidor
+    $.post("../../php/getCarritoCurrentData.php", function(data) {
+        try {
+            const carritoData = JSON.parse(data);
+            codes_carrito = carritoData.map(item => ({
+                code: item.code,
+                cantidad: item.cantidad,
+                precio: item.precio,
+                tiempo_entrega: item.tiempo_entrega
+            }));
+            console.log('Carrito sincronizado con servidor:', codes_carrito);
+            
+            // Refrescar tabla visual
+            if ($tableMakePedido && $tableMakePedido.length > 0) {
+                $tableMakePedido.bootstrapTable('refresh');
+            }
+        } catch (e) {
+            console.error('Error parseando carrito:', e);
+        }
+    });
+}

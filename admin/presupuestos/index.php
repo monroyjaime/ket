@@ -343,7 +343,7 @@ $tituloLista = '<h2 style="background-color: #037C79; padding-bottom: 14px; colo
         alert('Función mostrar pedidos - En desarrollo');
     }
 
-    // Event handlers para checkboxes de la tabla principal
+    // Event handlers para checkboxes de la tabla principal - CORREGIDOS
     $(function() {
         $tableMain.bootstrapTable({})
             .on('check.bs.table', function(e, row) {
@@ -352,6 +352,19 @@ $tituloLista = '<h2 style="background-color: #037C79; padding-bottom: 14px; colo
                     code: row.code 
                 }, function(data) {
                     console.log('Producto agregado al carrito: ' + data);
+                    // ACTUALIZAR la variable global codes_carrito
+                    if (data == '1') {
+                        // Agregar a codes_carrito
+                        if (!codes_carrito.some(item => item.code === row.code)) {
+                            codes_carrito.push({
+                                code: row.code,
+                                cantidad: 1,
+                                precio: 0,
+                                tiempo_entrega: 0
+                            });
+                        }
+                        console.log('Carrito actualizado:', codes_carrito);
+                    }
                 });
             })
             .on('uncheck.bs.table', function(e, row) {
@@ -360,7 +373,11 @@ $tituloLista = '<h2 style="background-color: #037C79; padding-bottom: 14px; colo
                     code: row.code 
                 }, function(data) {
                     console.log('Producto eliminado del carrito: ' + data);
-                    if (data == 1) {
+                    // ACTUALIZAR la variable global codes_carrito
+                    if (data == '1') {
+                        codes_carrito = codes_carrito.filter(item => item.code !== row.code);
+                        console.log('Carrito actualizado:', codes_carrito);
+                        
                         if ($tableMain.bootstrapTable('getSelections').length == 0) {
                             backToSelfAlt();
                         }
