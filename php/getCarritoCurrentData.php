@@ -18,7 +18,7 @@ try {
     // Obtener productos del carrito con información completa
     $carrito = $db->consultaSegura(
         "SELECT pc.product_code, pc.cantidad, pc.precio, pc.tiempo_entrega,
-                p.name, p.unit, p.stock, p.llegando, p.prec_min, p.prec_may, p.costo
+                p.name, p.unit, p.current_stock, p.stock_lleg, p.costo_max, p.cost_mayor, p.costo
          FROM presupuesto_carrito pc
          INNER JOIN productos p ON pc.product_code = p.code
          WHERE pc.user_num = $1 
@@ -33,10 +33,10 @@ try {
         $obj->code = $item->product_code;
         $obj->name = $item->name;
         $obj->unidad = $item->unit;
-        $obj->stock = intval($item->stock);
-        $obj->llegando = intval($item->llegando);
-        $obj->prec_min = floatval($item->prec_min);
-        $obj->prec_may = floatval($item->prec_may);
+        $obj->stock = intval($item->current_stock);
+        $obj->llegando = intval($item->stock_lleg);
+        $obj->prec_min = floatval($item->costo_max);
+        $obj->prec_may = floatval($item->cost_mayor);
         $obj->costo = floatval($item->costo);
         $obj->cantidad = intval($item->cantidad);
         $obj->precio = floatval($item->precio);
