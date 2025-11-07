@@ -199,6 +199,15 @@ $tituloLista = '<h2 style="background-color: #037C79; padding-bottom: 14px; colo
             color: #037C79;
         }
 
+        .badge-margen {
+            font-size: 0.6rem;
+            padding: 2px 4px;
+        }
+
+        .form-check-label .badge {
+            margin-left: 4px;
+        }
+
     </style>
 </head>
 

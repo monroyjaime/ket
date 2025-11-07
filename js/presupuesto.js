@@ -3,6 +3,10 @@
 // Variables globales para presupuestos
 var $tableMakePedido, ctrlClientSel;
 
+// Variables globales para márgenes
+var ganancia_min_glob = 0;
+var descuento_max_glob = 0;
+
 // Configuración inicial del modal de presupuesto - CORREGIDO
 
 // CORREGIR esta función en presupuesto.js
@@ -95,27 +99,54 @@ function llegandoFormater(value, row) {
 function precioOpcionesFormater(value, row) {
     const precMin = parseFloat(row.prec_min) || 0;
     const precMay = parseFloat(row.prec_may) || 0;
+    const prec3 = parseFloat(row.prec_3) || 0; // NUEVO PRECIO 3
+    const costo = parseFloat(row.costo) || 0;
     const precioActual = parseFloat(row.precio) || 0;
     
     let selectedMin = '';
     let selectedMay = '';
+    let selected3 = '';
     
     if (precioActual === precMin) {
         selectedMin = 'checked';
     } else if (precioActual === precMay) {
         selectedMay = 'checked';
+    } else if (precioActual === prec3) {
+        selected3 = 'checked';
     }
+    
+    // Verificar márgenes para cada precio
+    const cumpleMin = verificarMargenPrecio(costo, precMin);
+    const cumpleMay = verificarMargenPrecio(costo, precMay);
+    const cumple3 = verificarMargenPrecio(costo, prec3);
     
     return `
         <div class="form-check">
             <input class="form-check-input precio-radio" type="radio" name="precio_${row.code}" 
-                   value="${precMin}" ${selectedMin} onchange="seleccionarPrecio(this, '${row.code}')">
-            <label class="form-check-label small">Precio 1: $${precMin.toFixed(3).replace('.', ',')}</label>
+                   value="${precMin}" ${selectedMin} ${!cumpleMin ? 'disabled' : ''} onchange="seleccionarPrecio(this, '${row.code}')">
+            <label class="form-check-label small">
+                Precio 1: $${precMin.toFixed(3).replace('.', ',')}
+                ${!cumpleMin ? '<span class="badge bg-danger ms-1">Margen</span>' : ''}
+            </label>
         </div>
         <div class="form-check">
             <input class="form-check-input precio-radio" type="radio" name="precio_${row.code}" 
-                   value="${precMay}" ${selectedMay} onchange="seleccionarPrecio(this, '${row.code}')">
-            <label class="form-check-label small">Precio 2: $${precMay.toFixed(3).replace('.', ',')}</label>
+                   value="${precMay}" ${selectedMay} ${!cumpleMay ? 'disabled' : ''} onchange="seleccionarPrecio(this, '${row.code}')">
+            <label class="form-check-label small">
+                Precio 2: $${precMay.toFixed(3).replace('.', ',')}
+                ${!cumpleMay ? '<span class="badge bg-danger ms-1">Margen</span>' : ''}
+            </label>
+        </div>
+        <div class="form-check">
+            <input class="form-check-input precio-radio" type="radio" name="precio_${row.code}" 
+                   value="${prec3}" ${selected3} ${!cumple3 ? 'disabled' : ''} onchange="seleccionarPrecio(this, '${row.code}')">
+            <label class="form-check-label small">
+                Precio 3: $${prec3.toFixed(3).replace('.', ',')}
+                ${!cumple3 ? '<span class="badge bg-danger ms-1">Margen</span>' : ''}
+            </label>
+        </div>
+        <div class="small text-muted mt-1">
+            Costo: $${costo.toFixed(3).replace('.', ',')}
         </div>
     `;
 }
@@ -367,17 +398,17 @@ function inicializarTiemposEntrega() {
 function getSelected() {
     console.log('Abriendo modal de presupuesto...');
     
-    // Forzar recarga completa del carrito
-    refreshCarritoTable().then(() => {
-        console.log('Carrito recargado, actualizando total...');
-        updateTotal();
+    // Cargar márgenes primero, luego el carrito
+    cargarMargenesGlobales().then(() => {
+        forzarActualizacionCarrito();
         
-        // Inicializar Tom Select después de que el modal esté completamente visible
         setTimeout(() => {
-            initPresupuestoModal();
-            inicializarTiemposEntrega();
-            console.log('Modal completamente inicializado');
-        }, 300);
+            refreshCarritoTable().then(() => {
+                updateTotal();
+                initPresupuestoModal();
+                inicializarTiemposEntrega();
+            });
+        }, 200);
     });
     
     $('#ModalMakePedido').modal({show:true});
@@ -505,44 +536,77 @@ $(document).ready(function() {
     });
 });
 
-    // AGREGAR esta función en presupuesto.js
-    function forzarActualizacionCarrito() {
-        console.log('Forzando actualización del carrito...');
-        // Recargar datos del carrito desde el servidor
-        $.post("../../php/getCarritoCurrentData.php", function(data) {
-            console.log('Respuesta cruda del servidor:', data);
-            
-            try {
-                // Verificar si la respuesta es JSON válido
-                if (data.trim().startsWith('{') || data.trim().startsWith('[')) {
-                    const carritoData = JSON.parse(data);
-                    codes_carrito = carritoData.map(item => ({
-                        code: item.code,
-                        cantidad: item.cantidad,
-                        precio: item.precio,
-                        tiempo_entrega: item.tiempo_entrega
-                    }));
-                    console.log('Carrito sincronizado con servidor:', codes_carrito);
-                    
-                    // Refrescar tabla visual del modal
-                    if ($tableMakePedido && $tableMakePedido.length > 0) {
-                        $tableMakePedido.bootstrapTable('refresh');
-                    }
-                    
-                    // También refrescar tabla principal para actualizar checks
-                    if ($tableMain && $tableMain.length > 0) {
-                        $tableMain.bootstrapTable('refresh');
-                    }
-                } else {
-                    console.error('El servidor no devolvió JSON:', data);
-                    codes_carrito = [];
+// AGREGAR esta función en presupuesto.js
+function forzarActualizacionCarrito() {
+    console.log('Forzando actualización del carrito...');
+    // Recargar datos del carrito desde el servidor
+    $.post("../../php/getCarritoCurrentData.php", function(data) {
+        console.log('Respuesta cruda del servidor:', data);
+        
+        try {
+            // Verificar si la respuesta es JSON válido
+            if (data.trim().startsWith('{') || data.trim().startsWith('[')) {
+                const carritoData = JSON.parse(data);
+                codes_carrito = carritoData.map(item => ({
+                    code: item.code,
+                    cantidad: item.cantidad,
+                    precio: item.precio,
+                    tiempo_entrega: item.tiempo_entrega
+                }));
+                console.log('Carrito sincronizado con servidor:', codes_carrito);
+                
+                // Refrescar tabla visual del modal
+                if ($tableMakePedido && $tableMakePedido.length > 0) {
+                    $tableMakePedido.bootstrapTable('refresh');
                 }
-            } catch (e) {
-                console.error('Error parseando carrito:', e);
-                console.error('Datos recibidos:', data);
+                
+                // También refrescar tabla principal para actualizar checks
+                if ($tableMain && $tableMain.length > 0) {
+                    $tableMain.bootstrapTable('refresh');
+                }
+            } else {
+                console.error('El servidor no devolvió JSON:', data);
                 codes_carrito = [];
             }
-        }).fail(function(xhr, status, error) {
-            console.error('Error en la petición AJAX:', status, error);
+        } catch (e) {
+            console.error('Error parseando carrito:', e);
+            console.error('Datos recibidos:', data);
+            codes_carrito = [];
+        }
+    }).fail(function(xhr, status, error) {
+        console.error('Error en la petición AJAX:', status, error);
+    });
+}
+
+// Función para cargar márgenes globales
+function cargarMargenesGlobales() {
+    return new Promise((resolve) => {
+        $.post("../../php/getMargenesGlobales.php", function(data) {
+            try {
+                const margenes = JSON.parse(data);
+                ganancia_min_glob = parseFloat(margenes.ganancia_min_glob) || 0;
+                descuento_max_glob = parseFloat(margenes.descuento_max_glob) || 0;
+                console.log('Márgenes cargados - Ganancia:', ganancia_min_glob, 'Descuento:', descuento_max_glob);
+                resolve();
+            } catch (e) {
+                console.error('Error cargando márgenes:', e);
+                resolve();
+            }
+        }).fail(function() {
+            console.error('Error al cargar márgenes');
+            resolve();
         });
-    }
+    });
+}
+
+// Función para verificar si un precio cumple con los márgenes
+function verificarMargenPrecio(costo, precio) {
+    if (costo <= 0 || precio <= 0) return true;
+    
+    // Fórmula: costo > precio * ganancia_min_glob / (1 - descuento_max_glob)
+    const limiteMinimo = precio * ganancia_min_glob / (1 - descuento_max_glob);
+    const cumpleMargen = costo <= limiteMinimo;
+    
+    console.log(`Verificación margen - Costo: ${costo}, Precio: ${precio}, Límite: ${limiteMinimo}, Cumple: ${cumpleMargen}`);
+    return cumpleMargen;
+}
