@@ -401,12 +401,15 @@ function inicializarTiemposEntrega() {
 function getSelected() {
     console.log('Abriendo modal de presupuesto...');
     
-    // Cargar márgenes primero, luego el carrito
+    // Cargar márgenes primero
     cargarMargenesGlobales().then(() => {
+        console.log('Márgenes cargados, ahora forzando actualización del carrito...');
         forzarActualizacionCarrito();
         
+        // Esperar a que el carrito se actualice y luego refrescar la tabla
         setTimeout(() => {
             refreshCarritoTable().then(() => {
+                console.log('Tabla refrescada, actualizando total e inicializando...');
                 updateTotal();
                 initPresupuestoModal();
                 inicializarTiemposEntrega();
