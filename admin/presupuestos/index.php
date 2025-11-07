@@ -400,7 +400,7 @@ $tituloLista = '<h2 style="background-color: #037C79; padding-bottom: 14px; colo
 
 <script type="text/javascript">
     // Variables globales
-    var $tableMain;
+    var $tableMain = $('#table-main');;
     var $tableShowPedido = $('#table-pedidos');
 
     // Formateadores para la tabla principal
@@ -503,47 +503,49 @@ $tituloLista = '<h2 style="background-color: #037C79; padding-bottom: 14px; colo
     $(function() {
         // Cargar carrito al iniciar
         cargarCarritoInicial();
-    
-    $tableMain.bootstrapTable({})
-        .on('check.bs.table', function(e, row) {
-            $.post("../../php/insDelOneProdCarrito.php", { 
-                action: 1, 
-                code: row.code 
-            }, function(data) {
-                console.log('Producto agregado al carrito: ' + data);
-                // ACTUALIZAR la variable global codes_carrito
-                if (data == '1') {
-                    // Agregar a codes_carrito
-                    if (!codes_carrito.some(item => item.code === row.code)) {
-                        codes_carrito.push({
-                            code: row.code,
-                            cantidad: 1,
-                            precio: 0,
-                            tiempo_entrega: 0
-                        });
+    // Verificar si la tabla existe y no está ya inicializada
+    if ($tableMain.length > 0 && !$tableMain.data('bootstrap.table')) 
+    {
+        $tableMain.bootstrapTable({})
+            .on('check.bs.table', function(e, row) {
+                $.post("../../php/insDelOneProdCarrito.php", { 
+                    action: 1, 
+                    code: row.code 
+                }, function(data) {
+                    console.log('Producto agregado al carrito: ' + data);
+                    // ACTUALIZAR la variable global codes_carrito
+                    if (data == '1') {
+                        // Agregar a codes_carrito
+                        if (!codes_carrito.some(item => item.code === row.code)) {
+                            codes_carrito.push({
+                                code: row.code,
+                                cantidad: 1,
+                                precio: 0,
+                                tiempo_entrega: 0
+                            });
+                        }
+                        console.log('Carrito actualizado:', codes_carrito);
                     }
-                    console.log('Carrito actualizado:', codes_carrito);
-                }
-            });
-        })
-        .on('uncheck.bs.table', function(e, row) {
-            $.post("../../php/insDelOneProdCarrito.php", { 
-                action: 0, 
-                code: row.code 
-            }, function(data) {
-                console.log('Producto eliminado del carrito: ' + data);
-                // ACTUALIZAR la variable global codes_carrito
-                if (data == '1') {
-                    codes_carrito = codes_carrito.filter(item => item.code !== row.code);
-                    console.log('Carrito actualizado:', codes_carrito);
-                    
-                    if ($tableMain.bootstrapTable('getSelections').length == 0) {
-                        backToSelfAlt();
+                });
+            })
+            .on('uncheck.bs.table', function(e, row) {
+                $.post("../../php/insDelOneProdCarrito.php", { 
+                    action: 0, 
+                    code: row.code 
+                }, function(data) {
+                    console.log('Producto eliminado del carrito: ' + data);
+                    // ACTUALIZAR la variable global codes_carrito
+                    if (data == '1') {
+                        codes_carrito = codes_carrito.filter(item => item.code !== row.code);
+                        console.log('Carrito actualizado:', codes_carrito);
+                        
+                        if ($tableMain.bootstrapTable('getSelections').length == 0) {
+                            backToSelfAlt();
+                        }
                     }
-                }
+                });
             });
-        });
-
+    }
         // Mejorar la barra de búsqueda
         $('.float-right.search.btn-group').find('input').attr('placeholder', '....');
         $('.float-right.search.btn-group').find('input').wrap("<div class='input-group' id='awsearch'> </div>"); 
