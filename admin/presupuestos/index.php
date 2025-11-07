@@ -237,7 +237,6 @@ $tituloLista = '<h2 style="background-color: #037C79; padding-bottom: 14px; colo
         <table
             id="table-main"
             class="bootstrap-table"
-            data-toggle="table"
             data-show-export="false"
             data-click-to-select="true"
             data-maintain-meta-data="true"
@@ -401,7 +400,7 @@ $tituloLista = '<h2 style="background-color: #037C79; padding-bottom: 14px; colo
 
 <script type="text/javascript">
     // Variables globales
-    var $tableMain = $('#table-main');
+    var $tableMain;
     var $tableShowPedido = $('#table-pedidos');
 
     // Formateadores para la tabla principal
