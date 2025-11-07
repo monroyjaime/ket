@@ -99,7 +99,7 @@ function llegandoFormater(value, row) {
 function precioOpcionesFormater(value, row) {
     const precMin = parseFloat(row.prec_min) || 0;
     const precMay = parseFloat(row.prec_may) || 0;
-    const prec3 = parseFloat(row.prec_3) || 0; // NUEVO PRECIO 3
+    const prec3 = parseFloat(row.prec_3) || 0;
     const costo = parseFloat(row.costo) || 0;
     const precioActual = parseFloat(row.precio) || 0;
     
@@ -115,34 +115,37 @@ function precioOpcionesFormater(value, row) {
         selected3 = 'checked';
     }
     
-    // Verificar márgenes para cada precio
-    const cumpleMin = verificarMargenPrecio(costo, precMin);
-    const cumpleMay = verificarMargenPrecio(costo, precMay);
-    const cumple3 = verificarMargenPrecio(costo, prec3);
+    // Verificar márgenes para cada precio - CON LOGICA CORREGIDA
+    const resultadoMin = verificarMargenPrecio(costo, precMin);
+    const resultadoMay = verificarMargenPrecio(costo, precMay);
+    const resultado3 = verificarMargenPrecio(costo, prec3);
     
     return `
         <div class="form-check">
             <input class="form-check-input precio-radio" type="radio" name="precio_${row.code}" 
-                   value="${precMin}" ${selectedMin} ${!cumpleMin ? 'disabled' : ''} onchange="seleccionarPrecio(this, '${row.code}')">
+                   value="${precMin}" ${selectedMin} ${!resultadoMin.cumpleMargen ? 'disabled' : ''} onchange="seleccionarPrecio(this, '${row.code}')">
             <label class="form-check-label small">
                 Precio 1: $${precMin.toFixed(3).replace('.', ',')}
-                ${!cumpleMin ? '<span class="badge bg-danger ms-1">Margen</span>' : ''}
+                ${!resultadoMin.cumpleMargen && !resultadoMin.esCero ? '<span class="badge bg-danger ms-1">Margen</span>' : ''}
+                ${resultadoMin.esCero ? '<span class="badge bg-secondary ms-1">Cero</span>' : ''}
             </label>
         </div>
         <div class="form-check">
             <input class="form-check-input precio-radio" type="radio" name="precio_${row.code}" 
-                   value="${precMay}" ${selectedMay} ${!cumpleMay ? 'disabled' : ''} onchange="seleccionarPrecio(this, '${row.code}')">
+                   value="${precMay}" ${selectedMay} ${!resultadoMay.cumpleMargen ? 'disabled' : ''} onchange="seleccionarPrecio(this, '${row.code}')">
             <label class="form-check-label small">
                 Precio 2: $${precMay.toFixed(3).replace('.', ',')}
-                ${!cumpleMay ? '<span class="badge bg-danger ms-1">Margen</span>' : ''}
+                ${!resultadoMay.cumpleMargen && !resultadoMay.esCero ? '<span class="badge bg-danger ms-1">Margen</span>' : ''}
+                ${resultadoMay.esCero ? '<span class="badge bg-secondary ms-1">Cero</span>' : ''}
             </label>
         </div>
         <div class="form-check">
             <input class="form-check-input precio-radio" type="radio" name="precio_${row.code}" 
-                   value="${prec3}" ${selected3} ${!cumple3 ? 'disabled' : ''} onchange="seleccionarPrecio(this, '${row.code}')">
+                   value="${prec3}" ${selected3} ${!resultado3.cumpleMargen ? 'disabled' : ''} onchange="seleccionarPrecio(this, '${row.code}')">
             <label class="form-check-label small">
                 Precio 3: $${prec3.toFixed(3).replace('.', ',')}
-                ${!cumple3 ? '<span class="badge bg-danger ms-1">Margen</span>' : ''}
+                ${!resultado3.cumpleMargen && !resultado3.esCero ? '<span class="badge bg-danger ms-1">Margen</span>' : ''}
+                ${resultado3.esCero ? '<span class="badge bg-secondary ms-1">Cero</span>' : ''}
             </label>
         </div>
         <div class="small text-muted mt-1">
@@ -600,13 +603,25 @@ function cargarMargenesGlobales() {
 }
 
 // Función para verificar si un precio cumple con los márgenes
+// Función mejorada con más información de depuración
 function verificarMargenPrecio(costo, precio) {
-    if (costo <= 0 || precio <= 0) return true;
+    // Si el precio es 0, no es válido para selección
+    if (precio <= 0) {
+        console.log(`Precio ${precio} es 0 - deshabilitado`);
+        return { cumpleMargen: false, esCero: true };
+    }
     
-    // Fórmula: costo > precio * ganancia_min_glob / (1 - descuento_max_glob)
+    if (costo <= 0) {
+        console.log(`Costo ${costo} es 0 - siempre válido`);
+        return { cumpleMargen: true, esCero: false };
+    }
+    
+    // Fórmula CORREGIDA: precio * ganancia_min_glob / (1 - descuento_max_glob) > costo
     const limiteMinimo = precio * ganancia_min_glob / (1 - descuento_max_glob);
-    const cumpleMargen = costo <= limiteMinimo;
+    const cumpleMargen = limiteMinimo > costo;
     
     console.log(`Verificación margen - Costo: ${costo}, Precio: ${precio}, Límite: ${limiteMinimo}, Cumple: ${cumpleMargen}`);
-    return cumpleMargen;
+    console.log(`Fórmula: ${precio} * ${ganancia_min_glob} / (1 - ${descuento_max_glob}) = ${limiteMinimo} > ${costo} = ${cumpleMargen}`);
+    
+    return { cumpleMargen: cumpleMargen, esCero: false };
 }
