@@ -505,27 +505,44 @@ $(document).ready(function() {
     });
 });
 
-// AGREGAR esta función en presupuesto.js
-function forzarActualizacionCarrito() {
-    console.log('Forzando actualización del carrito...');
-    // Recargar datos del carrito desde el servidor
-    $.post("../../php/getCarritoCurrentData.php", function(data) {
-        try {
-            const carritoData = JSON.parse(data);
-            codes_carrito = carritoData.map(item => ({
-                code: item.code,
-                cantidad: item.cantidad,
-                precio: item.precio,
-                tiempo_entrega: item.tiempo_entrega
-            }));
-            console.log('Carrito sincronizado con servidor:', codes_carrito);
+    // AGREGAR esta función en presupuesto.js
+    function forzarActualizacionCarrito() {
+        console.log('Forzando actualización del carrito...');
+        // Recargar datos del carrito desde el servidor
+        $.post("../../php/getCarritoCurrentData.php", function(data) {
+            console.log('Respuesta cruda del servidor:', data);
             
-            // Refrescar tabla visual
-            if ($tableMakePedido && $tableMakePedido.length > 0) {
-                $tableMakePedido.bootstrapTable('refresh');
+            try {
+                // Verificar si la respuesta es JSON válido
+                if (data.trim().startsWith('{') || data.trim().startsWith('[')) {
+                    const carritoData = JSON.parse(data);
+                    codes_carrito = carritoData.map(item => ({
+                        code: item.code,
+                        cantidad: item.cantidad,
+                        precio: item.precio,
+                        tiempo_entrega: item.tiempo_entrega
+                    }));
+                    console.log('Carrito sincronizado con servidor:', codes_carrito);
+                    
+                    // Refrescar tabla visual del modal
+                    if ($tableMakePedido && $tableMakePedido.length > 0) {
+                        $tableMakePedido.bootstrapTable('refresh');
+                    }
+                    
+                    // También refrescar tabla principal para actualizar checks
+                    if ($tableMain && $tableMain.length > 0) {
+                        $tableMain.bootstrapTable('refresh');
+                    }
+                } else {
+                    console.error('El servidor no devolvió JSON:', data);
+                    codes_carrito = [];
+                }
+            } catch (e) {
+                console.error('Error parseando carrito:', e);
+                console.error('Datos recibidos:', data);
+                codes_carrito = [];
             }
-        } catch (e) {
-            console.error('Error parseando carrito:', e);
-        }
-    });
-}
+        }).fail(function(xhr, status, error) {
+            console.error('Error en la petición AJAX:', status, error);
+        });
+    }

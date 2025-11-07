@@ -405,13 +405,17 @@ $tituloLista = '<h2 style="background-color: #037C79; padding-bottom: 14px; colo
     }
 
     function checkFormater(value, row) {
+        console.log('Check formater para:', row.code, 'Carrito:', codes_carrito);
+        
         if (codes_carrito.length > 0) {
             for (i = 0; i < codes_carrito.length; i++) {
                 if (row.code === codes_carrito[i].code) {
+                    console.log('Producto encontrado en carrito, marcando check');
                     return { checked: true };
                 }
             }
         }
+        console.log('Producto NO encontrado en carrito');
         return { checked: false };
     }
 
@@ -459,47 +463,79 @@ $tituloLista = '<h2 style="background-color: #037C79; padding-bottom: 14px; colo
         alert('Función mostrar pedidos - En desarrollo');
     }
 
+    // Función para cargar el carrito al iniciar la página
+    function cargarCarritoInicial() {
+        console.log('Cargando carrito inicial...');
+        $.get("../../php/getCarritoCurrentData.php", function(data) {
+            try {
+                const carritoData = JSON.parse(data);
+                codes_carrito = carritoData.map(item => ({
+                    code: item.code,
+                    cantidad: item.cantidad,
+                    precio: item.precio,
+                    tiempo_entrega: item.tiempo_entrega
+                }));
+                console.log('Carrito inicial cargado:', codes_carrito.length, 'productos');
+                
+                // Forzar actualización de los checks en la tabla principal
+                if ($tableMain.length > 0) {
+                    setTimeout(() => {
+                        $tableMain.bootstrapTable('refresh');
+                    }, 500);
+                }
+            } catch (e) {
+                console.error('Error cargando carrito inicial:', e);
+            }
+        }).fail(function() {
+            console.error('Error al cargar carrito inicial');
+        });
+    }
+
     // Event handlers para checkboxes de la tabla principal - CORREGIDOS
     $(function() {
-        $tableMain.bootstrapTable({})
-            .on('check.bs.table', function(e, row) {
-                $.post("../../php/insDelOneProdCarrito.php", { 
-                    action: 1, 
-                    code: row.code 
-                }, function(data) {
-                    console.log('Producto agregado al carrito: ' + data);
-                    // ACTUALIZAR la variable global codes_carrito
-                    if (data == '1') {
-                        // Agregar a codes_carrito
-                        if (!codes_carrito.some(item => item.code === row.code)) {
-                            codes_carrito.push({
-                                code: row.code,
-                                cantidad: 1,
-                                precio: 0,
-                                tiempo_entrega: 0
-                            });
-                        }
-                        console.log('Carrito actualizado:', codes_carrito);
+        // Cargar carrito al iniciar
+        cargarCarritoInicial();
+        cargarCarritoInicial();
+    
+    $tableMain.bootstrapTable({})
+        .on('check.bs.table', function(e, row) {
+            $.post("../../php/insDelOneProdCarrito.php", { 
+                action: 1, 
+                code: row.code 
+            }, function(data) {
+                console.log('Producto agregado al carrito: ' + data);
+                // ACTUALIZAR la variable global codes_carrito
+                if (data == '1') {
+                    // Agregar a codes_carrito
+                    if (!codes_carrito.some(item => item.code === row.code)) {
+                        codes_carrito.push({
+                            code: row.code,
+                            cantidad: 1,
+                            precio: 0,
+                            tiempo_entrega: 0
+                        });
                     }
-                });
-            })
-            .on('uncheck.bs.table', function(e, row) {
-                $.post("../../php/insDelOneProdCarrito.php", { 
-                    action: 0, 
-                    code: row.code 
-                }, function(data) {
-                    console.log('Producto eliminado del carrito: ' + data);
-                    // ACTUALIZAR la variable global codes_carrito
-                    if (data == '1') {
-                        codes_carrito = codes_carrito.filter(item => item.code !== row.code);
-                        console.log('Carrito actualizado:', codes_carrito);
-                        
-                        if ($tableMain.bootstrapTable('getSelections').length == 0) {
-                            backToSelfAlt();
-                        }
-                    }
-                });
+                    console.log('Carrito actualizado:', codes_carrito);
+                }
             });
+        })
+        .on('uncheck.bs.table', function(e, row) {
+            $.post("../../php/insDelOneProdCarrito.php", { 
+                action: 0, 
+                code: row.code 
+            }, function(data) {
+                console.log('Producto eliminado del carrito: ' + data);
+                // ACTUALIZAR la variable global codes_carrito
+                if (data == '1') {
+                    codes_carrito = codes_carrito.filter(item => item.code !== row.code);
+                    console.log('Carrito actualizado:', codes_carrito);
+                    
+                    if ($tableMain.bootstrapTable('getSelections').length == 0) {
+                        backToSelfAlt();
+                    }
+                }
+            });
+        });
 
         // Mejorar la barra de búsqueda
         $('.float-right.search.btn-group').find('input').attr('placeholder', '....');
