@@ -414,7 +414,7 @@ $tituloLista = '<h2 style="background-color: #037C79; padding-bottom: 14px; colo
     }
 
     function checkFormater(value, row) {
-        console.log('Check formater para:', row.code, 'Carrito:', codes_carrito);
+        //console.log('Check formater para:', row.code, 'Carrito:', codes_carrito);
         
         if (codes_carrito.length > 0) {
             for (i = 0; i < codes_carrito.length; i++) {
