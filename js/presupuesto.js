@@ -22,15 +22,34 @@ function verificarMargenPrecio(costo, precio) {
     return { cumpleMargen: cumpleMargen, esCero: false };
 }
 
-// Función getSelected simplificada
+// Función getSelected 
+
 function getSelected() {
-    console.log('🎯 getSelected ejecutado - Márgenes:', ganancia_min_glob, descuento_max_glob);
+    console.log('🎯 getSelected ejecutado');
+    verificarEstadoCarrito();
     
-    // Forzar actualización del carrito antes de abrir el modal
-    forzarActualizacionCarrito();
-    
-    $('#ModalMakePedido').modal('show');
+    forzarActualizacionCarrito().then(() => {
+        console.log('✅ Después de forzarActualizacionCarrito:');
+        verificarEstadoCarrito();
+        
+        $('#ModalMakePedido').modal('show');
+        
+        setTimeout(() => {
+            if ($tableMakePedido && $tableMakePedido.length > 0) {
+                console.log('🔄 Refrescando tabla del carrito...');
+                $tableMakePedido.bootstrapTable('refresh');
+                
+                // Verificar datos de la tabla después de refrescar
+                setTimeout(() => {
+                    const tableData = $tableMakePedido.bootstrapTable('getData');
+                    console.log('📊 Datos en tabla carrito:', tableData.length, 'filas');
+                }, 1000);
+            }
+        }, 500);
+    });
 }
+
+
 
 // Función para inicializar el Tom Select en el modal
 function initPresupuestoModal() {
@@ -66,30 +85,37 @@ function initPresupuestoModal() {
 }
 
 // Función para forzar actualización del carrito
+
 function forzarActualizacionCarrito() {
-    console.log('🔄 Forzando actualización del carrito...');
-    $.get("../../php/getCarritoCurrentData.php", function(data) {
-        try {
-            const carritoData = JSON.parse(data);
-            codes_carrito = carritoData.map(item => ({
-                code: item.code,
-                cantidad: item.cantidad,
-                precio: item.precio,
-                tiempo_entrega: item.tiempo_entrega
-            }));
-            console.log('✅ Carrito sincronizado:', codes_carrito.length, 'productos');
-            
-            // Refrescar tabla principal para actualizar checks
-            if (typeof $tableMain !== 'undefined' && $tableMain.length > 0) {
-                $tableMain.bootstrapTable('refresh');
+    return new Promise((resolve) => {
+        console.log('🔄 Forzando actualización del carrito...');
+        $.get("../../php/getCarritoCurrentData.php", function(data) {
+            try {
+                const carritoData = JSON.parse(data);
+                codes_carrito = carritoData.map(item => ({
+                    code: item.code,
+                    cantidad: item.cantidad,
+                    precio: item.precio,
+                    tiempo_entrega: item.tiempo_entrega
+                }));
+                console.log('✅ Carrito sincronizado:', codes_carrito.length, 'productos');
+                
+                // Refrescar tabla principal para actualizar checks
+                if (typeof $tableMain !== 'undefined' && $tableMain.length > 0) {
+                    $tableMain.bootstrapTable('refresh');
+                }
+                
+                resolve(); // Resolver la Promise cuando termine
+            } catch (e) {
+                console.error('Error parseando carrito:', e);
+                codes_carrito = [];
+                resolve();
             }
-        } catch (e) {
-            console.error('Error parseando carrito:', e);
+        }).fail(function() {
+            console.error('Error cargando carrito');
             codes_carrito = [];
-        }
-    }).fail(function() {
-        console.error('Error cargando carrito');
-        codes_carrito = [];
+            resolve();
+        });
     });
 }
 
@@ -647,7 +673,16 @@ function calcularTotalPresupuesto() {
     return 0;
 }
 
+
+function verificarEstadoCarrito() {
+    console.log('=== ESTADO CARRITO ===');
+    console.log('codes_carrito:', codes_carrito);
+    console.log('Número de productos:', codes_carrito.length);
+    console.log('=====================');
+}
+
 // Inicialización
+
 $(document).ready(function() {
     console.log('🚀 presupuesto.js inicializado');
     $tableMakePedido = $('#table-carrito');
@@ -655,12 +690,33 @@ $(document).ready(function() {
     // Los márgenes ya están disponibles desde index.php
     console.log('📊 Márgenes en presupuesto.js:', {ganancia_min_glob, descuento_max_glob});
     
-    // Inicializar Tom Select cuando se abre el modal
+    // Inicializar Tom Select cuando se abre el modal Y refrescar tabla
     $('#ModalMakePedido').on('show.bs.modal', function() {
         console.log('🎯 Modal de presupuesto abriéndose...');
+        
+        // Refrescar la tabla del carrito cuando el modal se muestre
+        if ($tableMakePedido && $tableMakePedido.length > 0) {
+            setTimeout(() => {
+                console.log('🔄 Refrescando tabla del carrito en evento show...');
+                $tableMakePedido.bootstrapTable('refresh');
+            }, 300);
+        }
+        
         setTimeout(initPresupuestoModal, 100);
     });
+    
+    // También refrescar cuando el modal esté completamente visible
+    $('#ModalMakePedido').on('shown.bs.modal', function() {
+        console.log('✅ Modal completamente visible, refrescando tabla...');
+        if ($tableMakePedido && $tableMakePedido.length > 0) {
+            $tableMakePedido.bootstrapTable('refresh');
+            updateTotal();
+        }
+    });
 });
+
+
+
 
 // Función para generar número de presupuesto automático
 function generarNumeroPresupuesto() {
