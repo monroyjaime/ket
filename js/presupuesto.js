@@ -384,8 +384,8 @@ function relacionadoFormater(value, row) {
 function seleccionarPrecio(radio, code) {
     const precio = parseFloat(radio.value) || 0;
     
-    // Limpiar el input manual cuando se selecciona un precio predefinido
-    $(`.precio-manual-input[data-code="${code}"]`).val('');
+    // CAMBIAR ESTO: en lugar de vaciar el input, poner el precio seleccionado
+    $(`.precio-manual-input[data-code="${code}"]`).val(precio);
     
     debounce(() => {
         $.post("../../php/updPrecioOneProdCarrito.php", {
@@ -400,6 +400,9 @@ function seleccionarPrecio(radio, code) {
         });
     })();
 }
+
+
+
 
 function actualizarPrecioManual(input) {
     const code = input.getAttribute('data-code');
