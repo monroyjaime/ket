@@ -18,26 +18,15 @@ if ($numUsr <= 0) {
 
 try {
     // Obtener datos del POST
-    $inputJSON = file_get_contents('php://input');
-    $input = json_decode($inputJSON, true);
-    
-    error_log("Datos recibidos en raw: " . $inputJSON);
-    error_log("Datos recibidos en POST: " . print_r($_POST, true));
-    
-    // Verificar si viene en $_POST o en el body JSON
     if (isset($_POST['data'])) {
         $data = json_decode($_POST['data'], true);
-    } else if (isset($input['data'])) {
-        $data = json_decode($input['data'], true);
     } else {
-        throw new Exception('Datos del presupuesto vacíos o inválidos. POST: ' . print_r($_POST, true));
+        throw new Exception('Datos del presupuesto vacíos o inválidos');
     }
     
     if (empty($data)) {
         throw new Exception('Datos del presupuesto vacíos después del decode');
     }
-    
-    error_log("Datos del presupuesto decodificados: " . print_r($data, true));
     
     // Obtener información del cliente
     $clienteData = $db->consultaSegura(
@@ -52,6 +41,13 @@ try {
     $clienteCode = $clienteData[0]->code;
     $clienteNombre = $clienteData[0]->full_name;
     
+    // ✅ OPCIÓN A: Generar un número de presupuesto numérico único
+    $presupuestoNum = $db->consultaSegura(
+        "SELECT COALESCE(MAX(presupuesto_num), 0) + 1 as next_num FROM presupuesto_gen"
+    );
+    
+    $numeroPresupuesto = $presupuestoNum[0]->next_num;
+    
     // Insertar en presupuesto_gen
     $presupuestoGen = $db->consultaSegura(
         "INSERT INTO presupuesto_gen 
@@ -60,8 +56,8 @@ try {
         RETURNING idx",
         [
             $data['usuario'],
-            $data['numero'],
-            $data['numero'], // num_valery usa el mismo número
+            $numeroPresupuesto, // ✅ Número numérico auto-generado
+            $data['numero'],    // ✅ El string original va en num_valery
             $data['comentario'] ?? '',
             $clienteCode
         ]
@@ -98,6 +94,8 @@ try {
     echo json_encode([
         'success' => true,
         'presupuesto_id' => $presupuestoIdx,
+        'presupuesto_num' => $numeroPresupuesto,
+        'presupuesto_num_valery' => $data['numero'], // El string original
         'message' => 'Presupuesto guardado correctamente'
     ]);
     

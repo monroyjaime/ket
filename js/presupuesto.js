@@ -634,15 +634,14 @@ function guardarPresupuesto() {
                 console.log('📥 Respuesta del servidor:', respuesta);
                 
                 if (respuesta.success) {
-                    alert('✅ Presupuesto guardado correctamente');
+                    alert(`✅ Presupuesto guardado correctamente\nNúmero: ${respuesta.presupuesto_num}`);
                     $('#ModalMakePedido').modal('hide');
                     
                     // Redirigir a la página de visualización del presupuesto
                     setTimeout(() => {
                         window.location.href = `../php/verPresupuesto.php?presupuesto_id=${respuesta.presupuesto_id}`;
                     }, 1000);
-                    
-                } else {
+                }else {
                     alert('❌ Error al guardar el presupuesto: ' + respuesta.error);
                 }
             },
