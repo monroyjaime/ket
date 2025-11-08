@@ -542,6 +542,7 @@ function inicializarTiemposEntrega() {
 }
 
 // Función para guardar presupuesto
+
 function guardarPresupuesto() {
     const selectedClientNum = parseInt(ctrlClientSel.getValue()) || 0;
     const numeroPresupuesto = $('#numero-presupuesto').val();
@@ -595,23 +596,40 @@ function guardarPresupuesto() {
 
         const paramJSON = JSON.stringify(presupuesto);
         
+        console.log('📤 Enviando presupuesto a guardar...', presupuesto);
+        
         $.post("../../php/guardarPresupuesto.php", {
             data: paramJSON
         }, function(data, status) {
-            if (status === 'success' && data == '1') {
-                alert('Presupuesto guardado correctamente');
-                $('#ModalMakePedido').modal('hide');
-                $.post("../../php/limpiarCarritoPresupuesto.php", function() {
-                    backToSelfAlt();
-                });
-            } else {
-                alert('Error al guardar el presupuesto: ' + data);
+            console.log('📥 Respuesta del servidor:', data);
+            
+            if (status === 'success') {
+                try {
+                    const respuesta = JSON.parse(data);
+                    if (respuesta.success) {
+                        alert('✅ Presupuesto guardado correctamente');
+                        $('#ModalMakePedido').modal('hide');
+                        
+                        // Redirigir a la página de visualización del presupuesto
+                        setTimeout(() => {
+                            window.location.href = `verPresupuesto.php?presupuesto_id=${respuesta.presupuesto_id}`;
+                        }, 1000);
+                        
+                    } else {
+                        alert('❌ Error al guardar el presupuesto: ' + respuesta.error);
+                    }
+                } catch (e) {
+                    console.error('Error parseando respuesta:', e);
+                    alert('❌ Error inesperado al guardar el presupuesto');
+                }
             }
-        }).fail(function() {
-            alert('Error de conexión');
+        }).fail(function(xhr, status, error) {
+            console.error('Error en la petición:', status, error);
+            alert('❌ Error de conexión al guardar el presupuesto');
         });
     }
 }
+
 
 function calcularTotalPresupuesto() {
     if ($tableMakePedido && $tableMakePedido.length > 0) {
