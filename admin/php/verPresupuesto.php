@@ -4,7 +4,8 @@ ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
 session_start();
-require_once("dbcat_async.php");
+//require_once("dbcat_async.php");
+require_once("../../php/dbcat_async.php");
 
 $presupuesto_id = $_GET['presupuesto_id'] ?? 0;
 $db = new DBAsync();
