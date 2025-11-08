@@ -230,6 +230,68 @@ $tituloLista = '<h2 style="background-color: #037C79; padding-bottom: 14px; colo
             margin-left: 4px;
         }
 
+        /* Estilos para la columna de precio combinada */
+        .precio-combinado-container {
+            padding: 4px 0;
+        }
+
+        .precio-opciones {
+            border-bottom: 1px solid #e9ecef;
+            padding-bottom: 6px;
+        }
+
+        .precio-manual-container {
+            padding-top: 6px;
+        }
+
+        .precio-info {
+            font-size: 0.7rem;
+            line-height: 1.2;
+        }
+
+        /* Mejorar los radio buttons inline */
+        .form-check-inline {
+            margin-right: 8px;
+            margin-bottom: 2px;
+        }
+
+        .form-check-inline .form-check-input {
+            margin-right: 4px;
+        }
+
+        .form-check-inline .form-check-label {
+            font-size: 0.75rem;
+        }
+
+        /* Input group más compacto */
+        .precio-manual-container .input-group-sm {
+            height: 28px;
+        }
+
+        .precio-manual-container .input-group-text {
+            font-size: 0.75rem;
+            padding: 0.25rem 0.5rem;
+        }
+
+        .precio-manual-container .form-control {
+            font-size: 0.75rem;
+            padding: 0.25rem 0.5rem;
+            height: 28px;
+        }
+
+        /* Badges más compactos */
+        .badge-margen {
+            font-size: 0.55rem;
+            padding: 1px 3px;
+            margin-left: 2px;
+        }
+
+        /* Ajustar altura de filas de la tabla */
+        #table-carrito .bootstrap-table .table tbody tr td {
+            padding: 4px 8px;
+            vertical-align: top;
+        }
+
     </style>
 </head>
 
@@ -285,8 +347,10 @@ $tituloLista = '<h2 style="background-color: #037C79; padding-bottom: 14px; colo
                     <th data-field="relacionado" data-halign="center" data-align="left">RELACIONADO</th>
                     <th data-field="stock" data-halign="center" data-align="left">STOCK</th>
                     <th data-field="llegando" data-halign="center" data-align="left">LLEGANDO</th>
-                    <th data-field="prec_min" data-formatter="precioFormaterPresup" data-halign="center" data-align="left">PREC 1</th>
-                    <th data-field="prec_may" data-formatter="precioFormaterPresup" data-halign="center" data-align="left">PREC 2</th>
+                    <!--<th data-field="prec_min" data-formatter="precioFormaterPresup" data-halign="center" data-align="left">PREC 1</th>
+                    <th data-field="prec_may" data-formatter="precioFormaterPresup" data-halign="center" data-align="left">PREC 2</th> -->
+                    <!-- NUEVA COLUMNA COMBINADA EN LUGAR DE LAS DOS ANTERIORES -->
+                    <th data-field="precio_combinado" data-halign="center" data-align="center" data-width="280" data-formatter="precioCombinadoFormater">Precio</th>
                     <th data-field="costo" data-formatter="precioFormatergen" data-halign="center" data-align="left">COSTO</th>
                     <th data-field="unit">UNIDAD</th>
                     <th data-field="name" data-halign="center" data-align="left" data-width="500">. . . . . . DESCRIPCION . . . . . .</th>

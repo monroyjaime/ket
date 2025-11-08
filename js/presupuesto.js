@@ -218,6 +218,98 @@ function precioManualFormater(value, row) {
     `;
 }
 
+function precioCombinadoFormater(value, row) {
+    const precMin = parseFloat(row.prec_min) || 0;
+    const precMay = parseFloat(row.prec_may) || 0;
+    const prec3 = parseFloat(row.prec_3) || 0;
+    const costo = parseFloat(row.costo) || 0;
+    const precioActual = parseFloat(row.precio) || 0;
+    
+    // Determinar qué precio está seleccionado actualmente
+    let precioSeleccionado = '';
+    let esManual = false;
+    
+    if (precioActual === precMin) {
+        precioSeleccionado = 'precio1';
+    } else if (precioActual === precMay) {
+        precioSeleccionado = 'precio2';
+    } else if (precioActual === prec3) {
+        precioSeleccionado = 'precio3';
+    } else if (precioActual > 0) {
+        precioSeleccionado = 'manual';
+        esManual = true;
+    }
+    
+    // Verificar márgenes para cada precio
+    const resultadoMin = verificarMargenPrecio(costo, precMin);
+    const resultadoMay = verificarMargenPrecio(costo, precMay);
+    const resultado3 = verificarMargenPrecio(costo, prec3);
+    
+    // Calcular factores de ganancia
+    const factorMin = costo > 0 ? (precMin / costo).toFixed(2) : 'N/A';
+    const factorMay = costo > 0 ? (precMay / costo).toFixed(2) : 'N/A';
+    const factor3 = costo > 0 ? (prec3 / costo).toFixed(2) : 'N/A';
+    
+    return `
+        <div class="precio-combinado-container">
+            <!-- Selector de precios predefinidos -->
+            <div class="precio-opciones mb-2">
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input precio-radio" type="radio" name="precio_${row.code}" 
+                           value="${precMin}" ${precioSeleccionado === 'precio1' ? 'checked' : ''} 
+                           ${!resultadoMin.cumpleMargen ? 'disabled' : ''} 
+                           onchange="seleccionarPrecio(this, '${row.code}')">
+                    <label class="form-check-label small">
+                        $${precMin.toFixed(3).replace('.', ',')}
+                        <span class="badge badge-margen ${resultadoMin.cumpleMargen ? 'bg-success' : 'bg-danger'}">${factorMin}x</span>
+                    </label>
+                </div>
+                
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input precio-radio" type="radio" name="precio_${row.code}" 
+                           value="${precMay}" ${precioSeleccionado === 'precio2' ? 'checked' : ''} 
+                           ${!resultadoMay.cumpleMargen ? 'disabled' : ''} 
+                           onchange="seleccionarPrecio(this, '${row.code}')">
+                    <label class="form-check-label small">
+                        $${precMay.toFixed(3).replace('.', ',')}
+                        <span class="badge badge-margen ${resultadoMay.cumpleMargen ? 'bg-success' : 'bg-danger'}">${factorMay}x</span>
+                    </label>
+                </div>
+                
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input precio-radio" type="radio" name="precio_${row.code}" 
+                           value="${prec3}" ${precioSeleccionado === 'precio3' ? 'checked' : ''} 
+                           ${!resultado3.cumpleMargen ? 'disabled' : ''} 
+                           onchange="seleccionarPrecio(this, '${row.code}')">
+                    <label class="form-check-label small">
+                        $${prec3.toFixed(3).replace('.', ',')}
+                        <span class="badge badge-margen ${resultado3.cumpleMargen ? 'bg-success' : 'bg-danger'}">${factor3}x</span>
+                    </label>
+                </div>
+            </div>
+            
+            <!-- Input de precio manual -->
+            <div class="precio-manual-container">
+                <div class="input-group input-group-sm">
+                    <span class="input-group-text">Manual:</span>
+                    <input class="form-control precio-manual-input" type="number" step="0.001" min="0" 
+                           value="${esManual ? precioActual : ''}" 
+                           data-code="${row.code}" 
+                           placeholder="0.000"
+                           onfocus="this.select()" 
+                           oninput="actualizarPrecioManual(this)"/>
+                    <span class="input-group-text">$</span>
+                </div>
+            </div>
+            
+            <!-- Información de costos -->
+            <div class="precio-info small text-muted mt-1">
+                Costo: $${costo.toFixed(3).replace('.', ',')} | Mínimo: ${ganancia_min_glob}x
+            </div>
+        </div>
+    `;
+}
+
 function cantidadFormater(value, row) {
     return `
         <input class="form-control cantidad-input" type="number" min="0" 
@@ -288,10 +380,12 @@ function relacionadoFormater(value, row) {
 }
 
 // Funciones de interacción del carrito
+
 function seleccionarPrecio(radio, code) {
     const precio = parseFloat(radio.value) || 0;
     
-    $(`.precio-manual-input[data-code="${code}"]`).val(precio);
+    // Limpiar el input manual cuando se selecciona un precio predefinido
+    $(`.precio-manual-input[data-code="${code}"]`).val('');
     
     debounce(() => {
         $.post("../../php/updPrecioOneProdCarrito.php", {
@@ -311,6 +405,7 @@ function actualizarPrecioManual(input) {
     const code = input.getAttribute('data-code');
     const precio = parseFloat(input.value) || 0;
     
+    // Deseleccionar cualquier radio button cuando se usa precio manual
     $(`.precio-radio[name="precio_${code}"]`).prop('checked', false);
     
     debounce(() => {
@@ -326,6 +421,7 @@ function actualizarPrecioManual(input) {
         });
     })();
 }
+
 
 function actualizarCantidad(input) {
     const code = input.getAttribute('data-code');
