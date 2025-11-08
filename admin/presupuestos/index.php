@@ -347,10 +347,8 @@ $tituloLista = '<h2 style="background-color: #037C79; padding-bottom: 14px; colo
                     <th data-field="relacionado" data-halign="center" data-align="left">RELACIONADO</th>
                     <th data-field="stock" data-halign="center" data-align="left">STOCK</th>
                     <th data-field="llegando" data-halign="center" data-align="left">LLEGANDO</th>
-                    <!--<th data-field="prec_min" data-formatter="precioFormaterPresup" data-halign="center" data-align="left">PREC 1</th>
-                    <th data-field="prec_may" data-formatter="precioFormaterPresup" data-halign="center" data-align="left">PREC 2</th> -->
-                    <!-- NUEVA COLUMNA COMBINADA EN LUGAR DE LAS DOS ANTERIORES -->
-                    <th data-field="precio_combinado" data-halign="center" data-align="center" data-width="280" data-formatter="precioCombinadoFormater">Precio</th>
+                    <th data-field="prec_min" data-formatter="precioFormaterPresup" data-halign="center" data-align="left">PREC 1</th>
+                    <th data-field="prec_may" data-formatter="precioFormaterPresup" data-halign="center" data-align="left">PREC 2</th>
                     <th data-field="costo" data-formatter="precioFormatergen" data-halign="center" data-align="left">COSTO</th>
                     <th data-field="unit">UNIDAD</th>
                     <th data-field="name" data-halign="center" data-align="left" data-width="500">. . . . . . DESCRIPCION . . . . . .</th>
@@ -422,9 +420,10 @@ $tituloLista = '<h2 style="background-color: #037C79; padding-bottom: 14px; colo
                             <th data-field="relacionado" data-halign="center" data-align="left" data-width="100" data-formatter="relacionadoFormater">Relacionado</th> <!-- NUEVA COLUMNA -->                            <th data-field="name" data-halign="center" data-align="left" data-width="300">Descripción</th>
                             <th data-field="stock" data-halign="center" data-align="center" data-width="80" data-formatter="stockFormater">Stock</th>
                             <th data-field="llegando" data-halign="center" data-align="center" data-width="90" data-formatter="llegandoFormater">Llegando</th>
-                            <th data-field="precio_opciones" data-halign="center" data-align="center" data-width="200" data-formatter="precioOpcionesFormater">Precio</th>
-                            <th data-field="precio_manual" data-halign="center" data-align="center" data-width="120" data-formatter="precioManualFormater">Precio Manual</th>
-                            <th data-field="cantidad" data-halign="center" data-align="center" data-width="100" data-formatter="cantidadFormater">Cantidad</th>
+                            <!--<th data-field="precio_opciones" data-halign="center" data-align="center" data-width="200" data-formatter="precioOpcionesFormater">Precio</th>
+                            <th data-field="precio_manual" data-halign="center" data-align="center" data-width="120" data-formatter="precioManualFormater">Precio Manual</th> -->
+                            <!-- NUEVA COLUMNA COMBINADA - SOLO EN ESTA TABLA -->
+                            <th data-field="precio_combinado" data-halign="center" data-align="center" data-width="280" data-formatter="precioCombinadoFormater">Precio</th>                            <th data-field="cantidad" data-halign="center" data-align="center" data-width="100" data-formatter="cantidadFormater">Cantidad</th>
                             <th data-field="unidad" data-halign="center" data-align="center" data-width="80">Unidad</th>
                             <th data-field="tiempo_entrega" data-halign="center" data-align="center" data-width="120" data-formatter="tiempoEntregaFormater">Tiempo Entrega</th>
                             <th data-field="monto" data-halign="center" data-align="right" data-width="100" data-formatter="montoFormater">Monto</th>
