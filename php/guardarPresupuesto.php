@@ -20,11 +20,24 @@ try {
     // Obtener datos del POST
     $inputJSON = file_get_contents('php://input');
     $input = json_decode($inputJSON, true);
-    $data = json_decode($input['data'] ?? '{}', true);
+    
+    error_log("Datos recibidos en raw: " . $inputJSON);
+    error_log("Datos recibidos en POST: " . print_r($_POST, true));
+    
+    // Verificar si viene en $_POST o en el body JSON
+    if (isset($_POST['data'])) {
+        $data = json_decode($_POST['data'], true);
+    } else if (isset($input['data'])) {
+        $data = json_decode($input['data'], true);
+    } else {
+        throw new Exception('Datos del presupuesto vacíos o inválidos. POST: ' . print_r($_POST, true));
+    }
     
     if (empty($data)) {
-        throw new Exception('Datos del presupuesto vacíos o inválidos');
+        throw new Exception('Datos del presupuesto vacíos después del decode');
     }
+    
+    error_log("Datos del presupuesto decodificados: " . print_r($data, true));
     
     // Obtener información del cliente
     $clienteData = $db->consultaSegura(
