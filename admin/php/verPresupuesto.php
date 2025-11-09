@@ -46,9 +46,9 @@ try {
         $subtotal += $detalle->cantidad * $detalle->precio;
     }
     
-    // Por ahora no hay descuentos/recargos en la BD, los calculamos como 0
-    $descuento = 0;
-    $recargo = 0;
+    // NUEVO: Usar descuentos y recargos de la base de datos
+    $descuento = floatval($presupuesto->descuento_monto) ?? 0;
+    $recargo = floatval($presupuesto->recargo_monto) ?? 0;
     $total = $subtotal - $descuento + $recargo;
     
 } catch (Exception $e) {
@@ -294,6 +294,21 @@ try {
                     <div style="font-size: 0.9em;">
                         <strong>Comentarios:</strong><br>
                         <?php echo nl2br(htmlspecialchars($presupuesto->comentarios)); ?>
+                    </div>
+                    <?php endif; ?>
+                    
+                    <!-- NUEVO: Mostrar descuentos y recargos si existen -->
+                    <?php if ($descuento > 0 && !empty($presupuesto->descuento_texto)): ?>
+                    <div style="font-size: 0.9em; margin-top: 10px;">
+                        <strong>Descuento:</strong><br>
+                        <?php echo htmlspecialchars($presupuesto->descuento_texto); ?>
+                    </div>
+                    <?php endif; ?>
+                    
+                    <?php if ($recargo > 0 && !empty($presupuesto->recargo_texto)): ?>
+                    <div style="font-size: 0.9em; margin-top: 10px;">
+                        <strong>Recargo:</strong><br>
+                        <?php echo htmlspecialchars($presupuesto->recargo_texto); ?>
                     </div>
                     <?php endif; ?>
                 </div>

@@ -519,16 +519,28 @@ function recalcularTiempoEntrega(code, cantidad) {
 function updateTotal() {
     if ($tableMakePedido && $tableMakePedido.length > 0) {
         var rows = $tableMakePedido.bootstrapTable('getData');
-        let total = 0;
+        let subtotal = 0;
         
         for (let i = 0; i < rows.length; i++) {
             const cantidad = parseInt(rows[i].cantidad) || 0;
             const precio = parseFloat(rows[i].precio) || 0;
-            total += cantidad * precio;
+            subtotal += cantidad * precio;
         }
         
+        // Calcular descuentos y recargos
+        const descuentoMonto = parseFloat($('#descuento-monto').val()) || 0;
+        const recargoMonto = parseFloat($('#recargo-monto').val()) || 0;
+        const total = subtotal - descuentoMonto + recargoMonto;
+        
         const totalFormateado = total.toFixed(3).replace('.', ',');
-        $('#MontoTotal').html('Total Presupuesto: $' + totalFormateado);
+        const subtotalFormateado = subtotal.toFixed(3).replace('.', ',');
+        
+        $('#MontoTotal').html(`
+            <div>Sub-Total: $${subtotalFormateado}</div>
+            ${descuentoMonto > 0 ? `<div>Descuento: -$${descuentoMonto.toFixed(3).replace('.', ',')}</div>` : ''}
+            ${recargoMonto > 0 ? `<div>Recargo: +$${recargoMonto.toFixed(3).replace('.', ',')}</div>` : ''}
+            <div><strong>Total: $${totalFormateado}</strong></div>
+        `);
     }
 }
 
@@ -573,6 +585,12 @@ function guardarPresupuesto() {
     const selectedClientNum = parseInt(ctrlClientSel.getValue()) || 0;
     const numeroPresupuesto = $('#numero-presupuesto').val();
     const comentarioPresupuesto = $('#comentarioPresupuesto').val();
+    
+    // NUEVO: Obtener valores de descuento y recargo
+    const descuentoTexto = $('#descuento-texto').val();
+    const descuentoMonto = parseFloat($('#descuento-monto').val()) || 0;
+    const recargoTexto = $('#recargo-texto').val();
+    const recargoMonto = parseFloat($('#recargo-monto').val()) || 0;
 
     if (selectedClientNum === 0) {
         alert('Por favor seleccione un cliente');
@@ -617,31 +635,34 @@ function guardarPresupuesto() {
             productos: productos,
             comentario: comentarioPresupuesto,
             usuario: numUsr,
-            total: calcularTotalPresupuesto()
+            total: calcularTotalPresupuesto(),
+            // NUEVO: Campos de descuento y recargo
+            descuento_texto: descuentoTexto,
+            descuento_monto: descuentoMonto,
+            recargo_texto: recargoTexto,
+            recargo_monto: recargoMonto
         };
 
         const paramJSON = JSON.stringify(presupuesto);
         
         console.log('📤 Enviando presupuesto a guardar...', presupuesto);
         
-        // Usar $.ajax en lugar de $.post para tener más control
+        // MODIFICADO: Eliminar alert y redirigir directamente
         $.ajax({
             url: "../../php/guardarPresupuesto.php",
             type: "POST",
             data: { data: paramJSON },
-            dataType: "json", // Esperar JSON como respuesta
+            dataType: "json",
             success: function(respuesta) {
                 console.log('📥 Respuesta del servidor:', respuesta);
                 
                 if (respuesta.success) {
-                    alert(`✅ Presupuesto guardado correctamente\nNúmero: ${respuesta.presupuesto_num}`);
+                    // ELIMINADO: alert de confirmación
                     $('#ModalMakePedido').modal('hide');
                     
-                    // Redirigir a la página de visualización del presupuesto
-                    setTimeout(() => {
-                        window.location.href = `../php/verPresupuesto.php?presupuesto_id=${respuesta.presupuesto_id}`;
-                    }, 1000);
-                }else {
+                    // Redirigir directamente a la página del presupuesto
+                    window.location.href = `../php/verPresupuesto.php?presupuesto_id=${respuesta.presupuesto_id}`;
+                } else {
                     alert('❌ Error al guardar el presupuesto: ' + respuesta.error);
                 }
             },
@@ -709,6 +730,10 @@ $(document).ready(function() {
             $tableMakePedido.bootstrapTable('refresh');
             updateTotal();
         }
+    });
+    
+    $('#descuento-monto, #recargo-monto').on('input', function() {
+        updateTotal();
     });
 });
 

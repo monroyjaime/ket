@@ -396,6 +396,7 @@ $tituloLista = '<h2 style="background-color: #037C79; padding-bottom: 14px; colo
                                 </div>
                             </div>
                         </div>
+                        
                         <div class="col">
                             <div class="p-4">
                                 <h6>Número de Presupuesto:</h6>
@@ -404,6 +405,45 @@ $tituloLista = '<h2 style="background-color: #037C79; padding-bottom: 14px; colo
                         </div>  
                     </div>
                 </div> 
+                <!-- NUEVA SECCIÓN: Descuentos y Recargos -->
+                <div class="container mt-3">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header bg-warning">
+                                    <h6 class="mb-0">Descuento</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="mb-2">
+                                        <label class="form-label">Concepto de Descuento:</label>
+                                        <input type="text" class="form-control" id="descuento-texto" placeholder="Ej: Descuento por volumen">
+                                    </div>
+                                    <div class="mb-2">
+                                        <label class="form-label">Monto de Descuento ($):</label>
+                                        <input type="number" class="form-control" id="descuento-monto" step="0.001" min="0" placeholder="0.000" value="0">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header bg-info text-white">
+                                    <h6 class="mb-0">Recargo</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="mb-2">
+                                        <label class="form-label">Concepto de Recargo:</label>
+                                        <input type="text" class="form-control" id="recargo-texto" placeholder="Ej: Recargo por urgencia">
+                                    </div>
+                                    <div class="mb-2">
+                                        <label class="form-label">Monto de Recargo ($):</label>
+                                        <input type="number" class="form-control" id="recargo-monto" step="0.001" min="0" placeholder="0.000" value="0">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
                 <table
                     id="table-carrito"

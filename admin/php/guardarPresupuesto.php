@@ -49,18 +49,24 @@ try {
     
     $numeroPresupuesto = $presupuestoNum[0]->next_num;
     
-    // Insertar en presupuesto_gen
+    // NUEVO: Insertar con campos de descuento y recargo
     $presupuestoGen = $db->consultaSegura(
         "INSERT INTO presupuesto_gen 
-        (user_num, hora, archivado, presupuesto_num, status, fecha, num_valery, comentarios, cliente) 
-        VALUES ($1, CURRENT_TIME, 0, $2, 1, CURRENT_DATE, $3, $4, $5) 
+        (user_num, hora, archivado, presupuesto_num, status, fecha, num_valery, comentarios, cliente, 
+         descuento_texto, descuento_monto, recargo_texto, recargo_monto) 
+        VALUES ($1, CURRENT_TIME, 0, $2, 1, CURRENT_DATE, $3, $4, $5, $6, $7, $8, $9) 
         RETURNING idx",
         [
             $data['usuario'],
             $numeroPresupuesto, // ✅ Número numérico auto-generado
             $data['numero'],    // ✅ El string original va en num_valery
             $data['comentario'] ?? '',
-            $clienteCode
+            $clienteCode,
+            // NUEVO: Campos de descuento y recargo
+            $data['descuento_texto'] ?? '',
+            $data['descuento_monto'] ?? 0,
+            $data['recargo_texto'] ?? '',
+            $data['recargo_monto'] ?? 0
         ]
     );
     
