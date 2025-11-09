@@ -115,20 +115,17 @@ try {
         .text-center { text-align: center; }
         .total-row { font-weight: bold; background-color: #e9ecef; }
         .totales-section {
-            margin-top: 30px;
-            page-break-inside: avoid;
+            margin-top: 40px;
         }
         .totales-container {
             display: flex;
             justify-content: space-between;
             align-items: flex-end;
-            margin-top: 20px;
         }
         .totales-table { 
             width: 300px;
             border-collapse: collapse; 
             font-size: 0.95em;
-            margin-left: auto;
         }
         .totales-table td { 
             padding: 8px 12px;
@@ -149,8 +146,8 @@ try {
             margin-top: 5px;
         }
         .comentarios-section {
-            margin-top: 20px;
-            page-break-inside: avoid;
+            flex: 1;
+            margin-right: 20px;
         }
         @media print {
             .no-print { display: none; }
@@ -169,14 +166,9 @@ try {
                 padding-bottom: 12px !important; 
                 margin-bottom: 12px !important; 
             }
-            .presupuesto-footer { 
-                padding-top: 12px !important; 
-                margin-top: 12px !important; 
-            }
             .table-presupuesto { 
                 margin: 12px 0 !important;
                 font-size: 0.85em !important;
-                page-break-inside: avoid;
                 width: 100% !important;
             }
             .table-presupuesto th,
@@ -194,21 +186,23 @@ try {
                 margin-bottom: 8px !important;
             }
             .totales-section {
-                margin-top: 40px !important;
+                margin-top: 60px !important; /* Más espacio para que quede al final */
             }
             .totales-table {
                 font-size: 0.95em !important;
                 width: 300px !important;
             }
-            .totales-container {
-                margin-top: 30px !important;
-            }
             .comentarios-section {
                 margin-top: 25px !important;
             }
+            /* ELIMINAR la página extra en blanco */
             .container {
-                page-break-after: always;
+                page-break-after: auto !important; /* Cambiado de 'always' a 'auto' */
                 page-break-inside: avoid;
+            }
+            .presupuesto-footer {
+                position: relative;
+                margin-top: 80px !important; /* Empujar el footer hacia abajo */
             }
         }
     </style>
@@ -245,7 +239,7 @@ try {
                     <strong>Cliente:</strong><br>
                     <?php echo htmlspecialchars($presupuesto->cliente_nombre ?? $presupuesto->cliente); ?>
                 </div>
-                <div class="col-6" style="font-size: 0.9em;">
+                <div class="col-6 text-end" style="font-size: 0.9em;"> <!-- Cambiado a text-end -->
                     <strong>Atendido por:</strong><br>
                     <?php echo htmlspecialchars($presupuesto->usuario_nombre ?? 'Sistema'); ?>
                 </div>
@@ -291,7 +285,7 @@ try {
         <!-- Sección de totales al final -->
         <div class="totales-section">
             <div class="totales-container">
-                <div class="comentarios-section" style="flex: 1; margin-right: 20px;">
+                <div class="comentarios-section">
                     <?php if (!empty($presupuesto->comentarios)): ?>
                     <div style="font-size: 0.9em;">
                         <strong>Comentarios:</strong><br>
