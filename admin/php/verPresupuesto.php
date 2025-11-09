@@ -64,10 +64,9 @@ try {
     <title>Presupuesto #<?php echo $presupuesto->presupuesto_num; ?></title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        /* 2. Ajustar márgenes para PDF */
         body { 
             font-family: Arial, sans-serif; 
-            margin: 10px; /* Reducido de 20px a 10px */
+            margin: 10px;
             padding: 0;
         }
         .container {
@@ -89,41 +88,50 @@ try {
             border-collapse: collapse; 
             margin: 15px 0; 
             font-size: 0.9em;
-            table-layout: fixed; /* Para control exacto de anchos */
+            table-layout: fixed;
             word-wrap: break-word;
         }
-        /* Control exacto de anchos de columna - AJUSTADOS */
-        .table-presupuesto th:nth-child(1), .table-presupuesto td:nth-child(1) { width: 8%; }   /* Código */
-        .table-presupuesto th:nth-child(2), .table-presupuesto td:nth-child(2) { width: 35%; }  /* Descripción */
-        .table-presupuesto th:nth-child(3), .table-presupuesto td:nth-child(3) { width: 7%; }   /* Cantidad */
-        .table-presupuesto th:nth-child(4), .table-presupuesto td:nth-child(4) { width: 7%; }   /* Unidad */
-        .table-presupuesto th:nth-child(5), .table-presupuesto td:nth-child(5) { width: 12%; }  /* Precio */
-        .table-presupuesto th:nth-child(6), .table-presupuesto td:nth-child(6) { width: 10%; }  /* Tiempo */
-        .table-presupuesto th:nth-child(7), .table-presupuesto td:nth-child(7) { width: 12%; }  /* Subtotal */
+        .table-presupuesto th:nth-child(1), .table-presupuesto td:nth-child(1) { width: 8%; }
+        .table-presupuesto th:nth-child(2), .table-presupuesto td:nth-child(2) { width: 35%; }
+        .table-presupuesto th:nth-child(3), .table-presupuesto td:nth-child(3) { width: 7%; }
+        .table-presupuesto th:nth-child(4), .table-presupuesto td:nth-child(4) { width: 7%; }
+        .table-presupuesto th:nth-child(5), .table-presupuesto td:nth-child(5) { width: 12%; }
+        .table-presupuesto th:nth-child(6), .table-presupuesto td:nth-child(6) { width: 10%; }
+        .table-presupuesto th:nth-child(7), .table-presupuesto td:nth-child(7) { width: 12%; }
         
         .table-presupuesto th { 
             background-color: #f8f9fa; 
             border: 1px solid #dee2e6; 
-            padding: 8px 6px; /* Reducido padding */
+            padding: 8px 6px;
             text-align: left; 
             font-size: 0.85em;
         }
         .table-presupuesto td { 
             border: 1px solid #dee2e6; 
-            padding: 8px 6px; /* Reducido padding */
+            padding: 8px 6px;
             font-size: 0.85em;
         }
         .text-right { text-align: right; }
         .text-center { text-align: center; }
         .total-row { font-weight: bold; background-color: #e9ecef; }
+        .totales-section {
+            margin-top: 30px;
+            page-break-inside: avoid;
+        }
+        .totales-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            margin-top: 20px;
+        }
         .totales-table { 
-            width: 280px; /* Un poco más pequeño */
-            margin-left: auto; 
+            width: 300px;
             border-collapse: collapse; 
-            font-size: 0.9em;
+            font-size: 0.95em;
+            margin-left: auto;
         }
         .totales-table td { 
-            padding: 6px 8px; /* Reducido padding */
+            padding: 8px 12px;
             border: 1px solid #dee2e6; 
         }
         .totales-table .label { 
@@ -131,7 +139,6 @@ try {
             background-color: #f8f9fa; 
         }
         .no-print { margin-top: 15px; }
-        /* 1. Logo al 50% conservando proporción */
         .logo { 
             max-width: 50%; 
             height: auto; 
@@ -141,18 +148,22 @@ try {
             font-size: 0.85em;
             margin-top: 5px;
         }
+        .comentarios-section {
+            margin-top: 20px;
+            page-break-inside: avoid;
+        }
         @media print {
             .no-print { display: none; }
             body { 
-                font-size: 12px !important; /* Tamaño de fuente más legible */
-                margin: 10mm !important; /* Márgenes más grandes */
+                font-size: 12px !important;
+                margin: 10mm !important;
                 padding: 0 !important;
                 line-height: 1.3;
             }
             .container { 
-                max-width: 95% !important; /* Un poco menos del 100% para márgenes */
+                max-width: 95% !important;
                 padding: 0 !important;
-                margin: 0 auto !important; /* Centrado */
+                margin: 0 auto !important;
             }
             .presupuesto-header { 
                 padding-bottom: 12px !important; 
@@ -164,16 +175,16 @@ try {
             }
             .table-presupuesto { 
                 margin: 12px 0 !important;
-                font-size: 0.85em !important; /* Más legible */
+                font-size: 0.85em !important;
                 page-break-inside: avoid;
                 width: 100% !important;
             }
             .table-presupuesto th,
             .table-presupuesto td { 
-                padding: 6px 4px !important; /* Padding más cómodo */
+                padding: 6px 4px !important;
             }
             .logo {
-                max-width: 35% !important; /* Logo un poco más pequeño */
+                max-width: 35% !important;
             }
             .info-empresa {
                 font-size: 0.8em !important;
@@ -182,15 +193,19 @@ try {
                 font-size: 1.3em !important;
                 margin-bottom: 8px !important;
             }
+            .totales-section {
+                margin-top: 40px !important;
+            }
             .totales-table {
-                font-size: 0.9em !important;
-                width: 250px !important;
+                font-size: 0.95em !important;
+                width: 300px !important;
             }
-            /* Asegurar que la tabla de totales no se desborde */
-            .row {
-                page-break-inside: avoid;
+            .totales-container {
+                margin-top: 30px !important;
             }
-            /* Forzar una página por presupuesto */
+            .comentarios-section {
+                margin-top: 25px !important;
+            }
             .container {
                 page-break-after: always;
                 page-break-inside: avoid;
@@ -204,7 +219,6 @@ try {
         <div class="presupuesto-header">
             <div class="row">
                 <div class="col-6">
-                    <!-- 1. Logo al 50% -->
                     <img src="https://ketelectropartes.com/catalogo/images/logoSlogan.png" alt="KET ELECTROPARTES C.A." class="logo">
                     <div class="info-empresa">
                         RIF: J-12345678-9<br>
@@ -214,7 +228,7 @@ try {
                     </div>
                 </div>
                 <div class="col-6 text-end">
-                    <h4>PRESUPUESTO</h4> <!-- h4 en lugar de h3 para ser más pequeño -->
+                    <h4>PRESUPUESTO</h4>
                     <div style="font-size: 0.9em;">
                         <strong>N° Interno:</strong> <?php echo htmlspecialchars($presupuesto->presupuesto_num); ?><br>
                         <?php if (!empty($presupuesto->num_valery)): ?>
@@ -226,7 +240,7 @@ try {
                 </div>
             </div>
             
-            <div class="row mt-2"> <!-- Reducido mt-3 a mt-2 -->
+            <div class="row mt-2">
                 <div class="col-6" style="font-size: 0.9em;">
                     <strong>Cliente:</strong><br>
                     <?php echo htmlspecialchars($presupuesto->cliente_nombre ?? $presupuesto->cliente); ?>
@@ -274,19 +288,18 @@ try {
             </tbody>
         </table>
 
-        <!-- Tabla de totales -->
-        <div class="row">
-            <div class="col-8">
-                <!-- Comentarios del usuario -->
-                <?php if (!empty($presupuesto->comentarios)): ?>
-                <div style="margin-top: 15px; font-size: 0.9em;">
-                    <strong>Comentarios:</strong><br>
-                    <?php echo nl2br(htmlspecialchars($presupuesto->comentarios)); ?>
+        <!-- Sección de totales al final -->
+        <div class="totales-section">
+            <div class="totales-container">
+                <div class="comentarios-section" style="flex: 1; margin-right: 20px;">
+                    <?php if (!empty($presupuesto->comentarios)): ?>
+                    <div style="font-size: 0.9em;">
+                        <strong>Comentarios:</strong><br>
+                        <?php echo nl2br(htmlspecialchars($presupuesto->comentarios)); ?>
+                    </div>
+                    <?php endif; ?>
                 </div>
-                <?php endif; ?>
-            </div>
-            <div class="col-4">
-                <!-- Totales con subtotal, descuentos y total final -->
+                
                 <table class="totales-table">
                     <tr>
                         <td class="label">Sub-Total:</td>
