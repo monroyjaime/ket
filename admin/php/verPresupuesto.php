@@ -68,20 +68,18 @@ try {
             font-family: Arial, sans-serif; 
             margin: 10px;
             padding: 0;
+            position: relative;
+            min-height: 100vh;
         }
         .container {
             max-width: 100%;
             padding: 0 15px;
+            padding-bottom: 120px; /* Espacio para el footer fijo */
         }
         .presupuesto-header { 
             border-bottom: 2px solid #333; 
             padding-bottom: 15px; 
             margin-bottom: 15px; 
-        }
-        .presupuesto-footer { 
-            border-top: 2px solid #333; 
-            padding-top: 15px; 
-            margin-top: 15px; 
         }
         .table-presupuesto { 
             width: 100%; 
@@ -149,6 +147,19 @@ try {
             flex: 1;
             margin-right: 20px;
         }
+        /* Footer fijo */
+        .presupuesto-footer {
+            position: fixed;
+            bottom: 20px;
+            left: 0;
+            right: 0;
+            border-top: 2px solid #333;
+            padding-top: 15px;
+            text-align: center;
+            font-size: 0.9em;
+            background: white;
+            z-index: 100;
+        }
         @media print {
             .no-print { display: none; }
             body { 
@@ -161,6 +172,7 @@ try {
                 max-width: 95% !important;
                 padding: 0 !important;
                 margin: 0 auto !important;
+                padding-bottom: 80px !important; /* Espacio para footer fijo en impresión */
             }
             .presupuesto-header { 
                 padding-bottom: 12px !important; 
@@ -186,7 +198,7 @@ try {
                 margin-bottom: 8px !important;
             }
             .totales-section {
-                margin-top: 60px !important; /* Más espacio para que quede al final */
+                margin-top: 60px !important;
             }
             .totales-table {
                 font-size: 0.95em !important;
@@ -195,14 +207,22 @@ try {
             .comentarios-section {
                 margin-top: 25px !important;
             }
-            /* ELIMINAR la página extra en blanco */
-            .container {
-                page-break-after: auto !important; /* Cambiado de 'always' a 'auto' */
-                page-break-inside: avoid;
-            }
+            /* Footer fijo en impresión */
             .presupuesto-footer {
-                position: relative;
-                margin-top: 80px !important; /* Empujar el footer hacia abajo */
+                position: fixed !important;
+                bottom: 15mm !important;
+                left: 10mm !important;
+                right: 10mm !important;
+                border-top: 2px solid #333 !important;
+                padding-top: 8px !important;
+                text-align: center !important;
+                font-size: 0.9em !important;
+                background: white !important;
+                margin: 0 !important;
+            }
+            .container {
+                page-break-after: auto !important;
+                page-break-inside: avoid;
             }
         }
     </style>
@@ -239,7 +259,7 @@ try {
                     <strong>Cliente:</strong><br>
                     <?php echo htmlspecialchars($presupuesto->cliente_nombre ?? $presupuesto->cliente); ?>
                 </div>
-                <div class="col-6 text-end" style="font-size: 0.9em;"> <!-- Cambiado a text-end -->
+                <div class="col-6 text-end" style="font-size: 0.9em;">
                     <strong>Atendido por:</strong><br>
                     <?php echo htmlspecialchars($presupuesto->usuario_nombre ?? 'Sistema'); ?>
                 </div>
@@ -318,19 +338,19 @@ try {
                 </table>
             </div>
         </div>
+    </div>
 
-        <!-- Pie de página -->
-        <div class="presupuesto-footer text-center" style="font-size: 0.9em;">
-            <p>¡Gracias por su preferencia!<br>
-            Este presupuesto es válido por 30 días</p>
-        </div>
+    <!-- Pie de página FIJO -->
+    <div class="presupuesto-footer">
+        <p>¡Gracias por su preferencia!<br>
+        Este presupuesto es válido por 30 días</p>
+    </div>
 
-        <!-- Botones de acción -->
-        <div class="no-print text-center">
-            <button class="btn btn-primary" onclick="window.print()">🖨️ Imprimir PDF</button>
-            <button class="btn btn-secondary" onclick="window.history.back()">← Volver</button>
-            <a href="../index.php" class="btn btn-success">🏠 Ir al Inicio</a>
-        </div>
+    <!-- Botones de acción -->
+    <div class="no-print text-center">
+        <button class="btn btn-primary" onclick="window.print()">🖨️ Imprimir PDF</button>
+        <button class="btn btn-secondary" onclick="window.history.back()">← Volver</button>
+        <a href="../index.php" class="btn btn-success">🏠 Ir al Inicio</a>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
