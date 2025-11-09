@@ -1,20 +1,70 @@
-# Environment variables
+# Environment
 .env
-*.env
+.env.*
+!.env.example
 
 # Logs
 *.log
 logs/
+error_log
+access_log
 
 # Cache
 cache/
 tmp/
 temp/
+*.tmp
+*.temp
+.cache/
 
-# OS files
-.DS_Store
-Thumbs.db
+# Dependencies - CRÍTICO
+node_modules/
+vendor/
+composer.lock
+package-lock.json
+yarn.lock
 
-# Backup files
+# Database - CRÍTICO
+*.sql
+*.sqlite
+*.db
+database/backups/
+
+# Uploads and media - CRÍTICO
+/uploads/
+/storage/
+/public/storage/
+/storage/app/
+
+# Backups
+backup/
 *.bak
 *.backup
+*.zip
+*.tar.gz
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Large files - CRÍTICO
+*.psd
+*.ai
+*.pdf
+*.mp4
+*.mov
+*.avi
+
+# Git
+!.gitignore
+
+# Application specific large directories
+/public/build/
+/resources/assets/
