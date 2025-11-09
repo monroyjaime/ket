@@ -92,14 +92,14 @@ try {
             table-layout: fixed; /* Para control exacto de anchos */
             word-wrap: break-word;
         }
-        /* Control exacto de anchos de columna */
-        .table-presupuesto th:nth-child(1), .table-presupuesto td:nth-child(1) { width: 7%; }  /* Código */
-        .table-presupuesto th:nth-child(2), .table-presupuesto td:nth-child(2) { width: 30%; } /* Descripción */
-        .table-presupuesto th:nth-child(3), .table-presupuesto td:nth-child(3) { width: 6%; }  /* Cantidad */
-        .table-presupuesto th:nth-child(4), .table-presupuesto td:nth-child(4) { width: 6%; }  /* Unidad */
-        .table-presupuesto th:nth-child(5), .table-presupuesto td:nth-child(5) { width: 10%; } /* Precio */
-        .table-presupuesto th:nth-child(6), .table-presupuesto td:nth-child(6) { width: 8%; }  /* Tiempo */
-        .table-presupuesto th:nth-child(7), .table-presupuesto td:nth-child(7) { width: 10%; } /* Subtotal */
+        /* Control exacto de anchos de columna - AJUSTADOS */
+        .table-presupuesto th:nth-child(1), .table-presupuesto td:nth-child(1) { width: 8%; }   /* Código */
+        .table-presupuesto th:nth-child(2), .table-presupuesto td:nth-child(2) { width: 35%; }  /* Descripción */
+        .table-presupuesto th:nth-child(3), .table-presupuesto td:nth-child(3) { width: 7%; }   /* Cantidad */
+        .table-presupuesto th:nth-child(4), .table-presupuesto td:nth-child(4) { width: 7%; }   /* Unidad */
+        .table-presupuesto th:nth-child(5), .table-presupuesto td:nth-child(5) { width: 12%; }  /* Precio */
+        .table-presupuesto th:nth-child(6), .table-presupuesto td:nth-child(6) { width: 10%; }  /* Tiempo */
+        .table-presupuesto th:nth-child(7), .table-presupuesto td:nth-child(7) { width: 12%; }  /* Subtotal */
         
         .table-presupuesto th { 
             background-color: #f8f9fa; 
@@ -144,42 +144,51 @@ try {
         @media print {
             .no-print { display: none; }
             body { 
-                font-size: 10px; /* Más pequeño aún */
-                margin: 3mm !important; /* Márgenes más pequeños */
+                font-size: 12px !important; /* Tamaño de fuente más legible */
+                margin: 10mm !important; /* Márgenes más grandes */
                 padding: 0 !important;
-                line-height: 1.2;
+                line-height: 1.3;
             }
             .container { 
-                max-width: 100% !important; 
+                max-width: 95% !important; /* Un poco menos del 100% para márgenes */
                 padding: 0 !important;
-                margin: 0 !important;
+                margin: 0 auto !important; /* Centrado */
             }
             .presupuesto-header { 
-                padding-bottom: 8px !important; 
-                margin-bottom: 8px !important; 
+                padding-bottom: 12px !important; 
+                margin-bottom: 12px !important; 
             }
             .presupuesto-footer { 
-                padding-top: 8px !important; 
-                margin-top: 8px !important; 
+                padding-top: 12px !important; 
+                margin-top: 12px !important; 
             }
             .table-presupuesto { 
-                margin: 8px 0 !important;
-                font-size: 0.75em !important; /* Más compacto */
+                margin: 12px 0 !important;
+                font-size: 0.85em !important; /* Más legible */
                 page-break-inside: avoid;
+                width: 100% !important;
             }
             .table-presupuesto th,
             .table-presupuesto td { 
-                padding: 4px 3px !important; /* Padding mínimo */
+                padding: 6px 4px !important; /* Padding más cómodo */
             }
             .logo {
-                max-width: 40% !important; /* Logo más pequeño en impresión */
+                max-width: 35% !important; /* Logo un poco más pequeño */
             }
             .info-empresa {
-                font-size: 0.7em !important;
+                font-size: 0.8em !important;
             }
             h4 {
-                font-size: 1.1em !important;
-                margin-bottom: 5px !important;
+                font-size: 1.3em !important;
+                margin-bottom: 8px !important;
+            }
+            .totales-table {
+                font-size: 0.9em !important;
+                width: 250px !important;
+            }
+            /* Asegurar que la tabla de totales no se desborde */
+            .row {
+                page-break-inside: avoid;
             }
             /* Forzar una página por presupuesto */
             .container {
