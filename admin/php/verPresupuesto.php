@@ -64,88 +64,24 @@ try {
     <title>Presupuesto #<?php echo $presupuesto->presupuesto_num; ?></title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        /* 2. Ajustar márgenes para PDF */
-        body { 
-            font-family: Arial, sans-serif; 
-            margin: 10px; /* Reducido de 20px a 10px */
-            padding: 0;
-        }
-        .container {
-            max-width: 100%;
-            padding: 0 15px;
-        }
-        .presupuesto-header { 
-            border-bottom: 2px solid #333; 
-            padding-bottom: 15px; 
-            margin-bottom: 15px; 
-        }
-        .presupuesto-footer { 
-            border-top: 2px solid #333; 
-            padding-top: 15px; 
-            margin-top: 15px; 
-        }
-        .table-presupuesto { 
-            width: 100%; 
-            border-collapse: collapse; 
-            margin: 15px 0; 
-            font-size: 0.9em; /* Texto más pequeño para la tabla */
-        }
-        .table-presupuesto th { 
-            background-color: #f8f9fa; 
-            border: 1px solid #dee2e6; 
-            padding: 8px 6px; /* Reducido padding */
-            text-align: left; 
-            font-size: 0.85em;
-        }
-        .table-presupuesto td { 
-            border: 1px solid #dee2e6; 
-            padding: 8px 6px; /* Reducido padding */
-            font-size: 0.85em;
-        }
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .presupuesto-header { border-bottom: 2px solid #333; padding-bottom: 20px; margin-bottom: 20px; }
+        .presupuesto-footer { border-top: 2px solid #333; padding-top: 20px; margin-top: 20px; }
+        .table-presupuesto { width: 100%; border-collapse: collapse; margin: 20px 0; }
+        .table-presupuesto th { background-color: #f8f9fa; border: 1px solid #dee2e6; padding: 12px 8px; text-align: left; }
+        .table-presupuesto td { border: 1px solid #dee2e6; padding: 12px 8px; }
         .text-right { text-align: right; }
         .text-center { text-align: center; }
         .total-row { font-weight: bold; background-color: #e9ecef; }
-        .totales-table { 
-            width: 280px; /* Un poco más pequeño */
-            margin-left: auto; 
-            border-collapse: collapse; 
-            font-size: 0.9em;
-        }
-        .totales-table td { 
-            padding: 6px 8px; /* Reducido padding */
-            border: 1px solid #dee2e6; 
-        }
-        .totales-table .label { 
-            font-weight: bold; 
-            background-color: #f8f9fa; 
-        }
-        .no-print { margin-top: 15px; }
-        /* 1. Logo al 50% conservando proporción */
-        .logo { 
-            max-width: 50%; 
-            height: auto; 
-            width: auto;
-        }
-        .info-empresa {
-            font-size: 0.85em;
-            margin-top: 5px;
-        }
+        .totales-table { width: 300px; margin-left: auto; border-collapse: collapse; }
+        .totales-table td { padding: 8px; border: 1px solid #dee2e6; }
+        .totales-table .label { font-weight: bold; background-color: #f8f9fa; }
+        .no-print { margin-top: 20px; }
+        .logo { max-width: 300px; height: auto; }
         @media print {
             .no-print { display: none; }
-            body { 
-                font-size: 11px; /* Texto más pequeño para impresión */
-                margin: 5mm; /* Márgenes estándar para impresión */
-            }
-            .container { 
-                max-width: 100% !important; 
-                padding: 0;
-            }
-            .table-presupuesto {
-                font-size: 0.8em;
-            }
-            .logo {
-                max-width: 45%; /* Un poco más pequeño en impresión */
-            }
+            body { font-size: 12px; margin: 0; }
+            .container { max-width: 100% !important; }
         }
     </style>
 </head>
@@ -155,34 +91,34 @@ try {
         <div class="presupuesto-header">
             <div class="row">
                 <div class="col-6">
-                    <!-- 1. Logo al 50% -->
+                    <!-- 1. Logo en lugar del título -->
                     <img src="https://ketelectropartes.com/catalogo/images/logoSlogan.png" alt="KET ELECTROPARTES C.A." class="logo">
-                    <div class="info-empresa">
+                    <p class="mt-2">
                         RIF: J-12345678-9<br>
                         Dirección: Av. Principal, Centro<br>
                         Teléfono: (123) 456-7890<br>
                         Email: info@ketelectropartes.com
-                    </div>
+                    </p>
                 </div>
                 <div class="col-6 text-end">
-                    <h4>PRESUPUESTO</h4> <!-- h4 en lugar de h3 para ser más pequeño -->
-                    <div style="font-size: 0.9em;">
+                    <h3>PRESUPUESTO</h3>
+                    <p>
                         <strong>N° Interno:</strong> <?php echo htmlspecialchars($presupuesto->presupuesto_num); ?><br>
                         <?php if (!empty($presupuesto->num_valery)): ?>
                         <strong>N° Cliente:</strong> <?php echo htmlspecialchars($presupuesto->num_valery); ?><br>
                         <?php endif; ?>
                         <strong>Fecha:</strong> <?php echo date('d/m/Y', strtotime($presupuesto->fecha)); ?><br>
                         <strong>Hora:</strong> <?php echo date('H:i', strtotime($presupuesto->hora)); ?>
-                    </div>
+                    </p>
                 </div>
             </div>
             
-            <div class="row mt-2"> <!-- Reducido mt-3 a mt-2 -->
-                <div class="col-6" style="font-size: 0.9em;">
+            <div class="row mt-3">
+                <div class="col-6">
                     <strong>Cliente:</strong><br>
                     <?php echo htmlspecialchars($presupuesto->cliente_nombre ?? $presupuesto->cliente); ?>
                 </div>
-                <div class="col-6" style="font-size: 0.9em;">
+                <div class="col-6">
                     <strong>Atendido por:</strong><br>
                     <?php echo htmlspecialchars($presupuesto->usuario_nombre ?? 'Sistema'); ?>
                 </div>
@@ -194,11 +130,11 @@ try {
             <thead>
                 <tr>
                     <th width="8%">Código</th>
-                    <th width="33%">Descripción</th> <!-- Ajustado para nueva columna -->
-                    <th width="7%" class="text-center">Cantidad</th>
-                    <th width="7%" class="text-center">Unidad</th>
+                    <th width="35%">Descripción</th>
+                    <th width="8%" class="text-center">Cantidad</th>
+                    <th width="8%" class="text-center">Unidad</th>
                     <th width="12%" class="text-right">Precio Unit.</th>
-                    <th width="10%" class="text-center">Tiempo Entrega</th>
+                    <th width="12%" class="text-center">Tiempo Entrega</th> <!-- 2. Nueva columna -->
                     <th width="12%" class="text-right">Subtotal</th>
                 </tr>
             </thead>
@@ -212,6 +148,7 @@ try {
                     <td class="text-right">$<?php echo number_format($detalle->precio, 3, ',', '.'); ?></td>
                     <td class="text-center">
                         <?php 
+                        // 2. Mostrar tiempo de entrega por producto
                         if ($detalle->tiempo_entrega == 0) {
                             echo 'Inmediato';
                         } else {
@@ -228,16 +165,16 @@ try {
         <!-- Tabla de totales -->
         <div class="row">
             <div class="col-8">
-                <!-- Comentarios del usuario -->
+                <!-- 3. Comentarios del usuario -->
                 <?php if (!empty($presupuesto->comentarios)): ?>
-                <div style="margin-top: 15px; font-size: 0.9em;">
+                <div class="mt-4">
                     <strong>Comentarios:</strong><br>
                     <?php echo nl2br(htmlspecialchars($presupuesto->comentarios)); ?>
                 </div>
                 <?php endif; ?>
             </div>
             <div class="col-4">
-                <!-- Totales con subtotal, descuentos y total final -->
+                <!-- 4. Totales con subtotal, descuentos y total final -->
                 <table class="totales-table">
                     <tr>
                         <td class="label">Sub-Total:</td>
@@ -264,7 +201,7 @@ try {
         </div>
 
         <!-- Pie de página -->
-        <div class="presupuesto-footer text-center" style="font-size: 0.9em;">
+        <div class="presupuesto-footer text-center">
             <p>¡Gracias por su preferencia!<br>
             Este presupuesto es válido por 30 días</p>
         </div>
