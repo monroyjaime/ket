@@ -88,8 +88,19 @@ try {
             width: 100%; 
             border-collapse: collapse; 
             margin: 15px 0; 
-            font-size: 0.9em; /* Texto más pequeño para la tabla */
+            font-size: 0.9em;
+            table-layout: fixed; /* Para control exacto de anchos */
+            word-wrap: break-word;
         }
+        /* Control exacto de anchos de columna */
+        .table-presupuesto th:nth-child(1), .table-presupuesto td:nth-child(1) { width: 7%; }  /* Código */
+        .table-presupuesto th:nth-child(2), .table-presupuesto td:nth-child(2) { width: 30%; } /* Descripción */
+        .table-presupuesto th:nth-child(3), .table-presupuesto td:nth-child(3) { width: 6%; }  /* Cantidad */
+        .table-presupuesto th:nth-child(4), .table-presupuesto td:nth-child(4) { width: 6%; }  /* Unidad */
+        .table-presupuesto th:nth-child(5), .table-presupuesto td:nth-child(5) { width: 10%; } /* Precio */
+        .table-presupuesto th:nth-child(6), .table-presupuesto td:nth-child(6) { width: 8%; }  /* Tiempo */
+        .table-presupuesto th:nth-child(7), .table-presupuesto td:nth-child(7) { width: 10%; } /* Subtotal */
+        
         .table-presupuesto th { 
             background-color: #f8f9fa; 
             border: 1px solid #dee2e6; 
@@ -133,18 +144,47 @@ try {
         @media print {
             .no-print { display: none; }
             body { 
-                font-size: 11px; /* Texto más pequeño para impresión */
-                margin: 5mm; /* Márgenes estándar para impresión */
+                font-size: 10px; /* Más pequeño aún */
+                margin: 3mm !important; /* Márgenes más pequeños */
+                padding: 0 !important;
+                line-height: 1.2;
             }
             .container { 
                 max-width: 100% !important; 
-                padding: 0;
+                padding: 0 !important;
+                margin: 0 !important;
             }
-            .table-presupuesto {
-                font-size: 0.8em;
+            .presupuesto-header { 
+                padding-bottom: 8px !important; 
+                margin-bottom: 8px !important; 
+            }
+            .presupuesto-footer { 
+                padding-top: 8px !important; 
+                margin-top: 8px !important; 
+            }
+            .table-presupuesto { 
+                margin: 8px 0 !important;
+                font-size: 0.75em !important; /* Más compacto */
+                page-break-inside: avoid;
+            }
+            .table-presupuesto th,
+            .table-presupuesto td { 
+                padding: 4px 3px !important; /* Padding mínimo */
             }
             .logo {
-                max-width: 45%; /* Un poco más pequeño en impresión */
+                max-width: 40% !important; /* Logo más pequeño en impresión */
+            }
+            .info-empresa {
+                font-size: 0.7em !important;
+            }
+            h4 {
+                font-size: 1.1em !important;
+                margin-bottom: 5px !important;
+            }
+            /* Forzar una página por presupuesto */
+            .container {
+                page-break-after: always;
+                page-break-inside: avoid;
             }
         }
     </style>
@@ -193,13 +233,13 @@ try {
         <table class="table-presupuesto">
             <thead>
                 <tr>
-                    <th width="8%">Código</th>
-                    <th width="33%">Descripción</th> <!-- Ajustado para nueva columna -->
-                    <th width="7%" class="text-center">Cantidad</th>
-                    <th width="7%" class="text-center">Unidad</th>
-                    <th width="12%" class="text-right">Precio Unit.</th>
-                    <th width="10%" class="text-center">Tiempo Entrega</th>
-                    <th width="12%" class="text-right">Subtotal</th>
+                    <th>Código</th>
+                    <th>Descripción</th>
+                    <th class="text-center">Cantidad</th>
+                    <th class="text-center">Unidad</th>
+                    <th class="text-right">Precio Unit.</th>
+                    <th class="text-center">Tiempo Entrega</th>
+                    <th class="text-right">Subtotal</th>
                 </tr>
             </thead>
             <tbody>
