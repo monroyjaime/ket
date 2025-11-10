@@ -3,6 +3,15 @@ ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
+// DEBUG: Confirmar que es la versión NUEVA
+header('Content-Type: application/json');
+echo json_encode([
+    'success' => false,
+    'error' => 'VERSIÓN NUEVA - Esto confirma que se ejecuta el archivo correcto',
+    'debug' => 'El archivo se está ejecutando pero hay que verificar los datos'
+]);
+exit;
+
 session_start();
 require_once("../../php/dbcat_async.php");
 

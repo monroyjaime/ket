@@ -772,17 +772,16 @@ function guardarPresupuesto() {
         
 
         $.ajax({
-            url: "../../php/guardarPresupuesto.php",  // RUTA ORIGINAL CORRECTA
+            url: "../../php/guardarPresupuesto.php?cache=" + Date.now(),  // EVITA CACHÉ
             type: "POST",
             data: paramJSON,
             contentType: "application/json; charset=utf-8",
-            dataType: "json",  // Volver a json
+            dataType: "json",
             success: function(respuesta) {
                 console.log('📥 Respuesta del servidor:', respuesta);
                 
                 if (respuesta.success) {
                     $('#ModalMakePedido').modal('hide');
-                    // Redirigir directamente al presupuesto
                     window.location.href = `../php/verPresupuesto.php?presupuesto_id=${respuesta.presupuesto_id}`;
                 } else {
                     alert('❌ Error al guardar el presupuesto: ' + respuesta.error);
