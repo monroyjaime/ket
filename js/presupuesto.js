@@ -770,40 +770,12 @@ function guardarPresupuesto() {
         
         console.log('📤 Enviando presupuesto completo:', presupuesto);
         
-        /* $.ajax({
-            url: "../../php/guardarPresupuesto.php",
+      $.ajax({
+            url: "../../php/guardarPresupuesto_NUEVO.php",  // NUEVO NOMBRE
             type: "POST",
-            data: { data: paramJSON },
-            dataType: "text", // Cambiar a text temporalmente
-            success: function(respuesta) {
-                console.log('📥 Respuesta COMPLETA del servidor:', respuesta);
-                
-                // TEMPORAL: Mostrar respuesta en alert
-                alert('Respuesta del servidor:\n' + respuesta);
-                
-                // TEMPORAL: No redirigir, solo mostrar respuesta
-                btnGuardar.prop('disabled', false).html(originalText);
-                
-                // Si quieres ver el presupuesto, ábrelo en nueva pestaña manualmente
-                // window.open('../php/verPresupuesto.php?presupuesto_id=ULTIMO_ID', '_blank');
-            },
-            error: function(xhr, status, error) {
-                console.error('Error en la petición:', status, error);
-                console.error('Respuesta del servidor:', xhr.responseText);
-                alert('❌ Error de conexión al guardar el presupuesto');
-                btnGuardar.prop('disabled', false).html(originalText);
-            }
-        }); */
-
-        console.log('📤 JSON a enviar:', paramJSON);
-        console.log('📤 Tipo de dato:', typeof paramJSON);
-        
-        $.ajax({
-            url: "../../php/guardarPresupuesto.php",
-            type: "POST",
-            data: paramJSON, // ENVIAR DIRECTAMENTE el JSON, no como objeto
-            contentType: "application/json; charset=utf-8", // Especificar que es JSON
-            dataType: "text", // Mantener como text por ahora
+            data: paramJSON,
+            contentType: "application/json; charset=utf-8",
+            dataType: "text",
             success: function(respuesta) {
                 console.log('📥 Respuesta COMPLETA del servidor:', respuesta);
                 
@@ -811,6 +783,17 @@ function guardarPresupuesto() {
                 alert('Respuesta del servidor:\n' + respuesta);
                 
                 btnGuardar.prop('disabled', false).html(originalText);
+                
+                // Si fue exitoso, extraer el ID y redirigir
+                try {
+                    const respuestaJSON = JSON.parse(respuesta);
+                    if (respuestaJSON.success) {
+                        $('#ModalMakePedido').modal('hide');
+                        window.location.href = `../php/verPresupuesto.php?presupuesto_id=${respuestaJSON.presupuesto_id}`;
+                    }
+                } catch (e) {
+                    console.log('Respuesta no es JSON:', respuesta);
+                }
             },
             error: function(xhr, status, error) {
                 console.error('Error en la petición:', status, error);
