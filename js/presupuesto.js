@@ -772,7 +772,8 @@ function guardarPresupuesto() {
         
 
         $.ajax({
-            url: "../../php/guardarPresupuesto.php?cache=" + Date.now(),  // EVITA CACHÉ
+            //url: "../../php/guardarPresupuesto.php?cache=" + Date.now(),  // EVITA CACHÉ
+            url: "../../php/guardar_presupuesto_final.php",
             type: "POST",
             data: paramJSON,
             contentType: "application/json; charset=utf-8",
