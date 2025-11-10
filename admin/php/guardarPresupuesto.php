@@ -3,64 +3,58 @@ ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
-// TEMPORAL: Deshabilitar JSON para ver debug completo
+// TEMPORALMENTE comentar esta línea para ver el debug
 // header('Content-Type: application/json');
 
 session_start();
 
-echo "<pre>";
-echo "=== DEBUG GUARDAR PRESUPUESTO ===\n";
+// DEBUG INICIAL - Esto debe aparecer SIEMPRE
+echo "=== DEBUG INICIAL - ARCHIVO NUEVO ===<br>";
 
 require_once("../../php/dbcat_async.php");
 
 $db = new DBAsync();
 $numUsr = filter_var($_SESSION['usr_num'] ?? -1, FILTER_VALIDATE_INT) ?: -1;
 
-echo "Usuario: $numUsr\n";
+echo "Usuario: $numUsr<br>";
 
 if ($numUsr <= 0) {
-    echo "ERROR: Usuario no autenticado\n";
+    echo "ERROR: Usuario no autenticado<br>";
     exit;
 }
 
 // LEER EL JSON DIRECTAMENTE DEL BODY
 $json_input = file_get_contents('php://input');
-echo "JSON recibido:\n";
-echo $json_input . "\n\n";
+echo "Longitud del JSON: " . strlen($json_input) . " caracteres<br>";
 
 if (empty($json_input)) {
-    echo "ERROR: JSON vacío\n";
+    echo "ERROR: JSON vacío<br>";
     exit;
 }
 
 $data = json_decode($json_input, true);
 
 if (json_last_error() !== JSON_ERROR_NONE) {
-    echo "ERROR decodificando JSON: " . json_last_error_msg() . "\n";
+    echo "ERROR decodificando JSON: " . json_last_error_msg() . "<br>";
     exit;
 }
 
 if (empty($data)) {
-    echo "ERROR: Datos vacíos después del decode\n";
+    echo "ERROR: Datos vacíos después del decode<br>";
     exit;
 }
 
-echo "✅ JSON decodificado correctamente\n";
-echo "Cliente recibido: '" . ($data['cliente'] ?? 'NO_RECIBIDO') . "'\n";
-echo "Tipo de cliente: " . gettype($data['cliente'] ?? 'NULL') . "\n";
-echo "Número de productos: " . count($data['productos'] ?? []) . "\n";
+echo "✅ JSON decodificado correctamente<br>";
+echo "Cliente: '" . ($data['cliente'] ?? 'NO') . "'<br>";
+echo "Productos: " . count($data['productos'] ?? []) . "<br>";
+echo "Usuario: " . ($data['usuario'] ?? 'NO') . "<br>";
 
-// CONTINUAR CON EL PROCESO NORMAL...
 try {
-    $clienteCode = '';
-    $clienteNombre = '';
     $clienteInput = $data['cliente'];
     
-    echo "Procesando cliente: '$clienteInput'\n";
-    
-    // VERIFICAR SI ES NUMÉRICO (cliente existente) O TEXTO (cliente nuevo)
+    // PROCESAR CLIENTE (numérico o texto)
     if (is_numeric($clienteInput)) {
-        echo "Cliente numérico (existente)\n";
+        // Cliente existente
         $clienteNum = intval($clienteInput);
         $clienteData = $db->consultaSegura(
             "SELECT code, full_name FROM cliente WHERE num = $1", 
@@ -68,23 +62,22 @@ try {
         );
         
         if (empty($clienteData)) {
-            throw new Exception('Cliente no encontrado');
+            throw new Exception('Cliente no encontrado: ' . $clienteNum);
         }
         
         $clienteCode = $clienteData[0]->code;
         $clienteNombre = $clienteData[0]->full_name;
+        echo "Cliente existente: $clienteNombre ($clienteCode)<br>";
         
     } else {
-        // CLIENTE NUEVO (texto libre)
-        echo "Cliente texto (nuevo)\n";
+        // Cliente nuevo (texto)
         $clienteNombre = trim($clienteInput);
         if (empty($clienteNombre)) {
             throw new Exception('Nombre de cliente vacío');
         }
         
-        // Generar código temporal único
         $clienteCode = 'TEMP_' . date('YmdHis') . '_' . substr(md5($clienteNombre), 0, 8);
-        echo "Código temporal generado: $clienteCode\n";
+        echo "Cliente nuevo: '$clienteNombre' -> $clienteCode<br>";
     }
     
     // Generar número de presupuesto
@@ -93,18 +86,18 @@ try {
     );
     
     $numeroPresupuesto = $presupuestoNum[0]->next_num;
-    echo "Número de presupuesto: $numeroPresupuesto\n";
+    echo "Número presupuesto: $numeroPresupuesto<br>";
     
-    // Preparar valores para descuento/recargo
+    // Preparar valores
     $descuentoTexto = $data['descuento_texto'] ?? '';
     $descuentoMonto = floatval($data['descuento_monto'] ?? 0);
     $recargoTexto = $data['recargo_texto'] ?? '';
     $recargoMonto = floatval($data['recargo_monto'] ?? 0);
     
-    echo "Descuento: $descuentoMonto, Recargo: $recargoMonto\n";
+    echo "Descuento: $descuentoMonto, Recargo: $recargoMonto<br>";
     
-    // Insertar en presupuesto_gen
-    echo "Insertando en base de datos...\n";
+    // INSERTAR EN BD
+    echo "Insertando en presupuesto_gen...<br>";
     $presupuestoGen = $db->consultaSegura(
         "INSERT INTO presupuesto_gen 
         (user_num, hora, archivado, presupuesto_num, status, fecha, num_valery, comentarios, cliente, 
@@ -129,10 +122,10 @@ try {
     }
     
     $presupuestoIdx = $presupuestoGen[0]->idx;
-    echo "✅ Presupuesto creado con ID: $presupuestoIdx\n";
+    echo "✅ Presupuesto creado ID: $presupuestoIdx<br>";
     
-    // Insertar detalles del presupuesto
-    $contadorProductos = 0;
+    // Insertar productos
+    $contador = 0;
     foreach ($data['productos'] as $producto) {
         $db->consultaSegura(
             "INSERT INTO presupuesto_detail 
@@ -146,18 +139,18 @@ try {
                 $producto['code']
             ]
         );
-        $contadorProductos++;
+        $contador++;
     }
-    echo "✅ $contadorProductos productos insertados\n";
+    echo "✅ $contador productos insertados<br>";
     
-    // Limpiar el carrito después de guardar
+    // Limpiar carrito
     $db->consultaSegura(
         "DELETE FROM presupuesto_carrito WHERE user_num = $1",
         [$numUsr]
     );
-    echo "✅ Carrito limpiado\n";
+    echo "✅ Carrito limpiado<br>";
     
-    echo "✅ PRESUPUESTO GUARDADO EXITOSAMENTE\n";
+    echo "🎉 PRESUPUESTO GUARDADO EXITOSAMENTE<br>";
     
     // Enviar respuesta JSON
     header('Content-Type: application/json');
@@ -167,12 +160,11 @@ try {
         'presupuesto_num' => $numeroPresupuesto,
         'presupuesto_num_valery' => $data['numero'],
         'cliente_nombre' => $clienteNombre,
-        'cliente_tipo' => is_numeric($clienteInput) ? 'existente' : 'nuevo',
         'message' => 'Presupuesto guardado correctamente'
     ]);
     
 } catch (Exception $e) {
-    echo "❌ ERROR: " . $e->getMessage() . "\n";
+    echo "❌ ERROR: " . $e->getMessage() . "<br>";
     
     header('Content-Type: application/json');
     echo json_encode([
@@ -181,6 +173,5 @@ try {
     ]);
 }
 
-echo "=== FIN DEBUG ===\n";
-echo "</pre>";
+echo "=== FIN ===<br>";
 ?>
