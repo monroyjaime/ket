@@ -770,40 +770,30 @@ function guardarPresupuesto() {
         
         console.log('📤 Enviando presupuesto completo:', presupuesto);
         
-
         $.ajax({
-            url: "https://ketelectropartes.com/admin/php/guardarPresupuesto_final.php",
+            //url: "../../php/guardarPresupuesto.php",
+            url: "https://ketelectropartes.com/admin/php/guardarPresupuesto.php",
+
             type: "POST",
             data: paramJSON,
             contentType: "application/json; charset=utf-8",
-            dataType: "text", // Mantener como text para ver el debug
+            dataType: "json",
             success: function(respuesta) {
-                console.log('📥 Respuesta completa:', respuesta);
+                console.log('📥 Respuesta del servidor:', respuesta);
                 
-                // Intentar parsear como JSON
-                try {
-                    // Extraer solo la parte JSON si hay debug
-                    const jsonMatch = respuesta.match(/\{[^}]+\}/);
-                    const jsonStr = jsonMatch ? jsonMatch[0] : respuesta;
-                    const respuestaJSON = JSON.parse(jsonStr);
-                    
-                    if (respuestaJSON.success) {
-                        $('#ModalMakePedido').modal('hide');
-                        window.location.href = `../php/verPresupuesto.php?presupuesto_id=${respuestaJSON.presupuesto_id}`;
-                    } else {
-                        alert('❌ Error: ' + respuestaJSON.error);
-                        btnGuardar.prop('disabled', false).html(originalText);
-                    }
-                } catch (e) {
-                    console.log('No se pudo parsear JSON, mostrando respuesta completa');
-                    alert('Respuesta del servidor:\n' + respuesta);
+                if (respuesta.success) {
+                    $('#ModalMakePedido').modal('hide');
+                    // Redirigir directamente al presupuesto SIN alert
+                    window.location.href = `../php/verPresupuesto.php?presupuesto_id=${respuesta.presupuesto_id}`;
+                } else {
+                    alert('❌ Error al guardar el presupuesto: ' + respuesta.error);
                     btnGuardar.prop('disabled', false).html(originalText);
                 }
             },
             error: function(xhr, status, error) {
                 console.error('Error en la petición:', status, error);
                 console.error('Respuesta del servidor:', xhr.responseText);
-                alert('❌ Error de conexión');
+                alert('❌ Error de conexión al guardar el presupuesto');
                 btnGuardar.prop('disabled', false).html(originalText);
             }
         });
