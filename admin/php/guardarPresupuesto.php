@@ -6,7 +6,7 @@ error_reporting(E_ALL);
 session_start();
 require_once("../../php/dbcat_async.php");
 
-header('Content-Type: application/json'); // DESCOMENTAR esta línea
+header('Content-Type: application/json');
 
 $db = new DBAsync();
 $numUsr = filter_var($_SESSION['usr_num'] ?? -1, FILTER_VALIDATE_INT) ?: -1;
@@ -38,10 +38,11 @@ if (empty($data)) {
 
 try {
     $clienteInput = $data['cliente'];
+    $clienteParaGuardar = '';
     
     // PROCESAR CLIENTE (numérico o texto)
     if (is_numeric($clienteInput)) {
-        // Cliente existente
+        // Cliente existente - Buscar código y nombre
         $clienteNum = intval($clienteInput);
         $clienteData = $db->consultaSegura(
             "SELECT code, full_name FROM cliente WHERE num = $1", 
@@ -54,15 +55,16 @@ try {
         
         $clienteCode = $clienteData[0]->code;
         $clienteNombre = $clienteData[0]->full_name;
+        $clienteParaGuardar = $clienteCode . " --- " . $clienteNombre;
         
     } else {
-        // Cliente nuevo (texto)
+        // Cliente nuevo (texto) - Usar "000" como código y el texto como nombre
         $clienteNombre = trim($clienteInput);
         if (empty($clienteNombre)) {
             throw new Exception('Nombre de cliente vacío');
         }
         
-        $clienteCode = 'TEMP_' . date('YmdHis') . '_' . substr(md5($clienteNombre), 0, 8);
+        $clienteParaGuardar = "000 --- " . $clienteNombre;
     }
     
     // Generar número de presupuesto
@@ -78,7 +80,7 @@ try {
     $recargoTexto = $data['recargo_texto'] ?? '';
     $recargoMonto = floatval($data['recargo_monto'] ?? 0);
     
-    // INSERTAR EN BD
+    // INSERTAR EN BD - Guardar el formato "CODIGO --- NOMBRE" en el campo cliente
     $presupuestoGen = $db->consultaSegura(
         "INSERT INTO presupuesto_gen 
         (user_num, hora, archivado, presupuesto_num, status, fecha, num_valery, comentarios, cliente, 
@@ -90,7 +92,7 @@ try {
             $numeroPresupuesto,
             $data['numero'],
             $data['comentario'] ?? '',
-            $clienteCode,
+            $clienteParaGuardar,  // Guardar "CODIGO --- NOMBRE" o "000 --- NOMBRE"
             $descuentoTexto,
             $descuentoMonto,
             $recargoTexto,
@@ -131,7 +133,7 @@ try {
         'presupuesto_id' => $presupuestoIdx,
         'presupuesto_num' => $numeroPresupuesto,
         'presupuesto_num_valery' => $data['numero'],
-        'cliente_nombre' => $clienteNombre,
+        'cliente_guardado' => $clienteParaGuardar,
         'message' => 'Presupuesto guardado correctamente'
     ]);
     

@@ -9,16 +9,10 @@ require_once("../../php/dbcat_async.php");
 $presupuesto_id = $_GET['presupuesto_id'] ?? 0;
 $db = new DBAsync();
 
-
-// DEBUG TEMPORAL
-error_log("=== DEBUG VER PRESUPUESTO ===");
-error_log("Cargando presupuesto ID: " . $presupuesto_id);
-
-
 try {
     // Obtener datos generales del presupuesto
     $presupuestoGen = $db->consultaSegura(
-        "SELECT pg.*, u.full_name as usuario_nombre, c.full_name as cliente_nombre
+        "SELECT pg.*, u.full_name as usuario_nombre
          FROM presupuesto_gen pg
          LEFT JOIN usuario u ON pg.user_num = u.num
          WHERE pg.idx = $1",
@@ -30,14 +24,6 @@ try {
     }
     
     $presupuesto = $presupuestoGen[0];
-
-     // DEBUG: Verificar campos de descuento/recargo
-    error_log("Presupuesto cargado desde BD:");
-    error_log("descuento_monto: " . ($presupuesto->descuento_monto ?? 'NULL'));
-    error_log("recargo_monto: " . ($presupuesto->recargo_monto ?? 'NULL'));
-    error_log("descuento_texto: " . ($presupuesto->descuento_texto ?? 'NULL'));
-    error_log("recargo_texto: " . ($presupuesto->recargo_texto ?? 'NULL'));
-    error_log("=== FIN DEBUG VER PRESUPUESTO ===");
     
     // Obtener detalles del presupuesto
     $detalles = $db->consultaSegura(
@@ -59,10 +45,20 @@ try {
         $subtotal += $detalle->cantidad * $detalle->precio;
     }
     
-    // NUEVO: Usar descuentos y recargos de la base de datos
+    // Usar descuentos y recargos de la base de datos
     $descuento = floatval($presupuesto->descuento_monto) ?? 0;
     $recargo = floatval($presupuesto->recargo_monto) ?? 0;
     $total = $subtotal - $descuento + $recargo;
+    
+    // EXTRAER EL NOMBRE DEL CLIENTE del formato "CODIGO --- NOMBRE"
+    $cliente_completo = $presupuesto->cliente;
+    $cliente_nombre = $cliente_completo;
+    
+    // Si contiene " --- ", extraer solo la parte del nombre
+    if (strpos($cliente_completo, ' --- ') !== false) {
+        $partes = explode(' --- ', $cliente_completo, 2);
+        $cliente_nombre = $partes[1] ?? $cliente_completo; // Tomar la segunda parte (nombre)
+    }
     
 } catch (Exception $e) {
     die("Error al cargar el presupuesto: " . $e->getMessage());
@@ -254,9 +250,8 @@ try {
             <div class="row mt-2">
                 <div class="col-6" style="font-size: 0.9em;">
                     <strong>Cliente:</strong><br>
-                    <?php echo htmlspecialchars($presupuesto->cliente_nombre ?? $presupuesto->cliente); ?>
+                    <?php echo htmlspecialchars($cliente_nombre); ?>
                 </div>
-                
                 <div class="col-6 text-end" style="font-size: 0.9em;">
                     <strong>Atendido por:</strong><br>
                     <?php echo htmlspecialchars($presupuesto->usuario_nombre ?? 'Sistema'); ?>
@@ -311,7 +306,7 @@ try {
                     </div>
                     <?php endif; ?>
                     
-                    <!-- NUEVO: Mostrar descuentos y recargos si existen -->
+                    <!-- Mostrar descuentos y recargos si existen -->
                     <?php if ($descuento > 0 && !empty($presupuesto->descuento_texto)): ?>
                     <div style="font-size: 0.9em; margin-top: 10px;">
                         <strong>Descuento:</strong><br>
