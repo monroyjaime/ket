@@ -29,8 +29,15 @@ try {
         throw new Exception('Datos del presupuesto vacíos después del decode');
     }
     
-    // DEBUG: Log para ver qué datos llegan
-    error_log("Datos recibidos en guardarPresupuesto: " . print_r($data, true));
+    // DEBUG COMPLETO: Ver TODOS los campos que llegan
+    error_log("=== DEBUG GUARDAR PRESUPUESTO ===");
+    error_log("Datos completos recibidos: " . json_encode($data));
+    error_log("Campos específicos:");
+    error_log("descuento_texto: " . ($data['descuento_texto'] ?? 'NO EXISTE'));
+    error_log("descuento_monto: " . ($data['descuento_monto'] ?? 'NO EXISTE'));
+    error_log("recargo_texto: " . ($data['recargo_texto'] ?? 'NO EXISTE'));
+    error_log("recargo_monto: " . ($data['recargo_monto'] ?? 'NO EXISTE'));
+    error_log("=== FIN DEBUG ===");
     
     // Obtener información del cliente
     $clienteData = $db->consultaSegura(
@@ -52,14 +59,19 @@ try {
     
     $numeroPresupuesto = $presupuestoNum[0]->next_num;
     
-    // DEBUG: Verificar campos de descuento/recargo
-    error_log("Campos descuento/recargo:");
-    error_log("descuento_texto: " . ($data['descuento_texto'] ?? 'NO ENVIADO'));
-    error_log("descuento_monto: " . ($data['descuento_monto'] ?? 'NO ENVIADO'));
-    error_log("recargo_texto: " . ($data['recargo_texto'] ?? 'NO ENVIADO'));
-    error_log("recargo_monto: " . ($data['recargo_monto'] ?? 'NO ENVIADO'));
+    // Preparar valores para la inserción
+    $descuentoTexto = $data['descuento_texto'] ?? '';
+    $descuentoMonto = floatval($data['descuento_monto'] ?? 0);
+    $recargoTexto = $data['recargo_texto'] ?? '';
+    $recargoMonto = floatval($data['recargo_monto'] ?? 0);
     
-    // NUEVO: Insertar con campos de descuento y recargo - CORREGIDOS LOS NOMBRES
+    error_log("Valores a insertar:");
+    error_log("descuento_texto: '$descuentoTexto'");
+    error_log("descuento_monto: $descuentoMonto");
+    error_log("recargo_texto: '$recargoTexto'");
+    error_log("recargo_monto: $recargoMonto");
+    
+    // Insertar con campos de descuento y recargo
     $presupuestoGen = $db->consultaSegura(
         "INSERT INTO presupuesto_gen 
         (user_num, hora, archivado, presupuesto_num, status, fecha, num_valery, comentarios, cliente, 
@@ -72,11 +84,10 @@ try {
             $data['numero'],
             $data['comentario'] ?? '',
             $clienteCode,
-            // NUEVO: Campos de descuento y recargo - USAR VALORES POR DEFECTO SI NO EXISTEN
-            $data['descuento_texto'] ?? '',
-            floatval($data['descuento_monto'] ?? 0),
-            $data['recargo_texto'] ?? '',
-            floatval($data['recargo_monto'] ?? 0)
+            $descuentoTexto,
+            $descuentoMonto,
+            $recargoTexto,
+            $recargoMonto
         ]
     );
     

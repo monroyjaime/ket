@@ -592,6 +592,13 @@ function guardarPresupuesto() {
     const recargoTexto = $('#recargo-texto').val();
     const recargoMonto = parseFloat($('#recargo-monto').val()) || 0;
 
+    // DEBUG: Aquí sí las variables ya están definidas
+    console.log('🔍 DEBUG - Campos descuento/recargo:');
+    console.log('descuento_texto:', descuentoTexto);
+    console.log('descuento_monto:', descuentoMonto);
+    console.log('recargo_texto:', recargoTexto);
+    console.log('recargo_monto:', recargoMonto);
+
     if (selectedClientNum === 0) {
         alert('Por favor seleccione un cliente');
         return;
@@ -601,6 +608,11 @@ function guardarPresupuesto() {
         alert('Por favor ingrese un número de presupuesto');
         return;
     }
+
+    // MOSTRAR LOADING
+    const btnGuardar = $('#reg-presupuesto');
+    const originalText = btnGuardar.html();
+    btnGuardar.prop('disabled', true).html('<i class="bi bi-hourglass-split"></i> Guardando...');
 
     if ($tableMakePedido && $tableMakePedido.length > 0) {
         var rows = $tableMakePedido.bootstrapTable('getData');
@@ -626,6 +638,7 @@ function guardarPresupuesto() {
 
         if (productos.length === 0) {
             alert('No hay productos en el presupuesto');
+            btnGuardar.prop('disabled', false).html(originalText);
             return;
         }
 
@@ -645,9 +658,8 @@ function guardarPresupuesto() {
 
         const paramJSON = JSON.stringify(presupuesto);
         
-        console.log('📤 Enviando presupuesto a guardar...', presupuesto);
+        console.log('📤 Enviando presupuesto completo:', presupuesto);
         
-        // MODIFICADO: Eliminar alert y redirigir directamente
         $.ajax({
             url: "../../php/guardarPresupuesto.php",
             type: "POST",
@@ -657,19 +669,20 @@ function guardarPresupuesto() {
                 console.log('📥 Respuesta del servidor:', respuesta);
                 
                 if (respuesta.success) {
-                    // ELIMINADO: alert de confirmación
                     $('#ModalMakePedido').modal('hide');
                     
                     // Redirigir directamente a la página del presupuesto
                     window.location.href = `../php/verPresupuesto.php?presupuesto_id=${respuesta.presupuesto_id}`;
                 } else {
                     alert('❌ Error al guardar el presupuesto: ' + respuesta.error);
+                    btnGuardar.prop('disabled', false).html(originalText);
                 }
             },
             error: function(xhr, status, error) {
                 console.error('Error en la petición:', status, error);
                 console.error('Respuesta del servidor:', xhr.responseText);
                 alert('❌ Error de conexión al guardar el presupuesto');
+                btnGuardar.prop('disabled', false).html(originalText);
             }
         });
     }

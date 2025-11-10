@@ -9,6 +9,12 @@ require_once("../../php/dbcat_async.php");
 $presupuesto_id = $_GET['presupuesto_id'] ?? 0;
 $db = new DBAsync();
 
+
+// DEBUG TEMPORAL
+error_log("=== DEBUG VER PRESUPUESTO ===");
+error_log("Cargando presupuesto ID: " . $presupuesto_id);
+
+
 try {
     // Obtener datos generales del presupuesto
     $presupuestoGen = $db->consultaSegura(
@@ -25,6 +31,14 @@ try {
     }
     
     $presupuesto = $presupuestoGen[0];
+
+     // DEBUG: Verificar campos de descuento/recargo
+    error_log("Presupuesto cargado desde BD:");
+    error_log("descuento_monto: " . ($presupuesto->descuento_monto ?? 'NULL'));
+    error_log("recargo_monto: " . ($presupuesto->recargo_monto ?? 'NULL'));
+    error_log("descuento_texto: " . ($presupuesto->descuento_texto ?? 'NULL'));
+    error_log("recargo_texto: " . ($presupuesto->recargo_texto ?? 'NULL'));
+    error_log("=== FIN DEBUG VER PRESUPUESTO ===");
     
     // Obtener detalles del presupuesto
     $detalles = $db->consultaSegura(
