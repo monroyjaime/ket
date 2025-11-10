@@ -711,131 +711,106 @@ function guardarPresupuesto() {
 */
 
 function guardarPresupuesto() {
-    console.log('🎯 guardarPresupuesto() EJECUTADA');
-    
-    const selectedClientNum = parseInt(ctrlClientSel.getValue()) || 0;
-    const numeroPresupuesto = $('#numero-presupuesto').val();
-    const comentarioPresupuesto = $('#comentarioPresupuesto').val();
-    
-    const descuentoTexto = $('#descuento_texto').val();
-    const descuentoMonto = parseFloat($('#descuento_monto').val()) || 0;
-    const recargoTexto = $('#recargo_texto').val();
-    const recargoMonto = parseFloat($('#recargo_monto').val()) || 0;
+        console.log('🎯 guardarPresupuesto() EJECUTADA');
+        
+        // ESTA LÍNEA ES CRÍTICA - debe estar al inicio
+        const selectedClient = ctrlClientSel.getValue();
+        console.log('🔍 Cliente seleccionado:', selectedClient);
+        
+        const numeroPresupuesto = $('#numero-presupuesto').val();
+        const comentarioPresupuesto = $('#comentarioPresupuesto').val();
+        const descuentoTexto = $('#descuento_texto').val();
+        const descuentoMonto = parseFloat($('#descuento_monto').val()) || 0;
+        const recargoTexto = $('#recargo_texto').val();
+        const recargoMonto = parseFloat($('#recargo_monto').val()) || 0;
 
-     // DEBUG de validación
-    console.log('🔍 Validación - Cliente válido?:', !!selectedClient);
-    console.log('🔍 Validación - Número válido?:', !!numeroPresupuesto);
-
-    // Validaciones CORREGIDAS
-    if (!selectedClient || selectedClient === '' || selectedClient === '0') {
-        console.log('❌ Validación falló: Cliente no válido');
-        alert('Por favor seleccione o ingrese un cliente');
-        return;
-    }
-
-    if (!numeroPresupuesto) {
-        console.log('❌ Validación falló: Número no válido');
-        alert('Por favor ingrese un número de presupuesto');
-        return;
-    }
-
-    console.log('🔍 DEBUG - Campos descuento/recargo:');
-    console.log('descuento_texto:', descuentoTexto);
-    console.log('descuento_monto:', descuentoMonto);
-    console.log('recargo_texto:', recargoTexto);
-    console.log('recargo_monto:', recargoMonto);
-
-    if (selectedClientNum === 0) {
-        alert('Por favor seleccione un cliente');
-        return;
-    }
-
-    if (!numeroPresupuesto) {
-        alert('Por favor ingrese un número de presupuesto');
-        return;
-    }
-
-    // MOSTRAR LOADING
-    const btnGuardar = $('#reg-presupuesto');
-    const originalText = btnGuardar.html();
-    btnGuardar.prop('disabled', true).html('<i class="bi bi-hourglass-split"></i> Guardando...');
-
-    if ($tableMakePedido && $tableMakePedido.length > 0) {
-        var rows = $tableMakePedido.bootstrapTable('getData');
-        const productos = [];
-
-        for (let i = 0; i < rows.length; i++) {
-            if (parseInt(rows[i].cantidad) > 0) {
-                const producto = {
-                    code: rows[i].code,
-                    name: rows[i].name,
-                    cantidad: parseInt(rows[i].cantidad),
-                    precio: parseFloat(rows[i].precio) || 0,
-                    tiempo_entrega: parseInt(rows[i].tiempo_entrega) || 0,
-                    unidad: rows[i].unidad,
-                    stock: parseInt(rows[i].stock) || 0,
-                    llegando: parseInt(rows[i].llegando) || 0,
-                    prec_min: parseFloat(rows[i].prec_min) || 0,
-                    prec_may: parseFloat(rows[i].prec_may) || 0
-                };
-                productos.push(producto);
-            }
-        }
-
-        if (productos.length === 0) {
-            alert('No hay productos en el presupuesto');
-            btnGuardar.prop('disabled', false).html(originalText);
+        // Validaciones
+        if (!selectedClient || selectedClient === '' || selectedClient === '0') {
+            alert('Por favor seleccione o ingrese un cliente');
             return;
         }
 
-        const presupuesto = {
-            numero: numeroPresupuesto,
-            cliente: selectedClientNum,
-            productos: productos,
-            comentario: comentarioPresupuesto,
-            usuario: numUsr,
-            total: calcularTotalPresupuesto(),
-            descuento_texto: descuentoTexto,
-            descuento_monto: descuentoMonto,
-            recargo_texto: recargoTexto,
-            recargo_monto: recargoMonto
-        };
+        if (!numeroPresupuesto) {
+            alert('Por favor ingrese un número de presupuesto');
+            return;
+        }
 
-        const paramJSON = JSON.stringify(presupuesto);
-        
-        console.log('📤 Enviando presupuesto completo:', presupuesto);
-        
-        $.ajax({
-            //url: "../../php/guardarPresupuesto.php",
-            url: "https://ketelectropartes.com/admin/php/guardarPresupuesto.php",
+        // MOSTRAR LOADING
+        const btnGuardar = $('#reg-presupuesto');
+        const originalText = btnGuardar.html();
+        btnGuardar.prop('disabled', true).html('<i class="bi bi-hourglass-split"></i> Guardando...');
 
-            type: "POST",
-            data: paramJSON,
-            contentType: "application/json; charset=utf-8",
-            dataType: "json",
-            success: function(respuesta) {
-                console.log('📥 Respuesta del servidor:', respuesta);
-                
-                if (respuesta.success) {
-                    $('#ModalMakePedido').modal('hide');
-                    // Redirigir directamente al presupuesto SIN alert
-                    window.location.href = `../php/verPresupuesto.php?presupuesto_id=${respuesta.presupuesto_id}`;
-                } else {
-                    alert('❌ Error al guardar el presupuesto: ' + respuesta.error);
+        if ($tableMakePedido && $tableMakePedido.length > 0) {
+            var rows = $tableMakePedido.bootstrapTable('getData');
+            const productos = [];
+
+            for (let i = 0; i < rows.length; i++) {
+                if (parseInt(rows[i].cantidad) > 0) {
+                    const producto = {
+                        code: rows[i].code,
+                        name: rows[i].name,
+                        cantidad: parseInt(rows[i].cantidad),
+                        precio: parseFloat(rows[i].precio) || 0,
+                        tiempo_entrega: parseInt(rows[i].tiempo_entrega) || 0,
+                        unidad: rows[i].unidad,
+                        stock: parseInt(rows[i].stock) || 0,
+                        llegando: parseInt(rows[i].llegando) || 0,
+                        prec_min: parseFloat(rows[i].prec_min) || 0,
+                        prec_may: parseFloat(rows[i].prec_may) || 0
+                    };
+                    productos.push(producto);
+                }
+            }
+
+            if (productos.length === 0) {
+                alert('No hay productos en el presupuesto');
+                btnGuardar.prop('disabled', false).html(originalText);
+                return;
+            }
+
+            const presupuesto = {
+                numero: numeroPresupuesto,
+                cliente: selectedClient,
+                productos: productos,
+                comentario: comentarioPresupuesto,
+                usuario: numUsr,
+                total: calcularTotalPresupuesto(),
+                descuento_texto: descuentoTexto,
+                descuento_monto: descuentoMonto,
+                recargo_texto: recargoTexto,
+                recargo_monto: recargoMonto
+            };
+
+            const paramJSON = JSON.stringify(presupuesto);
+            
+            console.log('📤 Enviando presupuesto completo:', presupuesto);
+            
+            $.ajax({
+                url: "../../php/guardarPresupuesto.php",
+                type: "POST",
+                data: paramJSON,
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                success: function(respuesta) {
+                    console.log('📥 Respuesta del servidor:', respuesta);
+                    
+                    if (respuesta.success) {
+                        $('#ModalMakePedido').modal('hide');
+                        window.location.href = `../php/verPresupuesto.php?presupuesto_id=${respuesta.presupuesto_id}`;
+                    } else {
+                        alert('❌ Error al guardar el presupuesto: ' + respuesta.error);
+                        btnGuardar.prop('disabled', false).html(originalText);
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error en la petición:', status, error);
+                    console.error('Respuesta del servidor:', xhr.responseText);
+                    alert('❌ Error de conexión al guardar el presupuesto');
                     btnGuardar.prop('disabled', false).html(originalText);
                 }
-            },
-            error: function(xhr, status, error) {
-                console.error('Error en la petición:', status, error);
-                console.error('Respuesta del servidor:', xhr.responseText);
-                alert('❌ Error de conexión al guardar el presupuesto');
-                btnGuardar.prop('disabled', false).html(originalText);
-            }
-        });
-
-
+            });
+        }
     }
-}
 
 function calcularTotalPresupuesto() {
     if ($tableMakePedido && $tableMakePedido.length > 0) {
