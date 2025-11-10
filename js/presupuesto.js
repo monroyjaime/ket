@@ -786,7 +786,7 @@ function guardarPresupuesto() {
             console.log('📤 Enviando presupuesto completo:', presupuesto);
             
             $.ajax({
-                url: "../admin/php/guardarPresupuesto.php",
+                url: "https://ketelectropartes.com/admin/php/guardarPresupuesto.php",
 
                 type: "POST",
                 data: paramJSON,
