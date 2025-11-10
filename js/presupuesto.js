@@ -65,29 +65,19 @@ function initPresupuestoModal() {
         try {
             ctrlClientSel = new TomSelect("#clients-tom-sel", {
                 sortField: { field: "text", direction: "asc" },
+                
+                // SOLUCIÓN: Simplificar los eventos para evitar recursión
                 onChange: function(value) {
-                    console.log('Cliente seleccionado (onChange):', value);
+                    console.log('Cliente seleccionado:', value);
+                    // Habilitar si hay cualquier valor (numérico o string)
                     const tieneValor = value !== null && value !== undefined && value !== '' && value !== '0';
                     $('#reg-presupuesto').prop('disabled', !tieneValor);
                 },
-                onItemAdd: function(value, item) {
-                    console.log('Item agregado (onItemAdd):', value);
-                    // Cuando se agrega un nuevo item, forzar la habilitación del botón
-                    $('#reg-presupuesto').prop('disabled', false);
-                    // También asegurarnos de que el valor esté seleccionado
-                    ctrlClientSel.setValue(value, true);
-                },
-                onCreate: function(data) {
-                    console.log('Opción creada (onCreate):', data);
-                    // Esto se ejecuta cuando se crea una nueva opción
-                    return {
-                        value: data.value,
-                        text: data.text
-                    };
-                },
+                
+                // ELIMINAR onItemAdd para evitar conflicto con onChange
+                
                 create: function(input, callback) {
-                    console.log('Creando cliente (create):', input);
-                    // Crear la nueva opción
+                    console.log('Creando cliente:', input);
                     const newValue = input.trim();
                     if (newValue.length >= 2) {
                         callback({
@@ -99,16 +89,6 @@ function initPresupuestoModal() {
                 createOnBlur: true,
                 createFilter: function(input) {
                     return input.length >= 2;
-                },
-                onFocus: function() {
-                    console.log('Tom Select enfocado');
-                },
-                onBlur: function() {
-                    console.log('Tom Select perdió foco');
-                    // Verificar si hay valor después de perder foco
-                    const value = ctrlClientSel.getValue();
-                    console.log('Valor después de blur:', value);
-                    $('#reg-presupuesto').prop('disabled', !value);
                 }
             });
             
@@ -120,6 +100,7 @@ function initPresupuestoModal() {
         }
     }
 }
+
 
 // Función para forzar actualización del carrito
 
