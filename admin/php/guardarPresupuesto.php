@@ -37,18 +37,39 @@ if (empty($data)) {
 }
 
 try {
-    // Obtener información del cliente
-    $clienteData = $db->consultaSegura(
-        "SELECT code, full_name FROM cliente WHERE num = $1", 
-        [$data['cliente']]
-    );
+    $clienteCode = '';
+    $clienteNombre = '';
+    $clienteInput = $data['cliente'];
     
-    if (empty($clienteData)) {
-        throw new Exception('Cliente no encontrado');
+    // VERIFICAR SI ES NUMÉRICO (cliente existente) O TEXTO (cliente nuevo)
+    if (is_numeric($clienteInput)) {
+        // CLIENTE EXISTENTE - Consultar de la base de datos
+        $clienteNum = intval($clienteInput);
+        $clienteData = $db->consultaSegura(
+            "SELECT code, full_name FROM cliente WHERE num = $1", 
+            [$clienteNum]
+        );
+        
+        if (empty($clienteData)) {
+            throw new Exception('Cliente no encontrado');
+        }
+        
+        $clienteCode = $clienteData[0]->code;
+        $clienteNombre = $clienteData[0]->full_name;
+        
+    } else {
+        // CLIENTE NUEVO (texto libre) - Usar el texto como nombre y generar código temporal
+        $clienteNombre = trim($clienteInput);
+        if (empty($clienteNombre)) {
+            throw new Exception('Nombre de cliente vacío');
+        }
+        
+        // Generar código temporal único
+        $clienteCode = 'TEMP_' . date('YmdHis') . '_' . substr(md5($clienteNombre), 0, 8);
+        
+        // Opcional: Podrías guardar este cliente temporal en alguna tabla si lo necesitas
+        // Por ahora solo usamos el código temporal
     }
-    
-    $clienteCode = $clienteData[0]->code;
-    $clienteNombre = $clienteData[0]->full_name;
     
     // Generar número de presupuesto
     $presupuestoNum = $db->consultaSegura(
@@ -75,7 +96,7 @@ try {
             $numeroPresupuesto,
             $data['numero'],
             $data['comentario'] ?? '',
-            $clienteCode,
+            $clienteCode, // Usar el código (existente o temporal)
             $descuentoTexto,
             $descuentoMonto,
             $recargoTexto,
@@ -116,6 +137,8 @@ try {
         'presupuesto_id' => $presupuestoIdx,
         'presupuesto_num' => $numeroPresupuesto,
         'presupuesto_num_valery' => $data['numero'],
+        'cliente_nombre' => $clienteNombre,
+        'cliente_tipo' => is_numeric($clienteInput) ? 'existente' : 'nuevo',
         'message' => 'Presupuesto guardado correctamente'
     ]);
     

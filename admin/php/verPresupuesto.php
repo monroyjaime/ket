@@ -21,7 +21,6 @@ try {
         "SELECT pg.*, u.full_name as usuario_nombre, c.full_name as cliente_nombre
          FROM presupuesto_gen pg
          LEFT JOIN usuario u ON pg.user_num = u.num
-         LEFT JOIN cliente c ON pg.cliente = c.code
          WHERE pg.idx = $1",
         [$presupuesto_id]
     );
@@ -257,6 +256,7 @@ try {
                     <strong>Cliente:</strong><br>
                     <?php echo htmlspecialchars($presupuesto->cliente_nombre ?? $presupuesto->cliente); ?>
                 </div>
+                
                 <div class="col-6 text-end" style="font-size: 0.9em;">
                     <strong>Atendido por:</strong><br>
                     <?php echo htmlspecialchars($presupuesto->usuario_nombre ?? 'Sistema'); ?>

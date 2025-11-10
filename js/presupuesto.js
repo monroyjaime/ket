@@ -52,35 +52,47 @@ function getSelected() {
 
 
 // Función para inicializar el Tom Select en el modal
+
 function initPresupuestoModal() {
     console.log('🔧 Inicializando Tom Select...');
     
-    // VERIFICAR si Tom Select ya está inicializado y destruirlo primero
     if (ctrlClientSel && ctrlClientSel.initialized) {
         console.log('🔄 Tom Select ya inicializado, destruyendo...');
         ctrlClientSel.destroy();
     }
     
-    // Verificar que el elemento existe antes de inicializar Tom Select
     if ($('#clients-tom-sel').length > 0) {
         try {
             ctrlClientSel = new TomSelect("#clients-tom-sel", {
                 sortField: { field: "text", direction: "asc" },
-                onChange: function() {
-                    var selectedClient = parseInt(ctrlClientSel.getValue()) || 0;
-                    $('#reg-presupuesto').prop('disabled', selectedClient <= 0);
+                onChange: function(value) {
+                    console.log('Cliente seleccionado:', value);
+                    // Habilitar el botón si hay cualquier valor (numérico o texto)
+                    $('#reg-presupuesto').prop('disabled', !value || value === '');
                 },
-                create: true,
-                createOnBlur: true
+                create: function(input, callback) {
+                    console.log('Creando entrada de cliente:', input);
+                    // Para texto libre, usar el texto mismo como "valor"
+                    callback({
+                        value: input, // Usar el texto como valor
+                        text: input
+                    });
+                },
+                createOnBlur: true,
+                createFilter: function(input) {
+                    // Permitir cualquier texto con al menos 2 caracteres
+                    return input.length >= 2;
+                },
+                onDelete: function(values) {
+                    // Deshabilitar botón si se elimina el cliente
+                    $('#reg-presupuesto').prop('disabled', true);
+                }
             });
-            // Marcar como inicializado
             ctrlClientSel.initialized = true;
             console.log('✅ Tom Select inicializado correctamente');
         } catch (e) {
             console.error('❌ Error inicializando Tom Select:', e);
         }
-    } else {
-        console.error('❌ Elemento #clients-tom-sel no encontrado');
     }
 }
 
