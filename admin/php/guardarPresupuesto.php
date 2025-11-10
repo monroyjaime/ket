@@ -3,47 +3,64 @@ ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
-session_start();
-require_once("../../php/dbcat_async.php");
+// TEMPORAL: Deshabilitar JSON para ver debug completo
+// header('Content-Type: application/json');
 
-header('Content-Type: application/json');
+session_start();
+
+echo "<pre>";
+echo "=== DEBUG GUARDAR PRESUPUESTO ===\n";
+
+require_once("../../php/dbcat_async.php");
 
 $db = new DBAsync();
 $numUsr = filter_var($_SESSION['usr_num'] ?? -1, FILTER_VALIDATE_INT) ?: -1;
 
+echo "Usuario: $numUsr\n";
+
 if ($numUsr <= 0) {
-    echo json_encode(['success' => false, 'error' => 'Usuario no autenticado']);
+    echo "ERROR: Usuario no autenticado\n";
     exit;
 }
 
 // LEER EL JSON DIRECTAMENTE DEL BODY
 $json_input = file_get_contents('php://input');
+echo "JSON recibido:\n";
+echo $json_input . "\n\n";
 
 if (empty($json_input)) {
-    echo json_encode(['success' => false, 'error' => 'Datos del presupuesto vacíos o inválidos']);
+    echo "ERROR: JSON vacío\n";
     exit;
 }
 
 $data = json_decode($json_input, true);
 
 if (json_last_error() !== JSON_ERROR_NONE) {
-    echo json_encode(['success' => false, 'error' => 'Error decodificando JSON: ' . json_last_error_msg()]);
+    echo "ERROR decodificando JSON: " . json_last_error_msg() . "\n";
     exit;
 }
 
 if (empty($data)) {
-    echo json_encode(['success' => false, 'error' => 'Datos del presupuesto vacíos después del decode']);
+    echo "ERROR: Datos vacíos después del decode\n";
     exit;
 }
 
+echo "✅ JSON decodificado correctamente\n";
+echo "Cliente recibido: '" . ($data['cliente'] ?? 'NO_RECIBIDO') . "'\n";
+echo "Tipo de cliente: " . gettype($data['cliente'] ?? 'NULL') . "\n";
+echo "Número de productos: " . count($data['productos'] ?? []) . "\n";
+
+// CONTINUAR CON EL PROCESO NORMAL...
 try {
     $clienteCode = '';
     $clienteNombre = '';
     $clienteInput = $data['cliente'];
     
+    echo "Procesando cliente: '$clienteInput'\n";
+    
     // VERIFICAR SI ES NUMÉRICO (cliente existente) O TEXTO (cliente nuevo)
     if (is_numeric($clienteInput)) {
-        // CLIENTE EXISTENTE - Consultar de la base de datos
+        echo "Cliente numérico (existente)\n";
         $clienteNum = intval($clienteInput);
         $clienteData = $db->consultaSegura(
             "SELECT code, full_name FROM cliente WHERE num = $1", 
@@ -58,7 +75,8 @@ try {
         $clienteNombre = $clienteData[0]->full_name;
         
     } else {
-        // CLIENTE NUEVO (texto libre) - Usar el texto como nombre y generar código temporal
+        // CLIENTE NUEVO (texto libre)
+        echo "Cliente texto (nuevo)\n";
         $clienteNombre = trim($clienteInput);
         if (empty($clienteNombre)) {
             throw new Exception('Nombre de cliente vacío');
@@ -66,9 +84,7 @@ try {
         
         // Generar código temporal único
         $clienteCode = 'TEMP_' . date('YmdHis') . '_' . substr(md5($clienteNombre), 0, 8);
-        
-        // Opcional: Podrías guardar este cliente temporal en alguna tabla si lo necesitas
-        // Por ahora solo usamos el código temporal
+        echo "Código temporal generado: $clienteCode\n";
     }
     
     // Generar número de presupuesto
@@ -77,6 +93,7 @@ try {
     );
     
     $numeroPresupuesto = $presupuestoNum[0]->next_num;
+    echo "Número de presupuesto: $numeroPresupuesto\n";
     
     // Preparar valores para descuento/recargo
     $descuentoTexto = $data['descuento_texto'] ?? '';
@@ -84,7 +101,10 @@ try {
     $recargoTexto = $data['recargo_texto'] ?? '';
     $recargoMonto = floatval($data['recargo_monto'] ?? 0);
     
+    echo "Descuento: $descuentoMonto, Recargo: $recargoMonto\n";
+    
     // Insertar en presupuesto_gen
+    echo "Insertando en base de datos...\n";
     $presupuestoGen = $db->consultaSegura(
         "INSERT INTO presupuesto_gen 
         (user_num, hora, archivado, presupuesto_num, status, fecha, num_valery, comentarios, cliente, 
@@ -96,7 +116,7 @@ try {
             $numeroPresupuesto,
             $data['numero'],
             $data['comentario'] ?? '',
-            $clienteCode, // Usar el código (existente o temporal)
+            $clienteCode,
             $descuentoTexto,
             $descuentoMonto,
             $recargoTexto,
@@ -109,8 +129,10 @@ try {
     }
     
     $presupuestoIdx = $presupuestoGen[0]->idx;
+    echo "✅ Presupuesto creado con ID: $presupuestoIdx\n";
     
     // Insertar detalles del presupuesto
+    $contadorProductos = 0;
     foreach ($data['productos'] as $producto) {
         $db->consultaSegura(
             "INSERT INTO presupuesto_detail 
@@ -124,14 +146,21 @@ try {
                 $producto['code']
             ]
         );
+        $contadorProductos++;
     }
+    echo "✅ $contadorProductos productos insertados\n";
     
     // Limpiar el carrito después de guardar
     $db->consultaSegura(
         "DELETE FROM presupuesto_carrito WHERE user_num = $1",
         [$numUsr]
     );
+    echo "✅ Carrito limpiado\n";
     
+    echo "✅ PRESUPUESTO GUARDADO EXITOSAMENTE\n";
+    
+    // Enviar respuesta JSON
+    header('Content-Type: application/json');
     echo json_encode([
         'success' => true,
         'presupuesto_id' => $presupuestoIdx,
@@ -143,10 +172,15 @@ try {
     ]);
     
 } catch (Exception $e) {
-    error_log("Error en guardarPresupuesto: " . $e->getMessage());
+    echo "❌ ERROR: " . $e->getMessage() . "\n";
+    
+    header('Content-Type: application/json');
     echo json_encode([
         'success' => false,
         'error' => $e->getMessage()
     ]);
 }
+
+echo "=== FIN DEBUG ===\n";
+echo "</pre>";
 ?>
