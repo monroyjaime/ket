@@ -773,7 +773,7 @@ function guardarPresupuesto() {
 
         $.ajax({
             //url: "../../php/guardarPresupuesto.php?cache=" + Date.now(),  // EVITA CACHÉ
-            url: "admin/php/guardar_presupuesto_final.php",
+            url: "https://ketelectropartes.com/admin/php/guardarPresupuesto_final.php",
             type: "POST",
             data: paramJSON,
             contentType: "application/json; charset=utf-8",
