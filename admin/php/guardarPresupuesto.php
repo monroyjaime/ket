@@ -29,6 +29,9 @@ try {
         throw new Exception('Datos del presupuesto vacíos después del decode');
     }
     
+    // DEBUG: Log para ver qué datos llegan
+    error_log("Datos recibidos en guardarPresupuesto: " . print_r($data, true));
+    
     // Obtener información del cliente
     $clienteData = $db->consultaSegura(
         "SELECT code, full_name FROM cliente WHERE num = $1", 
@@ -49,7 +52,14 @@ try {
     
     $numeroPresupuesto = $presupuestoNum[0]->next_num;
     
-    // NUEVO: Insertar con campos de descuento y recargo
+    // DEBUG: Verificar campos de descuento/recargo
+    error_log("Campos descuento/recargo:");
+    error_log("descuento_texto: " . ($data['descuento_texto'] ?? 'NO ENVIADO'));
+    error_log("descuento_monto: " . ($data['descuento_monto'] ?? 'NO ENVIADO'));
+    error_log("recargo_texto: " . ($data['recargo_texto'] ?? 'NO ENVIADO'));
+    error_log("recargo_monto: " . ($data['recargo_monto'] ?? 'NO ENVIADO'));
+    
+    // NUEVO: Insertar con campos de descuento y recargo - CORREGIDOS LOS NOMBRES
     $presupuestoGen = $db->consultaSegura(
         "INSERT INTO presupuesto_gen 
         (user_num, hora, archivado, presupuesto_num, status, fecha, num_valery, comentarios, cliente, 
@@ -58,15 +68,15 @@ try {
         RETURNING idx",
         [
             $data['usuario'],
-            $numeroPresupuesto, // ✅ Número numérico auto-generado
-            $data['numero'],    // ✅ El string original va en num_valery
+            $numeroPresupuesto,
+            $data['numero'],
             $data['comentario'] ?? '',
             $clienteCode,
-            // NUEVO: Campos de descuento y recargo
+            // NUEVO: Campos de descuento y recargo - USAR VALORES POR DEFECTO SI NO EXISTEN
             $data['descuento_texto'] ?? '',
-            $data['descuento_monto'] ?? 0,
+            floatval($data['descuento_monto'] ?? 0),
             $data['recargo_texto'] ?? '',
-            $data['recargo_monto'] ?? 0
+            floatval($data['recargo_monto'] ?? 0)
         ]
     );
     
@@ -102,7 +112,7 @@ try {
         'success' => true,
         'presupuesto_id' => $presupuestoIdx,
         'presupuesto_num' => $numeroPresupuesto,
-        'presupuesto_num_valery' => $data['numero'], // El string original
+        'presupuesto_num_valery' => $data['numero'],
         'message' => 'Presupuesto guardado correctamente'
     ]);
     
