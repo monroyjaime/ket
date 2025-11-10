@@ -770,7 +770,7 @@ function guardarPresupuesto() {
         
         console.log('📤 Enviando presupuesto completo:', presupuesto);
         
-        $.ajax({
+        /* $.ajax({
             url: "../../php/guardarPresupuesto.php",
             type: "POST",
             data: { data: paramJSON },
@@ -786,6 +786,31 @@ function guardarPresupuesto() {
                 
                 // Si quieres ver el presupuesto, ábrelo en nueva pestaña manualmente
                 // window.open('../php/verPresupuesto.php?presupuesto_id=ULTIMO_ID', '_blank');
+            },
+            error: function(xhr, status, error) {
+                console.error('Error en la petición:', status, error);
+                console.error('Respuesta del servidor:', xhr.responseText);
+                alert('❌ Error de conexión al guardar el presupuesto');
+                btnGuardar.prop('disabled', false).html(originalText);
+            }
+        }); */
+
+        console.log('📤 JSON a enviar:', paramJSON);
+        console.log('📤 Tipo de dato:', typeof paramJSON);
+        
+        $.ajax({
+            url: "../../php/guardarPresupuesto.php",
+            type: "POST",
+            data: paramJSON, // ENVIAR DIRECTAMENTE el JSON, no como objeto
+            contentType: "application/json; charset=utf-8", // Especificar que es JSON
+            dataType: "text", // Mantener como text por ahora
+            success: function(respuesta) {
+                console.log('📥 Respuesta COMPLETA del servidor:', respuesta);
+                
+                // TEMPORAL: Mostrar respuesta en alert
+                alert('Respuesta del servidor:\n' + respuesta);
+                
+                btnGuardar.prop('disabled', false).html(originalText);
             },
             error: function(xhr, status, error) {
                 console.error('Error en la petición:', status, error);

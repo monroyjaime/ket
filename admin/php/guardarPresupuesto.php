@@ -20,10 +20,15 @@ if ($numUsr <= 0) {
     exit;
 }
 
-if (isset($_POST['data'])) {
-    $data = json_decode($_POST['data'], true);
+// LEER EL JSON DIRECTAMENTE DEL BODY
+$json_input = file_get_contents('php://input');
+echo "Raw input:\n";
+echo $json_input . "\n\n";
+
+if (!empty($json_input)) {
+    $data = json_decode($json_input, true);
     
-    echo "Datos recibidos:\n";
+    echo "Datos JSON decodificados:\n";
     print_r($data);
     
     echo "\nCampos específicos:\n";
@@ -32,17 +37,12 @@ if (isset($_POST['data'])) {
     echo "recargo_texto: '" . ($data['recargo_texto'] ?? 'NO EXISTE') . "'\n";
     echo "recargo_monto: " . ($data['recargo_monto'] ?? 'NO EXISTE') . "\n";
     
-    // Verificar tipos
-    echo "\nTipos de datos:\n";
-    echo "descuento_texto tipo: " . gettype($data['descuento_texto'] ?? 'null') . "\n";
-    echo "descuento_monto tipo: " . gettype($data['descuento_monto'] ?? 'null') . "\n";
-    echo "recargo_texto tipo: " . gettype($data['recargo_texto'] ?? 'null') . "\n";
-    echo "recargo_monto tipo: " . gettype($data['recargo_monto'] ?? 'null') . "\n";
-    
 } else {
-    echo "ERROR: No se recibió data en POST\n";
+    echo "ERROR: No se recibió JSON en el body\n";
     echo "Contenido de POST:\n";
     print_r($_POST);
+    echo "Contenido de GET:\n";
+    print_r($_GET);
 }
 
 echo "=== FIN DEBUG ===\n";
