@@ -582,6 +582,9 @@ function inicializarTiemposEntrega() {
 // Función para guardar presupuesto
 
 function guardarPresupuesto() {
+
+    console.log('🎯 guardarPresupuesto() EJECUTADA');
+    
     const selectedClientNum = parseInt(ctrlClientSel.getValue()) || 0;
     const numeroPresupuesto = $('#numero-presupuesto').val();
     const comentarioPresupuesto = $('#comentarioPresupuesto').val();
