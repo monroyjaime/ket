@@ -66,30 +66,55 @@ function initPresupuestoModal() {
             ctrlClientSel = new TomSelect("#clients-tom-sel", {
                 sortField: { field: "text", direction: "asc" },
                 onChange: function(value) {
-                    console.log('Cliente seleccionado:', value);
-                    // Habilitar el botón si hay cualquier valor (numérico o texto)
-                    $('#reg-presupuesto').prop('disabled', !value || value === '');
+                    console.log('Cliente seleccionado (onChange):', value);
+                    const tieneValor = value !== null && value !== undefined && value !== '' && value !== '0';
+                    $('#reg-presupuesto').prop('disabled', !tieneValor);
+                },
+                onItemAdd: function(value, item) {
+                    console.log('Item agregado (onItemAdd):', value);
+                    // Cuando se agrega un nuevo item, forzar la habilitación del botón
+                    $('#reg-presupuesto').prop('disabled', false);
+                    // También asegurarnos de que el valor esté seleccionado
+                    ctrlClientSel.setValue(value, true);
+                },
+                onCreate: function(data) {
+                    console.log('Opción creada (onCreate):', data);
+                    // Esto se ejecuta cuando se crea una nueva opción
+                    return {
+                        value: data.value,
+                        text: data.text
+                    };
                 },
                 create: function(input, callback) {
-                    console.log('Creando entrada de cliente:', input);
-                    // Para texto libre, usar el texto mismo como "valor"
-                    callback({
-                        value: input, // Usar el texto como valor
-                        text: input
-                    });
+                    console.log('Creando cliente (create):', input);
+                    // Crear la nueva opción
+                    const newValue = input.trim();
+                    if (newValue.length >= 2) {
+                        callback({
+                            value: newValue,
+                            text: newValue
+                        });
+                    }
                 },
                 createOnBlur: true,
                 createFilter: function(input) {
-                    // Permitir cualquier texto con al menos 2 caracteres
                     return input.length >= 2;
                 },
-                onDelete: function(values) {
-                    // Deshabilitar botón si se elimina el cliente
-                    $('#reg-presupuesto').prop('disabled', true);
+                onFocus: function() {
+                    console.log('Tom Select enfocado');
+                },
+                onBlur: function() {
+                    console.log('Tom Select perdió foco');
+                    // Verificar si hay valor después de perder foco
+                    const value = ctrlClientSel.getValue();
+                    console.log('Valor después de blur:', value);
+                    $('#reg-presupuesto').prop('disabled', !value);
                 }
             });
+            
             ctrlClientSel.initialized = true;
             console.log('✅ Tom Select inicializado correctamente');
+            
         } catch (e) {
             console.error('❌ Error inicializando Tom Select:', e);
         }
@@ -873,6 +898,12 @@ $(document).ready(function() {
     
     $('#descuento_monto, #recargo_monto').on('input', function() {
         updateTotal();
+    });
+
+    // Event listener adicional para el input del Tom Select
+    $('#clients-tom-sel').on('change', function() {
+        console.log('Change event en Tom Select:', this.value);
+        $('#reg-presupuesto').prop('disabled', !this.value);
     });
 });
 
