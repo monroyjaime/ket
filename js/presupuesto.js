@@ -770,29 +770,23 @@ function guardarPresupuesto() {
         
         console.log('📤 Enviando presupuesto completo:', presupuesto);
         
-      $.ajax({
-            url: "../../php/guardarPresupuesto_NUEVO.php",  // NUEVO NOMBRE
+
+        $.ajax({
+            url: "../../php/guardarPresupuesto.php",  // RUTA ORIGINAL CORRECTA
             type: "POST",
             data: paramJSON,
             contentType: "application/json; charset=utf-8",
-            dataType: "text",
+            dataType: "json",  // Volver a json
             success: function(respuesta) {
-                console.log('📥 Respuesta COMPLETA del servidor:', respuesta);
+                console.log('📥 Respuesta del servidor:', respuesta);
                 
-                // TEMPORAL: Mostrar respuesta en alert
-                alert('Respuesta del servidor:\n' + respuesta);
-                
-                btnGuardar.prop('disabled', false).html(originalText);
-                
-                // Si fue exitoso, extraer el ID y redirigir
-                try {
-                    const respuestaJSON = JSON.parse(respuesta);
-                    if (respuestaJSON.success) {
-                        $('#ModalMakePedido').modal('hide');
-                        window.location.href = `../php/verPresupuesto.php?presupuesto_id=${respuestaJSON.presupuesto_id}`;
-                    }
-                } catch (e) {
-                    console.log('Respuesta no es JSON:', respuesta);
+                if (respuesta.success) {
+                    $('#ModalMakePedido').modal('hide');
+                    // Redirigir directamente al presupuesto
+                    window.location.href = `../php/verPresupuesto.php?presupuesto_id=${respuesta.presupuesto_id}`;
+                } else {
+                    alert('❌ Error al guardar el presupuesto: ' + respuesta.error);
+                    btnGuardar.prop('disabled', false).html(originalText);
                 }
             },
             error: function(xhr, status, error) {
@@ -802,6 +796,7 @@ function guardarPresupuesto() {
                 btnGuardar.prop('disabled', false).html(originalText);
             }
         });
+
     }
 }
 

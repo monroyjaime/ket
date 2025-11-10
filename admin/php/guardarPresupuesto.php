@@ -3,48 +3,40 @@ ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
-// TEMPORAL: Mostrar debug siempre
-echo "<pre>";
-echo "=== DEBUG GUARDAR PRESUPUESTO ===\n";
-
 session_start();
 require_once("../../php/dbcat_async.php");
+
+header('Content-Type: application/json');
 
 $db = new DBAsync();
 $numUsr = filter_var($_SESSION['usr_num'] ?? -1, FILTER_VALIDATE_INT) ?: -1;
 
-echo "Usuario: $numUsr\n";
-
 if ($numUsr <= 0) {
-    echo "ERROR: Usuario no autenticado\n";
+    echo json_encode(['success' => false, 'error' => 'Usuario no autenticado']);
     exit;
 }
 
 // LEER EL JSON DIRECTAMENTE DEL BODY
 $json_input = file_get_contents('php://input');
-echo "Raw input recibido:\n";
-echo $json_input . "\n\n";
 
-if (!empty($json_input)) {
-    $data = json_decode($json_input, true);
-    
-    if (json_last_error() !== JSON_ERROR_NONE) {
-        echo "ERROR decodificando JSON: " . json_last_error_msg() . "\n";
-        exit;
-    }
-    
-    echo "Datos JSON decodificados:\n";
-    print_r($data);
-    
-    echo "\nCampos específicos:\n";
-    echo "descuento_texto: '" . ($data['descuento_texto'] ?? 'NO EXISTE') . "'\n";
-    echo "descuento_monto: " . ($data['descuento_monto'] ?? 'NO EXISTE') . "\n";
-    echo "recargo_texto: '" . ($data['recargo_texto'] ?? 'NO EXISTE') . "'\n";
-    echo "recargo_monto: " . ($data['recargo_monto'] ?? 'NO EXISTE') . "\n";
-    
-    // CONTINUAR CON EL GUARDADO NORMAL
-    echo "\n=== CONTINUANDO CON GUARDADO NORMAL ===\n";
-    
+if (empty($json_input)) {
+    echo json_encode(['success' => false, 'error' => 'Datos del presupuesto vacíos o inválidos']);
+    exit;
+}
+
+$data = json_decode($json_input, true);
+
+if (json_last_error() !== JSON_ERROR_NONE) {
+    echo json_encode(['success' => false, 'error' => 'Error decodificando JSON: ' . json_last_error_msg()]);
+    exit;
+}
+
+if (empty($data)) {
+    echo json_encode(['success' => false, 'error' => 'Datos del presupuesto vacíos después del decode']);
+    exit;
+}
+
+try {
     // Obtener información del cliente
     $clienteData = $db->consultaSegura(
         "SELECT code, full_name FROM cliente WHERE num = $1", 
@@ -65,17 +57,11 @@ if (!empty($json_input)) {
     
     $numeroPresupuesto = $presupuestoNum[0]->next_num;
     
-    // Preparar valores para la inserción
+    // Preparar valores para descuento/recargo
     $descuentoTexto = $data['descuento_texto'] ?? '';
     $descuentoMonto = floatval($data['descuento_monto'] ?? 0);
     $recargoTexto = $data['recargo_texto'] ?? '';
     $recargoMonto = floatval($data['recargo_monto'] ?? 0);
-    
-    echo "Valores a insertar en BD:\n";
-    echo "descuento_texto: '$descuentoTexto'\n";
-    echo "descuento_monto: $descuentoMonto\n";
-    echo "recargo_texto: '$recargoTexto'\n";
-    echo "recargo_monto: $recargoMonto\n";
     
     // Insertar en presupuesto_gen
     $presupuestoGen = $db->consultaSegura(
@@ -125,12 +111,6 @@ if (!empty($json_input)) {
         [$numUsr]
     );
     
-    echo "=== PRESUPUESTO GUARDADO EXITOSAMENTE ===\n";
-    echo "ID: $presupuestoIdx\n";
-    echo "Número: $numeroPresupuesto\n";
-    
-    // Enviar respuesta JSON
-    header('Content-Type: application/json');
     echo json_encode([
         'success' => true,
         'presupuesto_id' => $presupuestoIdx,
@@ -139,18 +119,11 @@ if (!empty($json_input)) {
         'message' => 'Presupuesto guardado correctamente'
     ]);
     
-} else {
-    echo "ERROR: No se recibió JSON en el body\n";
-    echo "Contenido de POST:\n";
-    print_r($_POST);
-    
-    header('Content-Type: application/json');
+} catch (Exception $e) {
+    error_log("Error en guardarPresupuesto: " . $e->getMessage());
     echo json_encode([
         'success' => false,
-        'error' => 'Datos del presupuesto vacíos o inválidos'
+        'error' => $e->getMessage()
     ]);
 }
-
-echo "=== FIN DEBUG ===\n";
-echo "</pre>";
 ?>
