@@ -416,11 +416,11 @@ $tituloLista = '<h2 style="background-color: #037C79; padding-bottom: 14px; colo
                                 <div class="card-body">
                                     <div class="mb-2">
                                         <label class="form-label">Concepto de Descuento:</label>
-                                        <input type="text" class="form-control" id="descuento-texto" placeholder="Ej: Descuento por volumen">
+                                        <input type="text" class="form-control" id="descuento_texto" placeholder="Ej: Descuento por volumen">
                                     </div>
                                     <div class="mb-2">
                                         <label class="form-label">Monto de Descuento ($):</label>
-                                        <input type="number" class="form-control" id="descuento-monto" step="0.001" min="0" placeholder="0.000" value="0">
+                                        <input type="number" class="form-control" id="descuento_monto" step="0.001" min="0" placeholder="0.000" value="0">
                                     </div>
                                 </div>
                             </div>
@@ -433,11 +433,11 @@ $tituloLista = '<h2 style="background-color: #037C79; padding-bottom: 14px; colo
                                 <div class="card-body">
                                     <div class="mb-2">
                                         <label class="form-label">Concepto de Recargo:</label>
-                                        <input type="text" class="form-control" id="recargo-texto" placeholder="Ej: Recargo por urgencia">
+                                        <input type="text" class="form-control" id="recargo_texto" placeholder="Ej: Recargo por urgencia">
                                     </div>
                                     <div class="mb-2">
                                         <label class="form-label">Monto de Recargo ($):</label>
-                                        <input type="number" class="form-control" id="recargo-monto" step="0.001" min="0" placeholder="0.000" value="0">
+                                        <input type="number" class="form-control" id="recargo_monto" step="0.001" min="0" placeholder="0.000" value="0">
                                     </div>
                                 </div>
                             </div>

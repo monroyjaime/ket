@@ -528,8 +528,8 @@ function updateTotal() {
         }
         
         // Calcular descuentos y recargos
-        const descuentoMonto = parseFloat($('#descuento-monto').val()) || 0;
-        const recargoMonto = parseFloat($('#recargo-monto').val()) || 0;
+        const descuentoMonto = parseFloat($('#descuento_monto').val()) || 0;
+        const recargoMonto = parseFloat($('#recargo_monto').val()) || 0;
         const total = subtotal - descuentoMonto + recargoMonto;
         
         const totalFormateado = total.toFixed(3).replace('.', ',');
@@ -584,16 +584,16 @@ function inicializarTiemposEntrega() {
 function guardarPresupuesto() {
 
     console.log('🎯 guardarPresupuesto() EJECUTADA');
-    
+
     const selectedClientNum = parseInt(ctrlClientSel.getValue()) || 0;
     const numeroPresupuesto = $('#numero-presupuesto').val();
     const comentarioPresupuesto = $('#comentarioPresupuesto').val();
     
     // NUEVO: Obtener valores de descuento y recargo
     const descuentoTexto = $('#descuento-texto').val();
-    const descuentoMonto = parseFloat($('#descuento-monto').val()) || 0;
+    const descuentoMonto = parseFloat($('#descuento_monto').val()) || 0;
     const recargoTexto = $('#recargo-texto').val();
-    const recargoMonto = parseFloat($('#recargo-monto').val()) || 0;
+    const recargoMonto = parseFloat($('#recargo_monto').val()) || 0;
 
     // DEBUG: Aquí sí las variables ya están definidas
     console.log('🔍 DEBUG - Campos descuento/recargo:');
@@ -748,7 +748,7 @@ $(document).ready(function() {
         }
     });
     
-    $('#descuento-monto, #recargo-monto').on('input', function() {
+    $('#descuento_monto, #recargo_monto').on('input', function() {
         updateTotal();
     });
 });
