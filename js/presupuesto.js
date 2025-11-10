@@ -786,7 +786,8 @@ function guardarPresupuesto() {
             console.log('📤 Enviando presupuesto completo:', presupuesto);
             
             $.ajax({
-                url: "../../php/guardarPresupuesto.php",
+                url: "../admin/php/guardarPresupuesto.php",
+
                 type: "POST",
                 data: paramJSON,
                 contentType: "application/json; charset=utf-8",
