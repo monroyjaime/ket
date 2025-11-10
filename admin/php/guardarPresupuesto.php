@@ -3,7 +3,7 @@ ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
-// TEMPORAL: Deshabilitar redirección y mostrar debug
+// TEMPORAL: Mostrar debug siempre
 echo "<pre>";
 echo "=== DEBUG GUARDAR PRESUPUESTO ===\n";
 
@@ -20,27 +20,32 @@ if ($numUsr <= 0) {
     exit;
 }
 
-// Verificar datos POST
-echo "Datos POST recibidos:\n";
-print_r($_POST);
-echo "\n";
-
 if (isset($_POST['data'])) {
     $data = json_decode($_POST['data'], true);
-    echo "Datos JSON decodificados:\n";
-    print_r($data);
-    echo "\n";
     
-    echo "Campos específicos:\n";
-    echo "descuento_texto: " . ($data['descuento_texto'] ?? 'NO EXISTE') . "\n";
+    echo "Datos recibidos:\n";
+    print_r($data);
+    
+    echo "\nCampos específicos:\n";
+    echo "descuento_texto: '" . ($data['descuento_texto'] ?? 'NO EXISTE') . "'\n";
     echo "descuento_monto: " . ($data['descuento_monto'] ?? 'NO EXISTE') . "\n";
-    echo "recargo_texto: " . ($data['recargo_texto'] ?? 'NO EXISTE') . "\n";
+    echo "recargo_texto: '" . ($data['recargo_texto'] ?? 'NO EXISTE') . "'\n";
     echo "recargo_monto: " . ($data['recargo_monto'] ?? 'NO EXISTE') . "\n";
+    
+    // Verificar tipos
+    echo "\nTipos de datos:\n";
+    echo "descuento_texto tipo: " . gettype($data['descuento_texto'] ?? 'null') . "\n";
+    echo "descuento_monto tipo: " . gettype($data['descuento_monto'] ?? 'null') . "\n";
+    echo "recargo_texto tipo: " . gettype($data['recargo_texto'] ?? 'null') . "\n";
+    echo "recargo_monto tipo: " . gettype($data['recargo_monto'] ?? 'null') . "\n";
+    
 } else {
     echo "ERROR: No se recibió data en POST\n";
+    echo "Contenido de POST:\n";
+    print_r($_POST);
 }
 
 echo "=== FIN DEBUG ===\n";
 echo "</pre>";
-exit; // Detener aquí para ver el debug
+exit;
 ?>
