@@ -722,6 +722,23 @@ function guardarPresupuesto() {
     const recargoTexto = $('#recargo_texto').val();
     const recargoMonto = parseFloat($('#recargo_monto').val()) || 0;
 
+     // DEBUG de validación
+    console.log('🔍 Validación - Cliente válido?:', !!selectedClient);
+    console.log('🔍 Validación - Número válido?:', !!numeroPresupuesto);
+
+    // Validaciones CORREGIDAS
+    if (!selectedClient || selectedClient === '' || selectedClient === '0') {
+        console.log('❌ Validación falló: Cliente no válido');
+        alert('Por favor seleccione o ingrese un cliente');
+        return;
+    }
+
+    if (!numeroPresupuesto) {
+        console.log('❌ Validación falló: Número no válido');
+        alert('Por favor ingrese un número de presupuesto');
+        return;
+    }
+
     console.log('🔍 DEBUG - Campos descuento/recargo:');
     console.log('descuento_texto:', descuentoTexto);
     console.log('descuento_monto:', descuentoMonto);
