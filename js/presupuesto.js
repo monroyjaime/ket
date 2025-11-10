@@ -787,7 +787,6 @@ function guardarPresupuesto() {
             
             $.ajax({
                 url: "https://ketelectropartes.com/admin/php/guardarPresupuesto.php",
-
                 type: "POST",
                 data: paramJSON,
                 contentType: "application/json; charset=utf-8",
@@ -797,7 +796,7 @@ function guardarPresupuesto() {
                     
                     if (respuesta.success) {
                         $('#ModalMakePedido').modal('hide');
-                        window.location.href = `../php/verPresupuesto.php?presupuesto_id=${respuesta.presupuesto_id}`;
+                        window.location.href = "https://ketelectropartes.com/admin/php/verPresupuesto.php?presupuesto_id=" + respuesta.presupuesto_id;
                     } else {
                         alert('❌ Error al guardar el presupuesto: ' + respuesta.error);
                         btnGuardar.prop('disabled', false).html(originalText);
