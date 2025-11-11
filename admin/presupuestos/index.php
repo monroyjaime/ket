@@ -405,6 +405,45 @@ $tituloLista = '<h2 style="background-color: #037C79; padding-bottom: 14px; colo
                         </div>  
                     </div>
                 </div> 
+
+                <table
+                    id="table-carrito"
+                    class="bootstrap-table"
+                    data-table-type="make-pedido"
+                    data-toggle="table"  
+                    data-height="600"
+                    data-checkbox-header="false"
+                    data-url="../../php/getCarritoCurrentData.php">
+                    <thead>
+                        <tr>
+                            <th data-field="edo" data-formatter="edoFormater" data-width="40"></th>
+                            <th data-field="code" data-halign="center" data-align="left" data-width="100">Código</th>
+                            <th data-field="relacionado" data-halign="center" data-align="left" data-width="100" data-formatter="relacionadoFormater">Relacionado</th> <!-- NUEVA COLUMNA -->                            <th data-field="name" data-halign="center" data-align="left" data-width="300">Descripción</th>
+                            <th data-field="stock" data-halign="center" data-align="center" data-width="80" data-formatter="stockFormater">Stock</th>
+                            <th data-field="llegando" data-halign="center" data-align="center" data-width="90" data-formatter="llegandoFormater">Llegando</th>
+                            <!--<th data-field="precio_opciones" data-halign="center" data-align="center" data-width="200" data-formatter="precioOpcionesFormater">Precio</th>
+                            <th data-field="precio_manual" data-halign="center" data-align="center" data-width="120" data-formatter="precioManualFormater">Precio Manual</th> -->
+                            <!-- NUEVA COLUMNA COMBINADA - SOLO EN ESTA TABLA -->
+                            <th data-field="precio_combinado" data-halign="center" data-align="center" data-width="280" data-formatter="precioCombinadoFormater">Precio</th>                            <th data-field="cantidad" data-halign="center" data-align="center" data-width="100" data-formatter="cantidadFormater">Cantidad</th>
+                            <th data-field="unidad" data-halign="center" data-align="center" data-width="80">Unidad</th>
+                            <th data-field="tiempo_entrega" data-halign="center" data-align="center" data-width="120" data-formatter="tiempoEntregaFormater">Tiempo Entrega</th>
+                            <th data-field="monto" data-halign="center" data-align="right" data-width="100" data-formatter="montoFormater">Monto</th>
+                        </tr>
+                    </thead>
+                </table>
+                
+                <div style="text-align: right; margin-top: 20px;">
+                    <a class="updTot" href="javascript:void(0)" onClick="updateTotal()" title="update">
+                        <i class="bi bi-arrow-clockwise"></i>
+                        <h4 id="MontoTotal" style="color: #037C79; font-weight: bold;"></h4>
+                    </a>
+                </div>
+
+                <div class="input-group mt-3">
+                    <span class="input-group-text">Comentarios del Presupuesto:</span>
+                    <textarea class="form-control" id="comentarioPresupuesto" rows="2"></textarea>
+                </div>
+
                 <!-- NUEVA SECCIÓN: Descuentos y Recargos -->
                 <div class="container mt-3">
                     <div class="row">
@@ -443,44 +482,6 @@ $tituloLista = '<h2 style="background-color: #037C79; padding-bottom: 14px; colo
                             </div>
                         </div>
                     </div>
-                </div>
-
-                <table
-                    id="table-carrito"
-                    class="bootstrap-table"
-                    data-table-type="make-pedido"
-                    data-toggle="table"  
-                    data-height="400"
-                    data-checkbox-header="false"
-                    data-url="../../php/getCarritoCurrentData.php">
-                    <thead>
-                        <tr>
-                            <th data-field="edo" data-formatter="edoFormater" data-width="40"></th>
-                            <th data-field="code" data-halign="center" data-align="left" data-width="100">Código</th>
-                            <th data-field="relacionado" data-halign="center" data-align="left" data-width="100" data-formatter="relacionadoFormater">Relacionado</th> <!-- NUEVA COLUMNA -->                            <th data-field="name" data-halign="center" data-align="left" data-width="300">Descripción</th>
-                            <th data-field="stock" data-halign="center" data-align="center" data-width="80" data-formatter="stockFormater">Stock</th>
-                            <th data-field="llegando" data-halign="center" data-align="center" data-width="90" data-formatter="llegandoFormater">Llegando</th>
-                            <!--<th data-field="precio_opciones" data-halign="center" data-align="center" data-width="200" data-formatter="precioOpcionesFormater">Precio</th>
-                            <th data-field="precio_manual" data-halign="center" data-align="center" data-width="120" data-formatter="precioManualFormater">Precio Manual</th> -->
-                            <!-- NUEVA COLUMNA COMBINADA - SOLO EN ESTA TABLA -->
-                            <th data-field="precio_combinado" data-halign="center" data-align="center" data-width="280" data-formatter="precioCombinadoFormater">Precio</th>                            <th data-field="cantidad" data-halign="center" data-align="center" data-width="100" data-formatter="cantidadFormater">Cantidad</th>
-                            <th data-field="unidad" data-halign="center" data-align="center" data-width="80">Unidad</th>
-                            <th data-field="tiempo_entrega" data-halign="center" data-align="center" data-width="120" data-formatter="tiempoEntregaFormater">Tiempo Entrega</th>
-                            <th data-field="monto" data-halign="center" data-align="right" data-width="100" data-formatter="montoFormater">Monto</th>
-                        </tr>
-                    </thead>
-                </table>
-                
-                <div style="text-align: right; margin-top: 20px;">
-                    <a class="updTot" href="javascript:void(0)" onClick="updateTotal()" title="update">
-                        <i class="bi bi-arrow-clockwise"></i>
-                        <h4 id="MontoTotal" style="color: #037C79; font-weight: bold;"></h4>
-                    </a>
-                </div>
-
-                <div class="input-group mt-3">
-                    <span class="input-group-text">Comentarios del Presupuesto:</span>
-                    <textarea class="form-control" id="comentarioPresupuesto" rows="2"></textarea>
                 </div>
 
                 <button type="button" class="btn btn-success btn-lg" id="reg-presupuesto" onClick="guardarPresupuesto()" style="margin: 20px 40px 10px;">
