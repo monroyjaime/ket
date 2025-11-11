@@ -101,13 +101,14 @@ try {
             table-layout: fixed;
             word-wrap: break-word;
         }
-        .table-presupuesto th:nth-child(1), .table-presupuesto td:nth-child(1) { width: 8%; }
-        .table-presupuesto th:nth-child(2), .table-presupuesto td:nth-child(2) { width: 35%; }
-        .table-presupuesto th:nth-child(3), .table-presupuesto td:nth-child(3) { width: 7%; }
-        .table-presupuesto th:nth-child(4), .table-presupuesto td:nth-child(4) { width: 7%; }
-        .table-presupuesto th:nth-child(5), .table-presupuesto td:nth-child(5) { width: 12%; }
-        .table-presupuesto th:nth-child(6), .table-presupuesto td:nth-child(6) { width: 10%; }
-        .table-presupuesto th:nth-child(7), .table-presupuesto td:nth-child(7) { width: 12%; }
+        .table-presupuesto th:nth-child(1), .table-presupuesto td:nth-child(1) { width: 5%; } /* Ítem */
+        .table-presupuesto th:nth-child(2), .table-presupuesto td:nth-child(2) { width: 8%; } /* Código */
+        .table-presupuesto th:nth-child(3), .table-presupuesto td:nth-child(3) { width: 32%; } /* Descripción */
+        .table-presupuesto th:nth-child(4), .table-presupuesto td:nth-child(4) { width: 7%; } /* Cantidad */
+        .table-presupuesto th:nth-child(5), .table-presupuesto td:nth-child(5) { width: 7%; } /* Unidad */
+        .table-presupuesto th:nth-child(6), .table-presupuesto td:nth-child(6) { width: 12%; } /* Precio Unit. */
+        .table-presupuesto th:nth-child(7), .table-presupuesto td:nth-child(7) { width: 10%; } /* Tiempo Entrega */
+        .table-presupuesto th:nth-child(8), .table-presupuesto td:nth-child(8) { width: 12%; } /* Subtotal */
         
         .table-presupuesto th { 
             background-color: #f8f9fa; 
@@ -263,6 +264,7 @@ try {
         <table class="table-presupuesto">
             <thead>
                 <tr>
+                    <th class="text-center">Ítem</th>
                     <th>Código</th>
                     <th>Descripción</th>
                     <th class="text-center">Cantidad</th>
@@ -273,8 +275,12 @@ try {
                 </tr>
             </thead>
             <tbody>
-                <?php foreach ($detalles as $detalle): ?>
+                <?php 
+                $contador_item = 1;
+                foreach ($detalles as $detalle): 
+                ?>
                 <tr>
+                    <td class="text-center"><?php echo $contador_item; ?></td>
                     <td><?php echo htmlspecialchars($detalle->product_code); ?></td>
                     <td><?php echo htmlspecialchars($detalle->producto_nombre); ?></td>
                     <td class="text-center"><?php echo number_format($detalle->cantidad, 0); ?></td>
@@ -291,7 +297,10 @@ try {
                     </td>
                     <td class="text-right">$<?php echo number_format($detalle->cantidad * $detalle->precio, 3, ',', '.'); ?></td>
                 </tr>
-                <?php endforeach; ?>
+                <?php 
+                $contador_item++;
+                endforeach; 
+                ?>
             </tbody>
         </table>
 
