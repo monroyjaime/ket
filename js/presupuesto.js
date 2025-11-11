@@ -305,7 +305,7 @@ function precioCombinadoFormater(value, row) {
                            onchange="seleccionarPrecio(this, '${row.code}')">
                     <label class="form-check-label small">
                         $${precMin.toFixed(3).replace('.', ',')}
-                        <span class="badge badge-margen ${resultadoMin.cumpleMargen ? 'bg-success' : 'bg-danger'}">${factorMin}x</span>
+
                     </label>
                 </div>
                 
@@ -316,7 +316,6 @@ function precioCombinadoFormater(value, row) {
                            onchange="seleccionarPrecio(this, '${row.code}')">
                     <label class="form-check-label small">
                         $${precMay.toFixed(3).replace('.', ',')}
-                        <span class="badge badge-margen ${resultadoMay.cumpleMargen ? 'bg-success' : 'bg-danger'}">${factorMay}x</span>
                     </label>
                 </div>
                 
@@ -327,7 +326,6 @@ function precioCombinadoFormater(value, row) {
                            onchange="seleccionarPrecio(this, '${row.code}')">
                     <label class="form-check-label small">
                         $${prec3.toFixed(3).replace('.', ',')}
-                        <span class="badge badge-margen ${resultado3.cumpleMargen ? 'bg-success' : 'bg-danger'}">${factor3}x</span>
                     </label>
                 </div>
             </div>
