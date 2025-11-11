@@ -22,10 +22,46 @@ jobs:
 
     - name: 🚀 Deploy with backup safety
       run: |
-        ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no -p 5655 ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} "tar -czf /tmp/backup-$(date +%Y%m%d-%H%M%S).tar.gz /var/www/html/ 2>/dev/null || true"
-        rsync -avz --delete --exclude='.env' --exclude='uploads/' -e "ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no -p 5655" ./ ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/var/www/html/
-        echo "✅ Deployment with backup and controlled delete completed"
+        # Verificar espacio en disco primero
+        ssh -i ~/.ssh/deploy_key -p 5655 ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} "df -h /tmp && df -h /var/www/"
+        
+        # Crear backup con timestamp (excluyendo uploads para ahorrar espacio)
+        BACKUP_FILE="/tmp/backup-ket-$(date +%Y%m%d-%H%M%S).tar.gz"
+        echo "📦 Creating backup: $BACKUP_FILE"
+        ssh -i ~/.ssh/deploy_key -p 5655 ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} "
+          cd /var/www/html/ && \
+          tar -czf $BACKUP_FILE . \
+            --exclude='./uploads' \
+            --exclude='./backup-*.tar.gz' \
+            --exclude='./node_modules' \
+            --exclude='./.git' \
+          2>/dev/null || echo '⚠️  Backup completed with warnings'
+        "
+        
+        # Despliegue seguro SIN --delete, incluyendo imágenes
+        echo "🚀 Deploying application with images..."
+        rsync -avz \
+          --exclude='.env' \
+          --exclude='.env.*' \
+          --exclude='backup-*.tar.gz' \
+          --exclude='node_modules/' \
+          --exclude='.git/' \
+          --exclude='*.sql' \
+          --exclude='*.log' \
+          -e "ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no -p 5655" \
+          ./ \
+          ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/var/www/html/
+        
+        echo "✅ Deployment with images completed successfully"
 
     - name: ✅ Verify deployment
       run: |
-        ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no -p 5655 ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} "ls -la /var/www/html/ && echo '✅ Ket deployment verified!'"
+        ssh -i ~/.ssh/deploy_key -p 5655 ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} "
+          echo '📁 Checking deployment:'
+          ls -la /var/www/html/ | head -10
+          echo '🖼️  Image files count:'
+          find /var/www/html/ -name '*.jpg' -o -name '*.jpeg' -o -name '*.png' -o -name '*.gif' | wc -l
+          echo '📊 Total files:'
+          find /var/www/html/ -type f | wc -l
+          echo '✅ Ket catalog deployment verified!'
+        "
