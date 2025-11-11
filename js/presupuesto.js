@@ -268,6 +268,7 @@ function precioCombinadoFormater(value, row) {
     const prec3 = parseFloat(row.prec_3) || 0;
     const costo = parseFloat(row.costo) || 0;
     const precioActual = parseFloat(row.precio) || 0;
+    const minimoPrecio = parseFloat(costo*(ganancia_min_glob/descuento_max_glob)) || 0;
     
     // Determinar qué precio está seleccionado actualmente
     let precioSeleccionado = '';
@@ -346,7 +347,7 @@ function precioCombinadoFormater(value, row) {
             
             <!-- Información de costos -->
             <div class="precio-info small text-muted mt-1">
-                Costo: $${costo.toFixed(3).replace('.', ',')} | Mínimo: (${ganancia_min_glob}/${descuento_max_glob})x
+                Costo: $${costo.toFixed(3).replace('.', ',')} | Mínimo: $${minimoPrecio.toFixed(3).replace('.', ',')}(${ganancia_min_glob}/${descuento_max_glob})x
             </div>
         </div>
     `;
