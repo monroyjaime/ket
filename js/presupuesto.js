@@ -302,7 +302,7 @@ function precioCombinadoFormater(value, row) {
                 <div class="form-check form-check-inline">
                     <input class="form-check-input precio-radio" type="radio" name="precio_${row.code}" 
                            value="${precMin}" ${precioSeleccionado === 'precio1' ? 'checked' : ''} 
-                           ${!resultadoMin.esCero ? 'disabled' : ''} 
+                           ${!resultadoMin.cumpleMargen ? 'disabled' : ''} 
                            onchange="seleccionarPrecio(this, '${row.code}')">
                     <label class="form-check-label small">
                         <span class="badge badge-margen ${resultadoMin.cumpleMargen ? 'bg-success' : 'bg-danger'}">$${precMin.toFixed(3).replace('.', ',')}</span> 
@@ -312,7 +312,7 @@ function precioCombinadoFormater(value, row) {
                 <div class="form-check form-check-inline">
                     <input class="form-check-input precio-radio" type="radio" name="precio_${row.code}" 
                            value="${precMay}" ${precioSeleccionado === 'precio2' ? 'checked' : ''} 
-                           ${!resultadoMay.esCero ? 'disabled' : ''} 
+                           ${!resultadoMay.cumpleMargen ? 'disabled' : ''} 
                            onchange="seleccionarPrecio(this, '${row.code}')">
                     <label class="form-check-label small">
                         <span class="badge badge-margen ${resultadoMay.cumpleMargen ? 'bg-success' : 'bg-danger'}">$${precMay.toFixed(3).replace('.', ',')}</span>
@@ -322,7 +322,7 @@ function precioCombinadoFormater(value, row) {
                 <div class="form-check form-check-inline">
                     <input class="form-check-input precio-radio" type="radio" name="precio_${row.code}" 
                            value="${prec3}" ${precioSeleccionado === 'precio3' ? 'checked' : ''} 
-                           ${!resultado3.esCero ? 'disabled' : ''} 
+                           ${!resultado3.cumpleMargen ? 'disabled' : ''} 
                            onchange="seleccionarPrecio(this, '${row.code}')">
                     <label class="form-check-label small">
                         <span class="badge badge-margen ${resultadoMay.cumpleMargen ? 'bg-success' : 'bg-danger'}">$${prec3.toFixed(3).replace('.', ',')}</span>
