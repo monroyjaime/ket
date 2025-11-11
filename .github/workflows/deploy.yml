@@ -64,4 +64,5 @@ jobs:
           echo '📊 Total files:'
           find /var/www/html/ -type f | wc -l
           echo '✅ Ket catalog deployment verified!'
+          echo "# $(date) - Deployment fix" >> .github/workflows/deploy.yml
         "
