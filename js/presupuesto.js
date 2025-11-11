@@ -14,10 +14,10 @@ function verificarMargenPrecio(costo, precio) {
         return { cumpleMargen: true, esCero: false };
     }
     
-    const precioMinimoRequerido = costo * ganancia_min_glob;
+    const precioMinimoRequerido = costo * ganancia_min_glob/descuento_max_glob;
     const cumpleMargen = precio >= precioMinimoRequerido;
     
-    console.log(`💰 Margen verificado: ${costo} × ${ganancia_min_glob} = ${precioMinimoRequerido.toFixed(3)} vs ${precio} → ${cumpleMargen ? '✅' : '❌'}`);
+    console.log(`💰 Margen verificado: ${costo} × ${ganancia_min_glob}/${descuento_max_glob} = ${precioMinimoRequerido.toFixed(3)} vs ${precio} → ${cumpleMargen ? '✅' : '❌'}`);
     
     return { cumpleMargen: cumpleMargen, esCero: false };
 }
@@ -348,7 +348,7 @@ function precioCombinadoFormater(value, row) {
             
             <!-- Información de costos -->
             <div class="precio-info small text-muted mt-1">
-                Costo: $${costo.toFixed(3).replace('.', ',')} | Mínimo: ${ganancia_min_glob}x
+                Costo: $${costo.toFixed(3).replace('.', ',')} | Mínimo: (${ganancia_min_glob}/${descuento_max_glob})x
             </div>
         </div>
     `;
