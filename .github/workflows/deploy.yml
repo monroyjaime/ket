@@ -25,7 +25,7 @@ jobs:
         # Verificar espacio en disco primero
         ssh -i ~/.ssh/deploy_key -p 5655 ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} "df -h /tmp && df -h /var/www/"
         
-        # Crear backup con timestamp (excluyendo uploads para ahorrar espacio)
+        # Crear backup con timestamp (excluyendo uploads para ahorrar espacio
         BACKUP_FILE="/tmp/backup-ket-$(date +%Y%m%d-%H%M%S).tar.gz"
         echo "📦 Creating backup: $BACKUP_FILE"
         ssh -i ~/.ssh/deploy_key -p 5655 ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} "
