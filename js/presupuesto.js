@@ -305,8 +305,7 @@ function precioCombinadoFormater(value, row) {
                            ${!resultadoMin.cumpleMargen ? 'disabled' : ''} 
                            onchange="seleccionarPrecio(this, '${row.code}')">
                     <label class="form-check-label small">
-                        $${precMin.toFixed(3).replace('.', ',')}
-
+                        <span class="badge badge-margen ${resultadoMin.cumpleMargen ? 'bg-success' : 'bg-danger'}">$${precMin.toFixed(3).replace('.', ',')}</span> 
                     </label>
                 </div>
                 
@@ -347,7 +346,7 @@ function precioCombinadoFormater(value, row) {
             
             <!-- Información de costos -->
             <div class="precio-info small text-muted mt-1">
-                Costo: $${costo.toFixed(3).replace('.', ',')} | Mínimo: $${minimoPrecio.toFixed(3).replace('.', ',')}(${ganancia_min_glob}/${descuento_max_glob})x
+                Costo: $${costo.toFixed(3).replace('.', ',')} | Mínimo: $${minimoPrecio.toFixed(3).replace('.', ',')} | (${ganancia_min_glob}/${descuento_max_glob})x
             </div>
         </div>
     `;
