@@ -281,7 +281,7 @@ $tituloLista = '<h2 style="background-color: #037C79; padding-bottom: 14px; colo
 
         /* Badges más compactos */
         .badge-margen {
-            font-size: 0.55rem;
+            font-size: 0.75rem;
             padding: 1px 3px;
             margin-left: 2px;
         }
