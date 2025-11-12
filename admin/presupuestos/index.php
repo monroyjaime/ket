@@ -458,8 +458,12 @@ $tituloLista = '<h2 style="background-color: #037C79; padding-bottom: 14px; colo
                                         <input type="text" class="form-control" id="descuento_texto" placeholder="Ej: Descuento por volumen">
                                     </div>
                                     <div class="mb-2">
-                                        <label class="form-label">Monto de Descuento ($):</label>
-                                        <input type="number" class="form-control" id="descuento_monto" step="0.001" min="0" placeholder="0.000" value="0">
+                                        <label class="form-label">Porcentaje de Descuento (%):</label>
+                                        <input type="number" class="form-control" id="descuento_porcentaje" step="0.1" min="0" max="100" placeholder="0.0" value="0" onchange="calcularDescuentoDesdePorcentaje()">
+                                    </div>
+                                    <div class="mb-2">
+                                        <label class="form-label">Monto Calculado ($):</label>
+                                        <input type="number" class="form-control" id="descuento_monto" step="0.001" min="0" placeholder="0.000" value="0" readonly>
                                     </div>
                                 </div>
                             </div>
