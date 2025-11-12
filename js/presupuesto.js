@@ -532,7 +532,7 @@ function recalcularTiempoEntrega(code, cantidad) {
         }
     }
 }
-
+/*
 function updateTotal() {
     if ($tableMakePedido && $tableMakePedido.length > 0) {
         var rows = $tableMakePedido.bootstrapTable('getData');
@@ -560,6 +560,43 @@ function updateTotal() {
         `);
     }
 }
+*/
+function updateTotal() {
+    if ($tableMakePedido && $tableMakePedido.length > 0) {
+        var rows = $tableMakePedido.bootstrapTable('getData');
+        let subtotal = 0;
+        
+        for (let i = 0; i < rows.length; i++) {
+            const cantidad = parseInt(rows[i].cantidad) || 0;
+            const precio = parseFloat(rows[i].precio) || 0;
+            subtotal += cantidad * precio;
+        }
+        
+        // Si hay porcentaje de descuento pero no monto, calcularlo
+        const descuentoPorcentaje = parseFloat($('#descuento_porcentaje').val()) || 0;
+        let descuentoMonto = parseFloat($('#descuento_monto').val()) || 0;
+        
+        if (descuentoPorcentaje > 0 && descuentoMonto === 0) {
+            descuentoMonto = subtotal * (descuentoPorcentaje / 100);
+            $('#descuento_monto').val(descuentoMonto.toFixed(3));
+        }
+        
+        const recargoMonto = parseFloat($('#recargo_monto').val()) || 0;
+        const total = subtotal - descuentoMonto + recargoMonto;
+        
+        const totalFormateado = total.toFixed(3).replace('.', ',');
+        const subtotalFormateado = subtotal.toFixed(3).replace('.', ',');
+        
+        $('#MontoTotal').html(`
+            <div>Sub-Total: $${subtotalFormateado}</div>
+            ${descuentoMonto > 0 ? `<div>Descuento (${descuentoPorcentaje}%): -$${descuentoMonto.toFixed(3).replace('.', ',')}</div>` : ''}
+            ${recargoMonto > 0 ? `<div>Recargo: +$${recargoMonto.toFixed(3).replace('.', ',')}</div>` : ''}
+            <div><strong>Total: $${totalFormateado}</strong></div>
+        `);
+    }
+}
+
+
 
 function inicializarTiemposEntrega() {
     if ($tableMakePedido && $tableMakePedido.length > 0) {
@@ -833,6 +870,54 @@ function verificarEstadoCarrito() {
     console.log('codes_carrito:', codes_carrito);
     console.log('Número de productos:', codes_carrito.length);
     console.log('=====================');
+}
+
+
+// Función para calcular descuento desde porcentaje
+function calcularDescuentoDesdePorcentaje() {
+    const porcentaje = parseFloat($('#descuento_porcentaje').val()) || 0;
+    
+    if ($tableMakePedido && $tableMakePedido.length > 0) {
+        var rows = $tableMakePedido.bootstrapTable('getData');
+        let subtotal = 0;
+        
+        for (let i = 0; i < rows.length; i++) {
+            const cantidad = parseInt(rows[i].cantidad) || 0;
+            const precio = parseFloat(rows[i].precio) || 0;
+            subtotal += cantidad * precio;
+        }
+        
+        const descuentoMonto = subtotal * (porcentaje / 100);
+        $('#descuento_monto').val(descuentoMonto.toFixed(3));
+        
+        updateTotal();
+    }
+}
+
+
+// Función para calcular porcentaje desde monto
+function calcularPorcentajeDesdeMonto() {
+    const monto = parseFloat($('#descuento_monto').val()) || 0;
+    
+    if ($tableMakePedido && $tableMakePedido.length > 0) {
+        var rows = $tableMakePedido.bootstrapTable('getData');
+        let subtotal = 0;
+        
+        for (let i = 0; i < rows.length; i++) {
+            const cantidad = parseInt(rows[i].cantidad) || 0;
+            const precio = parseFloat(rows[i].precio) || 0;
+            subtotal += cantidad * precio;
+        }
+        
+        if (subtotal > 0) {
+            const porcentaje = (monto / subtotal) * 100;
+            $('#descuento_porcentaje').val(porcentaje.toFixed(2));
+        } else {
+            $('#descuento_porcentaje').val(0);
+        }
+        
+        updateTotal();
+    }
 }
 
 // Inicialización
