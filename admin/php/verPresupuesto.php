@@ -52,16 +52,6 @@ try {
     $iva_porcentaje = floatval($presupuesto->iva_porcentaje) ?? 0;
     $total = $subtotal - $descuento + $recargo + $iva;
     
-    // EXTRAER EL NOMBRE DEL CLIENTE del formato "CODIGO --- NOMBRE"
-    $cliente_completo = $presupuesto->cliente;
-    $cliente_nombre = $cliente_completo;
-    
-    // Si contiene " --- ", extraer solo la parte del nombre
-    if (strpos($cliente_completo, ' --- ') !== false) {
-        $partes = explode(' --- ', $cliente_completo, 2);
-        $cliente_nombre = $partes[1] ?? $cliente_completo; // Tomar la segunda parte (nombre)
-    }
-    
 } catch (Exception $e) {
     die("Error al cargar el presupuesto: " . $e->getMessage());
 }
@@ -162,6 +152,10 @@ try {
             flex: 1;
             margin-right: 20px;
         }
+        .numero-interno {
+            font-size: 0.8em;
+            color: #6c757d;
+        }
         @media print {
             .no-print { display: none; }
             body { 
@@ -220,6 +214,10 @@ try {
                 page-break-after: auto !important;
                 page-break-inside: avoid;
             }
+            .numero-interno {
+                font-size: 0.75em !important;
+                color: #6c757d !important;
+            }
         }
     </style>
 </head>
@@ -240,10 +238,16 @@ try {
                 <div class="col-6 text-end">
                     <h4>PRESUPUESTO</h4>
                     <div style="font-size: 0.9em;">
-                        <strong>N° Interno:</strong> <?php echo htmlspecialchars($presupuesto->presupuesto_num); ?><br>
+                        <!-- CAMBIO 1: No. Cliente primero -->
                         <?php if (!empty($presupuesto->num_valery)): ?>
-                        <strong>N° Cliente:</strong> <?php echo htmlspecialchars($presupuesto->num_valery); ?><br>
+                        <strong>No. <?php echo htmlspecialchars($presupuesto->num_valery); ?></strong><br>
                         <?php endif; ?>
+                        
+                        <!-- CAMBIO 2: No. Interno en gris y más pequeño -->
+                        <span class="numero-interno">
+                            <strong>No. Interno:</strong> <?php echo htmlspecialchars($presupuesto->presupuesto_num); ?>
+                        </span><br>
+                        
                         <strong>Fecha:</strong> <?php echo date('d/m/Y', strtotime($presupuesto->fecha)); ?><br>
                         <strong>Hora:</strong> <?php echo date('H:i', strtotime($presupuesto->hora)); ?>
                     </div>
@@ -253,7 +257,8 @@ try {
             <div class="row mt-2">
                 <div class="col-6" style="font-size: 0.9em;">
                     <strong>Cliente:</strong><br>
-                    <?php echo htmlspecialchars($cliente_nombre); ?>
+                    <!-- CAMBIO 3: Mostrar formato "CODIGO --- NOMBRE" completo -->
+                    <?php echo htmlspecialchars($presupuesto->cliente); ?>
                 </div>
                 <div class="col-6 text-end" style="font-size: 0.9em;">
                     <strong>Atendido por:</strong><br>
@@ -332,13 +337,7 @@ try {
                     </div>
                     <?php endif; ?>
 
-                    <!-- Mostrar IVA si existe -->
-                    <?php if ($iva > 0): ?>
-                    <div style="font-size: 0.9em; margin-top: 10px;">
-                        <strong>IVA (<?php echo $iva_porcentaje; ?>%):</strong><br>
-                        $<?php echo number_format($iva, 3, ',', '.'); ?>
-                    </div>
-                    <?php endif; ?>
+                    <!-- CAMBIO 4: ELIMINADO mostrar IVA aquí (solo aparece en la tabla) -->
                 </div>
                 
                 <table class="totales-table">
