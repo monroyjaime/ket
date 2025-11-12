@@ -548,26 +548,39 @@ function updateTotal() {
         const descuentoPorcentaje = parseFloat($('#descuento_porcentaje').val()) || 0;
         let descuentoMonto = parseFloat($('#descuento_monto').val()) || 0;
         const recargoMonto = parseFloat($('#recargo_monto').val()) || 0;
+        const ivaPorcentaje = parseFloat($('#iva_porcentaje').val()) || 0;
+        let ivaMonto = parseFloat($('#iva_monto').val()) || 0;
         
-        // Si el usuario cambió el porcentaje, recalcular el monto
+        // Recalcular descuento si hay porcentaje
         if (descuentoPorcentaje > 0) {
             descuentoMonto = subtotal * (descuentoPorcentaje / 100);
             $('#descuento_monto').val(descuentoMonto.toFixed(3));
         } else {
-            // Si porcentaje es 0, limpiar monto
             $('#descuento_monto').val(0);
             descuentoMonto = 0;
         }
         
-        const total = subtotal - descuentoMonto + recargoMonto;
+        // Recalcular IVA si hay porcentaje
+        const baseIVA = subtotal - descuentoMonto + recargoMonto;
+        if (ivaPorcentaje > 0) {
+            ivaMonto = baseIVA * (ivaPorcentaje / 100);
+            $('#iva_monto').val(ivaMonto.toFixed(3));
+        } else {
+            $('#iva_monto').val(0);
+            ivaMonto = 0;
+        }
+        
+        const total = baseIVA + ivaMonto;
         
         const totalFormateado = total.toFixed(3).replace('.', ',');
         const subtotalFormateado = subtotal.toFixed(3).replace('.', ',');
         
+        // Mostrar solo los campos que tienen valores > 0
         $('#MontoTotal').html(`
             <div>Sub-Total: $${subtotalFormateado}</div>
             ${descuentoMonto > 0 ? `<div>Descuento (${descuentoPorcentaje}%): -$${descuentoMonto.toFixed(3).replace('.', ',')}</div>` : ''}
             ${recargoMonto > 0 ? `<div>Recargo: +$${recargoMonto.toFixed(3).replace('.', ',')}</div>` : ''}
+            ${ivaMonto > 0 ? `<div>IVA (${ivaPorcentaje}%): +$${ivaMonto.toFixed(3).replace('.', ',')}</div>` : ''}
             <div><strong>Total: $${totalFormateado}</strong></div>
         `);
     }
@@ -736,6 +749,8 @@ function guardarPresupuesto() {
         const descuentoMonto = parseFloat($('#descuento_monto').val()) || 0;
         const recargoTexto = $('#recargo_texto').val();
         const recargoMonto = parseFloat($('#recargo_monto').val()) || 0;
+        const ivaPorcentaje = parseFloat($('#iva_porcentaje').val()) || 0;
+        const ivaMonto = parseFloat($('#iva_monto').val()) || 0;
 
         // Validaciones
         if (!selectedClient || selectedClient === '' || selectedClient === '0') {
@@ -791,7 +806,9 @@ function guardarPresupuesto() {
                 descuento_texto: descuentoTexto,
                 descuento_monto: descuentoMonto,
                 recargo_texto: recargoTexto,
-                recargo_monto: recargoMonto
+                recargo_monto: recargoMonto,
+                iva_porcentaje: ivaPorcentaje,  // NUEVO
+                iva_monto: ivaMonto             // NUEVO
             };
 
             const paramJSON = JSON.stringify(presupuesto);
@@ -871,6 +888,33 @@ function calcularDescuentoDesdePorcentaje() {
     }
 }
 
+function calcularIVA() {
+    const ivaPorcentaje = parseFloat($('#iva_porcentaje').val()) || 0;
+    
+    if ($tableMakePedido && $tableMakePedido.length > 0) {
+        var rows = $tableMakePedido.bootstrapTable('getData');
+        let subtotal = 0;
+        
+        for (let i = 0; i < rows.length; i++) {
+            const cantidad = parseInt(rows[i].cantidad) || 0;
+            const precio = parseFloat(rows[i].precio) || 0;
+            subtotal += cantidad * precio;
+        }
+        
+        // Calcular descuentos primero
+        const descuentoPorcentaje = parseFloat($('#descuento_porcentaje').val()) || 0;
+        const descuentoMonto = subtotal * (descuentoPorcentaje / 100);
+        const recargoMonto = parseFloat($('#recargo_monto').val()) || 0;
+        
+        // Base para IVA: subtotal - descuento + recargo
+        const baseIVA = subtotal - descuentoMonto + recargoMonto;
+        const ivaMonto = baseIVA * (ivaPorcentaje / 100);
+        
+        $('#iva_monto').val(ivaMonto.toFixed(3));
+        updateTotal();
+    }
+}
+
 
 // Inicialización
 
@@ -910,7 +954,7 @@ $(document).ready(function() {
     });
 
     // NUEVO: Event listener para los campos de descuento/recargo (AGREGAR ESTO)
-    $('#descuento_porcentaje, #recargo_monto').on('input', function() {
+    $('#descuento_porcentaje, #recargo_monto, #iva_porcentaje').on('input', function() {
         updateTotal();
     });
 

@@ -482,10 +482,24 @@ $tituloLista = '<h2 style="background-color: #037C79; padding-bottom: 14px; colo
                                         <label class="form-label">Monto de Recargo ($):</label>
                                         <input type="number" class="form-control" id="recargo_monto" step="0.001" min="0" placeholder="0.000" value="0">
                                     </div>
+                                     <!-- NUEVO CAMPO IVA -->
+                                    <div class="mb-2">
+                                        <label class="form-label">IVA (%):</label>
+                                        <input type="number" class="form-control" id="iva_porcentaje" step="0.1" min="0" max="100" placeholder="0.0" value="0" onchange="calcularIVA()">
+                                    </div>
+                                    <div class="mb-2">
+                                        <label class="form-label">Monto de IVA ($):</label>
+                                        <input type="number" class="form-control" id="iva_monto" step="0.001" min="0" placeholder="0.000" value="0" readonly>
+                                    </div>
                                 </div>
                             </div>
                         </div>
+
+                        
                     </div>
+
+
+
                 </div>
 
                 <button type="button" class="btn btn-success btn-lg" id="reg-presupuesto" onClick="guardarPresupuesto()" style="margin: 20px 40px 10px;">
