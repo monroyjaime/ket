@@ -80,23 +80,29 @@ try {
     $recargoTexto = $data['recargo_texto'] ?? '';
     $recargoMonto = floatval($data['recargo_monto'] ?? 0);
     
-    // INSERTAR EN BD - Guardar el formato "CODIGO --- NOMBRE" en el campo cliente
+    // NUEVO: Obtener valores de IVA
+    $ivaPorcentaje = floatval($data['iva_porcentaje'] ?? 0);
+    $ivaMonto = floatval($data['iva_monto'] ?? 0);
+    
+    // INSERTAR EN BD - Incluir campos de IVA
     $presupuestoGen = $db->consultaSegura(
         "INSERT INTO presupuesto_gen 
         (user_num, hora, archivado, presupuesto_num, status, fecha, num_valery, comentarios, cliente, 
-         descuento_texto, descuento_monto, recargo_texto, recargo_monto) 
-        VALUES ($1, CURRENT_TIME, 0, $2, 1, CURRENT_DATE, $3, $4, $5, $6, $7, $8, $9) 
+         descuento_texto, descuento_monto, recargo_texto, recargo_monto, iva_porcentaje, iva_monto) 
+        VALUES ($1, CURRENT_TIME, 0, $2, 1, CURRENT_DATE, $3, $4, $5, $6, $7, $8, $9, $10, $11) 
         RETURNING idx",
         [
             $data['usuario'],
             $numeroPresupuesto,
             $data['numero'],
             $data['comentario'] ?? '',
-            $clienteParaGuardar,  // Guardar "CODIGO --- NOMBRE" o "000 --- NOMBRE"
+            $clienteParaGuardar,
             $descuentoTexto,
             $descuentoMonto,
             $recargoTexto,
-            $recargoMonto
+            $recargoMonto,
+            $ivaPorcentaje,  // NUEVO
+            $ivaMonto        // NUEVO
         ]
     );
     
@@ -134,6 +140,8 @@ try {
         'presupuesto_num' => $numeroPresupuesto,
         'presupuesto_num_valery' => $data['numero'],
         'cliente_guardado' => $clienteParaGuardar,
+        'iva_porcentaje' => $ivaPorcentaje,  // NUEVO
+        'iva_monto' => $ivaMonto,            // NUEVO
         'message' => 'Presupuesto guardado correctamente'
     ]);
     

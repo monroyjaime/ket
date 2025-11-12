@@ -45,10 +45,12 @@ try {
         $subtotal += $detalle->cantidad * $detalle->precio;
     }
     
-    // Usar descuentos y recargos de la base de datos
+    // Usar descuentos, recargos e IVA de la base de datos
     $descuento = floatval($presupuesto->descuento_monto) ?? 0;
     $recargo = floatval($presupuesto->recargo_monto) ?? 0;
-    $total = $subtotal - $descuento + $recargo;
+    $iva = floatval($presupuesto->iva_monto) ?? 0;
+    $iva_porcentaje = floatval($presupuesto->iva_porcentaje) ?? 0;
+    $total = $subtotal - $descuento + $recargo + $iva;
     
     // EXTRAER EL NOMBRE DEL CLIENTE del formato "CODIGO --- NOMBRE"
     $cliente_completo = $presupuesto->cliente;
@@ -329,6 +331,14 @@ try {
                         <?php echo htmlspecialchars($presupuesto->recargo_texto); ?>
                     </div>
                     <?php endif; ?>
+
+                    <!-- Mostrar IVA si existe -->
+                    <?php if ($iva > 0): ?>
+                    <div style="font-size: 0.9em; margin-top: 10px;">
+                        <strong>IVA (<?php echo $iva_porcentaje; ?>%):</strong><br>
+                        $<?php echo number_format($iva, 3, ',', '.'); ?>
+                    </div>
+                    <?php endif; ?>
                 </div>
                 
                 <table class="totales-table">
@@ -346,6 +356,12 @@ try {
                     <tr>
                         <td class="label">Recargo:</td>
                         <td class="text-right">+$<?php echo number_format($recargo, 3, ',', '.'); ?></td>
+                    </tr>
+                    <?php endif; ?>
+                    <?php if ($iva > 0): ?>
+                    <tr>
+                        <td class="label">IVA (<?php echo $iva_porcentaje; ?>%):</td>
+                        <td class="text-right">+$<?php echo number_format($iva, 3, ',', '.'); ?></td>
                     </tr>
                     <?php endif; ?>
                     <tr class="total-row">
