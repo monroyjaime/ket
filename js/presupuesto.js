@@ -957,6 +957,11 @@ $(document).ready(function() {
         updateTotal();
     });
 
+    // NUEVO: Event listener para los campos de descuento/recargo (AGREGAR ESTO)
+    $('#descuento_porcentaje, #descuento_monto, #recargo_monto').on('input', function() {
+        updateTotal();
+    });
+
     // Event listener adicional para el input del Tom Select
     $('#clients-tom-sel').on('change', function() {
         console.log('Change event en Tom Select:', this.value);
