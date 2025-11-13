@@ -1,49 +1,3 @@
-<?php
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
-
-session_start();
-require_once("../../php/dbcat_async.php");
-
-$db = new DBAsync();
-$numUsr = isset($_SESSION['usr_num']) ? intval($_SESSION['usr_num']) : -1;
-
-// Obtener el presupuesto_id de la URL o el último
-$presupuesto_id = $_GET['presupuesto_id'] ?? 0;
-
-try {
-    // Obtener lista de presupuestos no archivados
-    $presupuestos = $db->consultaSegura(
-        "SELECT pg.idx, pg.presupuesto_num, pg.fecha, pg.cliente, pg.num_valery, u.full_name as usuario_nombre
-         FROM presupuesto_gen pg
-         LEFT JOIN usuario u ON pg.user_num = u.num
-         WHERE pg.archivado = 0
-         ORDER BY pg.fecha DESC, pg.hora DESC"
-    );
-    
-    // Si no hay presupuesto_id específico, tomar el más reciente
-    if ($presupuesto_id == 0 && !empty($presupuestos)) {
-        $presupuesto_id = $presupuestos[0]->idx;
-    }
-    
-    // Obtener datos del presupuesto actual
-    $presupuesto_actual = null;
-    
-    if ($presupuesto_id > 0) {
-        foreach ($presupuestos as $pres) {
-            if ($pres->idx == $presupuesto_id) {
-                $presupuesto_actual = $pres;
-                break;
-            }
-        }
-    }
-    
-} catch (Exception $e) {
-    die("Error al cargar los presupuestos: " . $e->getMessage());
-}
-?>
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -55,21 +9,26 @@ try {
     <link href="https://cdn.jsdelivr.net/npm/tom-select@2.0.0-rc.4/dist/css/tom-select.css" rel="stylesheet">
     <style>
         body {
+            text-align: center;
+            padding: 0px;
             background-color: #f8f9fa;
-            padding: 20px;
         }
-        .header-nav {
-            background-color: #037C79;
-            color: white;
-            padding: 10px 0;
-            margin-bottom: 20px;
+        .header-top {
+            background-color: #CCC;
+            padding: 5px 0;
+        }
+        .icon-dark-blue {
+            color: #003272;
+        }
+        .icon-large {
+            font-size: 25px;
         }
         .presupuesto-container {
             background: white;
             border-radius: 8px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
             padding: 20px;
-            margin-bottom: 20px;
+            margin: 10px;
         }
         .navigation-buttons {
             display: flex;
@@ -81,6 +40,7 @@ try {
         /* ESTILOS TOM SELECT MEJORADOS (igual al de clientes) */
         .tom-select-container {
             margin-bottom: 20px;
+            padding: 0 15px;
         }
         .selector-label {
             text-align: left;
@@ -125,28 +85,48 @@ try {
             border-bottom: 1px solid #037C79 !important;
             padding: 8px 12px !important;
         }
+        
+        /* Título estilo index.php */
+        .titulo-presupuestos {
+            background-color: #037C79; 
+            padding-bottom: 14px; 
+            color: #FFF;
+            margin: 0;
+            padding: 10px 0;
+        }
     </style>
 </head>
 <body>
-    <div class="header-nav">
-        <div class="container">
-            <div class="row align-items-center">
-                <div class="col">
-                    <a href="../index.php" class="btn btn-light btn-sm">
-                        <i class="bi bi-arrow-left"></i> Volver al Catálogo
-                    </a>
-                </div>
-                <div class="col text-center">
-                    <h4 class="mb-0">📋 Presupuestos Guardados</h4>
-                </div>
-                <div class="col text-end">
-                    <img src="../../catalogo/images/logoMini.png" alt="KET" height="40">
-                </div>
+    <!-- HEADER SUPERIOR (igual al index.php) -->
+    <div class="w-100 p-0" style="background-color: #CCC;">
+        <div class="row align-items-start" style="max-height: 50px;">
+            <div class="col text-start" style="max-height: 40px; padding-left: 20px;">
+                <!-- FLECHA AZUL - Corregida para apuntar al index de presupuestos -->
+                <a href="index.php" title="Pag. Prev.">
+                    <i class="bi bi-arrow-left-circle-fill icon-dark-blue icon-large"></i>
+                </a>
+            </div>  
+            <div class="col text-center" style="max-height: 40px; padding-bottom: 14px; padding-top: 1px;">
+                <!-- Botones como en index.php -->
+                <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#ModalMakePedido" onClick="getSelected()" style="margin: 1px 2px 1px;">
+                    <i class="bi bi-gear"></i> Def. Presup.
+                </button>
+                <button type="button" class="btn btn-primary btn-sm" onClick="showPedidoClient()" style="margin: 1px 2px 1px;">
+                    <i class="bi bi-file-earmark-ppt"></i> Ver Presup.
+                </button>
             </div>
+            <div class="col text-end" style="max-height: 40px;">
+                <img src="../../catalogo/images/logoMini.png" class="img-fluid" alt="logo" />
+            </div>       
         </div>
     </div>
 
-    <div class="container">
+    <!-- TÍTULO -->
+    <div class="titulo-presupuestos">
+        <h2>Presupuestos Guardados</h2>
+    </div>
+
+    <div class="container-fluid">
         <!-- Selector de Presupuestos -->
         <div class="tom-select-container">
             <label class="selector-label">Seleccionar Presupuesto:</label>
@@ -178,7 +158,7 @@ try {
                     </div>
                 </div>
                 
-                <!-- Navegación DINÁMICA (se actualizará con JavaScript) -->
+                <!-- Navegación DINÁMICA -->
                 <div id="navigation-container">
                     <div class="navigation-buttons">
                         <button class="btn btn-outline-secondary" disabled>
@@ -356,6 +336,17 @@ try {
                 navegarSiguiente();
             }
         });
+        
+        // Función para el botón "Def. Presup." - abrir modal del index
+        function getSelected() {
+            // Redirigir al index.php que tiene el modal
+            window.location.href = 'index.php';
+        }
+        
+        // Función para el botón "Ver Presup." - recargar esta página
+        function showPedidoClient() {
+            window.location.href = 'verPresupuestos.php';
+        }
     </script>
 </body>
 </html>
