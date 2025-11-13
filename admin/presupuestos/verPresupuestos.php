@@ -55,33 +55,33 @@ try {
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css">
     <link href="https://cdn.jsdelivr.net/npm/tom-select@2.0.0-rc.4/dist/css/tom-select.css" rel="stylesheet">
 <style>
+    /* RESET GLOBAL - SIN PADDING */
     body {
         text-align: center;
-        padding: 0px;
-        margin: 0px;
+        padding: 0px !important;
+        margin: 0px !important;
         background-color: #f8f9fa;
+    }
+    
+    /* CONTENEDOR PRINCIPAL CON PADDING */
+    .contenedor-principal {
+        padding: 0px 15px !important; /* PADDING solo aquí */
     }
     
     /* BARRA SUPERIOR - SIN PADDING */
     #uperbar {
         padding: 0px !important;
         margin: 0px !important;
+        background-color: #CCC !important;
     }
     
     #uperbar .row {
         margin: 0px !important;
+        padding: 0px !important;
     }
     
     #uperbar .col {
         padding: 0px !important;
-    }
-    
-    #uperbar .text-start {
-        padding-left: 10px !important; /* Solo un poco para la flecha */
-    }
-    
-    #uperbar .text-end {
-        padding-right: 10px !important; /* Solo un poco para el logo */
     }
 
     .icon-dark-blue {
@@ -94,7 +94,7 @@ try {
     /* TÍTULO - SIN PADDING LATERAL */
     .titulo-presupuestos {
         background-color: #037C79; 
-        padding: 14px 0 !important; /* Solo padding vertical */
+        padding: 14px 0 !important; /* Solo vertical */
         color: #FFF;
         margin: 0 !important;
         text-align: center !important;
@@ -108,7 +108,7 @@ try {
         width: 100%;
     }
     
-    /* CONTENEDOR PRINCIPAL CON PADDING SOLO DONDE SE NECESITA */
+    /* CONTENEDOR PRINCIPAL SIN PADDING */
     .container-sin-padding {
         padding: 0 !important;
         margin: 0 !important;
@@ -116,10 +116,10 @@ try {
         width: 100%;
     }
 
-    /* CONTENEDOR DEL PRESUPUESTO - PADDING LATERAL */
+    /* CONTENEDOR DEL PRESUPUESTO - SIN PADDING (ya lo tiene el contenedor principal) */
     .presupuesto-container {
         background: white;
-        padding: 0px 15px 20px 15px; /* Padding lateral solo aquí */
+        padding: 0px 0px 20px 0px !important; /* Solo bottom */
         margin: 0px;
     }
     
@@ -130,10 +130,10 @@ try {
         margin: 20px 0;
     }
     
-    /* ESTILOS TOM SELECT MEJORADOS */
+    /* ESTILOS TOM SELECT MEJORADOS - SIN PADDING (ya lo tiene el contenedor principal) */
     .tom-select-container {
         margin-bottom: 20px;
-        padding: 0 15px; /* Padding lateral */
+        padding: 0px !important;
     }
     .selector-label {
         text-align: left;
@@ -187,7 +187,7 @@ try {
             max-width: 100% !important;
         }
         
-        /* ELIMINAR reglas conflictivas */
+        /* ELIMINAR reglas conflictivas - dejar que verPresupuesto.php maneje su formato */
     }
 
     /* ESTILOS PARA IMPRESIÓN - OCULTAR ELEMENTOS NO NECESARIOS */
@@ -210,6 +210,10 @@ try {
             padding: 0 !important;
             margin: 0 !important;
         }
+        
+        .contenedor-principal {
+            padding: 0 !important;
+        }
     }
 </style>
 </head>
@@ -231,7 +235,7 @@ try {
             </div>       
         </div>
     </div>
-
+<div class="contenedor-principal">
     <!-- TÍTULO -->
     <div class="titulo-presupuestos">
         <h2>Presupuestos Guardados</h2>
@@ -292,7 +296,7 @@ try {
             <?php endif; ?>
         </div>
     </div>
-
+</div>
     <script src="https://cdn.jsdelivr.net/npm/jquery/dist/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/tom-select@2.0.0-rc.4/dist/js/tom-select.complete.min.js"></script>

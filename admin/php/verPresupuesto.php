@@ -256,12 +256,12 @@ try {
             </div>
             
             <div class="row mt-2">  <!-- Removido justify-content-center -->
-                <div class="col-5 text-center" style="font-size: 0.9em;">  <!-- Cambiado a col-5 y text-center -->
+                <div class="col-md-6 text-start" style="font-size: 0.9em;">                    
                     <strong>Cliente:</strong><br>
                     <!-- CAMBIO 3: Mostrar formato "CODIGO --- NOMBRE" completo -->
                     <?php echo htmlspecialchars($presupuesto->cliente); ?>
                 </div>
-                <div class="col-5 text-end" style="font-size: 0.9em;">
+                <div class="col-md-6 text-end" style="font-size: 0.9em;">
                     <strong>Atendido por:</strong><br>
                     <?php echo htmlspecialchars($presupuesto->usuario_nombre ?? 'Sistema'); ?>
                 </div>
