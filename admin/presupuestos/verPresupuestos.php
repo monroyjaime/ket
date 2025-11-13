@@ -81,6 +81,10 @@ try {
             gap: 10px;
             margin: 20px 0;
         }
+
+        #uperbar{
+            padding: 0px;
+        }
         
         /* ESTILOS TOM SELECT MEJORADOS (igual al de clientes) */
         .tom-select-container {
