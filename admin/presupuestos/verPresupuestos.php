@@ -54,163 +54,147 @@ try {
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css">
     <link href="https://cdn.jsdelivr.net/npm/tom-select@2.0.0-rc.4/dist/css/tom-select.css" rel="stylesheet">
-    <style>
-        body {
-            text-align: center;
-            padding: 0px !important; /* ELIMINAR PADDING GLOBAL */
-            margin: 0px !important; /* ELIMINAR MARGEN GLOBAL */
-            background-color: #f8f9fa;
+<style>
+    body {
+        text-align: center;
+        padding: 0px; /* Sin padding global */
+        margin: 0px; /* Sin margin global */
+        background-color: #f8f9fa;
+    }
+    .header-top {
+        background-color: #CCC;
+        padding: 0px;
+    }
+    .icon-dark-blue {
+        color: #003272;
+    }
+    .icon-large {
+        font-size: 25px;
+    }
+    .presupuesto-container {
+        background: white;
+        padding: 0px 15px 20px 15px; /* PADDING lateral 15px, bottom 20px */
+        margin: 0px;
+    }
+    .navigation-buttons {
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+        margin: 20px 0;
+    }
+
+    #uperbar{
+        padding: 0px;
+    }
+    
+    /* CONTENEDOR PRINCIPAL CON PADDING CONTROLADO */
+    .container-sin-padding {
+        padding: 0 !important;
+        margin: 0 !important;
+        max-width: 100%;
+        width: 100%;
+    }
+
+    /* TÍTULO CENTRADO Y SIN MARGEN */
+    .titulo-presupuestos {
+        background-color: #037C79; 
+        padding: 14px 15px !important; /* PADDING lateral 15px */
+        color: #FFF;
+        margin: 0 !important;
+        text-align: center !important;
+        width: 100%;
+    }
+    
+    .titulo-presupuestos h2 {
+        margin: 0 !important;
+        padding: 0 !important;
+        text-align: center !important;
+        width: 100%;
+    }
+    
+    /* ESTILOS TOM SELECT MEJORADOS */
+    .tom-select-container {
+        margin-bottom: 20px;
+        padding: 0 15px; /* PADDING lateral consistente */
+    }
+    .selector-label {
+        text-align: left;
+        display: block;
+        margin-bottom: 5px;
+        font-weight: bold;
+        color: #037C79;
+    }
+    .ts-control {
+        text-align: left !important;
+        border: 1px solid #037C79 !important;
+        border-radius: 4px !important;
+        padding: 8px 12px !important;
+        background: white !important;
+    }
+    .ts-wrapper.single .ts-control {
+        background: white !important;
+    }
+    .ts-dropdown {
+        text-align: left !important;
+        border: 1px solid #037C79 !important;
+        border-top: none !important;
+        border-radius: 0 0 4px 4px !important;
+        background: white !important;
+    }
+    .ts-dropdown .option .highlight {
+        background-color: #ffeb3b !important;
+        color: #000 !important;
+        font-weight: bold !important;
+        padding: 2px 4px !important;
+        border-radius: 3px !important;
+    }
+    .ts-dropdown .active {
+        background-color: #037C79 !important;
+        color: white !important;
+    }
+    .ts-dropdown .option:hover {
+        background-color: #025a57 !important;
+        color: white !important;
+    }
+    .ts-dropdown .ts-input {
+        border-bottom: 1px solid #037C79 !important;
+        padding: 8px 12px !important;
+    }
+    
+    /* ESTILOS PARA EL CONTENIDO CARGADO POR AJAX - SOLO PANTALLA */
+    @media screen {
+        #presupuesto-content .container {
+            padding-left: 0 !important;
+            padding-right: 0 !important;
+            max-width: 100% !important;
         }
-        .header-top {
-            background-color: #CCC;
-            padding: 0px;
-        }
-        .icon-dark-blue {
-            color: #003272;
-        }
-        .icon-large {
-            font-size: 25px;
-        }
-        .presupuesto-container {
-            background: white;
-            padding: 0px; /* REDUCIDO de 20px a 0px */
-            margin: 0px; /* ELIMINADO margen */
-        }
+        
+        /* ELIMINAR reglas conflictivas - dejar que verPresupuesto.php maneje su formato */
+    }
+
+    /* ESTILOS PARA IMPRESIÓN - OCULTAR ELEMENTOS NO NECESARIOS */
+    @media print {
+        #uperbar,
+        .header-top,
+        .titulo-presupuestos,
+        .tom-select-container,
         .navigation-buttons {
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-            margin: 20px 0;
-        }
-
-        #uperbar{
-            padding: 0px !important; /* FORZAR sin padding */
+            display: none !important;
         }
         
-        /* CONTENEDOR PRINCIPAL SIN PADDING */
-        .container-sin-padding {
-            padding: 0 !important; /* ELIMINAR PADDING */
-            margin: 0 !important; /* ELIMINAR MARGEN */
-            max-width: 100%;
-            width: 100%;
-        }
-
-        /* TÍTULO CENTRADO Y SIN MARGEN */
-        .titulo-presupuestos {
-            background-color: #037C79; 
-            padding: 14px 0 !important; /* SOLO padding vertical */
-            color: #FFF;
-            margin: 0 !important; /* ELIMINAR margen */
-            text-align: center !important; /* FORZAR centrado */
-            width: 100%;
-        }
-        
-        .titulo-presupuestos h2 {
-            margin: 0 !important; /* ELIMINAR margen del h2 */
-            padding: 0 !important; /* ELIMINAR padding del h2 */
-            text-align: center !important; /* FORZAR centrado */
-            width: 100%;
-        }
-        
-        /* ESTILOS TOM SELECT MEJORADOS (igual al de clientes) */
-        .tom-select-container {
-            margin-bottom: 20px;
-            padding: 0 15px; /* MANTENER solo padding lateral necesario */
-        }
-        .selector-label {
-            text-align: left;
-            display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
-            color: #037C79;
-        }
-        .ts-control {
-            text-align: left !important;
-            border: 1px solid #037C79 !important;
-            border-radius: 4px !important;
-            padding: 8px 12px !important;
+        body {
             background: white !important;
-        }
-        .ts-wrapper.single .ts-control {
-            background: white !important;
-        }
-        .ts-dropdown {
-            text-align: left !important;
-            border: 1px solid #037C79 !important;
-            border-top: none !important;
-            border-radius: 0 0 4px 4px !important;
-            background: white !important;
-        }
-        .ts-dropdown .option .highlight {
-            background-color: #ffeb3b !important;
-            color: #000 !important;
-            font-weight: bold !important;
-            padding: 2px 4px !important;
-            border-radius: 3px !important;
-        }
-        .ts-dropdown .active {
-            background-color: #037C79 !important;
-            color: white !important;
-        }
-        .ts-dropdown .option:hover {
-            background-color: #025a57 !important;
-            color: white !important;
-        }
-        .ts-dropdown .ts-input {
-            border-bottom: 1px solid #037C79 !important;
-            padding: 8px 12px !important;
+            padding: 0 !important;
+            margin: 0 !important;
         }
         
-        /* ESTILOS PARA EL CONTENIDO CARGADO POR AJAX - SOLO PANTALLA */
-        @media screen {
-            #presupuesto-content .container {
-                padding-left: 0 !important;
-                padding-right: 0 !important;
-                max-width: 100% !important;
-            }
-             /* REMOVER solo las reglas problemáticas */
-            /*#presupuesto-content .presupuesto-header .row:first-child {
-                justify-content: center !important;
-            }
-            
-            #presupuesto-content .presupuesto-header .row.mt-2 {
-                justify-content: center !important;
-            }
-            
-            #presupuesto-content .presupuesto-header h4 {
-                text-align: center !important;
-            }
-            
-            #presupuesto-content .presupuesto-header .col-6 {
-                text-align: center !important;
-                width: 45% !important;
-                flex: 0 0 auto !important;
-            } */
+        .presupuesto-container {
+            box-shadow: none !important;
+            padding: 0 !important;
+            margin: 0 !important;
         }
-
-        /* ESTILOS PARA IMPRESIÓN - OCULTAR ELEMENTOS NO NECESARIOS */
-        @media print {
-            #uperbar,
-            .header-top,
-            .titulo-presupuestos,
-            .tom-select-container,
-            .navigation-buttons {
-                display: none !important;
-            }
-            
-            body {
-                background: white !important;
-                padding: 0 !important;
-                margin: 0 !important;
-            }
-            
-            .presupuesto-container {
-                box-shadow: none !important;
-                padding: 0 !important;
-                margin: 0 !important;
-            }
-        }
-    </style>
+    }
+</style>
 </head>
 <body>
     <!-- HEADER SUPERIOR (igual al index.php pero SIN BOTONES) -->
