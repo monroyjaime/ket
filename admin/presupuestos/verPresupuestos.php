@@ -168,8 +168,8 @@ try {
                 padding-right: 0 !important;
                 max-width: 100% !important;
             }
-            
-            #presupuesto-content .presupuesto-header .row:first-child {
+             /* REMOVER solo las reglas problemáticas */
+            /*#presupuesto-content .presupuesto-header .row:first-child {
                 justify-content: center !important;
             }
             
@@ -185,7 +185,7 @@ try {
                 text-align: center !important;
                 width: 45% !important;
                 flex: 0 0 auto !important;
-            }
+            } */
         }
 
         /* ESTILOS PARA IMPRESIÓN - OCULTAR ELEMENTOS NO NECESARIOS */
