@@ -1,3 +1,50 @@
+<?php
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+
+session_start();
+require_once("../../php/dbcat_async.php");
+
+$db = new DBAsync();
+$numUsr = isset($_SESSION['usr_num']) ? intval($_SESSION['usr_num']) : -1;
+
+// Obtener el presupuesto_id de la URL o el último - CON VALOR POR DEFECTO
+$presupuesto_id = $_GET['presupuesto_id'] ?? 0;
+$presupuesto_id = intval($presupuesto_id); // Asegurar que sea entero
+
+try {
+    // Obtener lista de presupuestos no archivados
+    $presupuestos = $db->consultaSegura(
+        "SELECT pg.idx, pg.presupuesto_num, pg.fecha, pg.cliente, pg.num_valery, u.full_name as usuario_nombre
+         FROM presupuesto_gen pg
+         LEFT JOIN usuario u ON pg.user_num = u.num
+         WHERE pg.archivado = 0
+         ORDER BY pg.fecha DESC, pg.hora DESC"
+    );
+    
+    // Si no hay presupuesto_id específico, tomar el más reciente
+    if ($presupuesto_id == 0 && !empty($presupuestos)) {
+        $presupuesto_id = $presupuestos[0]->idx;
+    }
+    
+    // Obtener datos del presupuesto actual
+    $presupuesto_actual = null;
+    
+    if ($presupuesto_id > 0) {
+        foreach ($presupuestos as $pres) {
+            if ($pres->idx == $presupuesto_id) {
+                $presupuesto_actual = $pres;
+                break;
+            }
+        }
+    }
+    
+} catch (Exception $e) {
+    die("Error al cargar los presupuestos: " . $e->getMessage());
+}
+?>
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -10,7 +57,8 @@
     <style>
         body {
             text-align: center;
-            padding: 0px 0px;
+            padding: 0px;
+            background-color: #f8f9fa;
         }
         .header-top {
             background-color: #CCC;
@@ -37,7 +85,7 @@
         /* ESTILOS TOM SELECT MEJORADOS (igual al de clientes) */
         .tom-select-container {
             margin-bottom: 20px;
-            padding: 0 0px;
+            padding: 0 15px;
         }
         .selector-label {
             text-align: left;
@@ -110,7 +158,7 @@
                 </a>
             </div>  
             <div class="col text-center" style="max-height: 40px; padding-bottom: 14px; padding-top: 1px;">
-                <!-- ELIMINADOS LOS BOTONES REDUNDANTES -->
+                <!-- Espacio reservado para mantener el layout -->
             </div>
             <div class="col text-end" style="max-height: 40px;">
                 <img src="../../catalogo/images/logoMini.png" class="img-fluid" alt="logo" />
@@ -125,7 +173,7 @@
 
     <div class="container-sin-padding">
         <!-- Selector de Presupuestos -->
-        <div class="tom-select-container" style="padding: 0 15px;">
+        <div class="tom-select-container">
             <label class="selector-label">Seleccionar Presupuesto:</label>
             <select id="presupuestos-tom-sel" placeholder="Buscar presupuesto...">
                 <option value="">Seleccione un presupuesto...</option>
