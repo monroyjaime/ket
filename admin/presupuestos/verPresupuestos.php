@@ -145,6 +145,35 @@ try {
             margin: 0;
             max-width: 100%;
         }
+
+        /* FORZAR estilos para el contenido cargado via AJAX */
+        #presupuesto-content .presupuesto-header {
+            text-align: center !important;
+        }
+
+        #presupuesto-content .container {
+            padding: 0 !important;
+            max-width: 100% !important;
+        }
+
+        #presupuesto-content h4 {
+            text-align: center !important;
+        }
+
+        #presupuesto-content .row.mt-2 {
+            justify-content: center !important;
+        }
+
+        #presupuesto-content .row.mt-2 > div {
+            text-align: center !important;
+            flex: 0 0 auto !important;
+            width: 45% !important; /* Para que los dos divs queden centrados */
+        }
+
+        #presupuesto-content .text-end {
+            text-align: center !important;
+        }
+
     </style>
 </head>
 <body>
