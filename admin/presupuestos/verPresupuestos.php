@@ -190,19 +190,32 @@ try {
         /* ELIMINAR reglas conflictivas - dejar que verPresupuesto.php maneje su formato */
     }
 
-    /* ESTILOS PARA IMPRESIÓN - OCULTAR ELEMENTOS NO NECESARIOS */
+    /* ESTILOS PARA IMPRESIÓN - MÁRGENES REDUCIDOS */
     @media print {
-        #uperbar,
-        .titulo-presupuestos,
-        .tom-select-container,
-        .navigation-buttons {
-            display: none !important;
+        @page {
+            margin: 5mm 8mm !important; /* REDUCIDO: 5mm arriba/abajo, 8mm lados (era ~15mm) */
+            size: A4;
         }
         
         body {
             background: white !important;
             padding: 0 !important;
+            margin: 0 !important !important;
+            font-size: 11px !important; /* Texto ligeramente más pequeño para aprovechar espacio */
+        }
+        
+        .container {
+            max-width: 100% !important;
+            padding: 0 !important;
             margin: 0 !important;
+        }
+        
+        #uperbar,
+        .titulo-presupuestos,
+        .tom-select-container,
+        .navigation-buttons,
+        .no-print {
+            display: none !important;
         }
         
         .presupuesto-container {
@@ -213,6 +226,49 @@ try {
         
         .contenedor-principal {
             padding: 0 !important;
+        }
+        
+        /* COMPACTAR MÁS EL CONTENIDO PARA PDF */
+        .presupuesto-header {
+            padding-bottom: 8px !important;
+            margin-bottom: 8px !important;
+        }
+        
+        .table-presupuesto {
+            margin: 8px 0 !important;
+            font-size: 0.8em !important; /* Texto más compacto */
+        }
+        
+        .table-presupuesto th,
+        .table-presupuesto td {
+            padding: 4px 3px !important; /* Celdas más compactas */
+        }
+        
+        .logo {
+            max-width: 30% !important; /* Logo más pequeño */
+        }
+        
+        .info-empresa {
+            font-size: 0.75em !important; /* Info empresa más compacta */
+        }
+        
+        h4 {
+            font-size: 1.2em !important;
+            margin-bottom: 5px !important;
+        }
+        
+        .totales-section {
+            margin-top: 40px !important; /* Menos espacio antes de totales */
+        }
+        
+        .totales-table {
+            font-size: 0.9em !important;
+            width: 280px !important; /* Tabla de totales más compacta */
+        }
+        
+        .presupuesto-footer {
+            margin-top: 60px !important; /* Menos espacio en el pie */
+            font-size: 0.8em !important;
         }
     }
 </style>
