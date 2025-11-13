@@ -57,48 +57,44 @@ try {
 <style>
     body {
         text-align: center;
-        padding: 0px; /* Sin padding global */
-        margin: 0px; /* Sin margin global */
+        padding: 0px;
+        margin: 0px;
         background-color: #f8f9fa;
     }
-    .header-top {
-        background-color: #CCC;
-        padding: 0px;
+    
+    /* BARRA SUPERIOR - SIN PADDING */
+    #uperbar {
+        padding: 0px !important;
+        margin: 0px !important;
     }
+    
+    #uperbar .row {
+        margin: 0px !important;
+    }
+    
+    #uperbar .col {
+        padding: 0px !important;
+    }
+    
+    #uperbar .text-start {
+        padding-left: 10px !important; /* Solo un poco para la flecha */
+    }
+    
+    #uperbar .text-end {
+        padding-right: 10px !important; /* Solo un poco para el logo */
+    }
+
     .icon-dark-blue {
         color: #003272;
     }
     .icon-large {
         font-size: 25px;
     }
-    .presupuesto-container {
-        background: white;
-        padding: 0px 15px 20px 15px; /* PADDING lateral 15px, bottom 20px */
-        margin: 0px;
-    }
-    .navigation-buttons {
-        display: flex;
-        justify-content: center;
-        gap: 10px;
-        margin: 20px 0;
-    }
-
-    #uperbar{
-        padding: 0px;
-    }
     
-    /* CONTENEDOR PRINCIPAL CON PADDING CONTROLADO */
-    .container-sin-padding {
-        padding: 0 !important;
-        margin: 0 !important;
-        max-width: 100%;
-        width: 100%;
-    }
-
-    /* TÍTULO CENTRADO Y SIN MARGEN */
+    /* TÍTULO - SIN PADDING LATERAL */
     .titulo-presupuestos {
         background-color: #037C79; 
-        padding: 14px 15px !important; /* PADDING lateral 15px */
+        padding: 14px 0 !important; /* Solo padding vertical */
         color: #FFF;
         margin: 0 !important;
         text-align: center !important;
@@ -112,10 +108,32 @@ try {
         width: 100%;
     }
     
+    /* CONTENEDOR PRINCIPAL CON PADDING SOLO DONDE SE NECESITA */
+    .container-sin-padding {
+        padding: 0 !important;
+        margin: 0 !important;
+        max-width: 100%;
+        width: 100%;
+    }
+
+    /* CONTENEDOR DEL PRESUPUESTO - PADDING LATERAL */
+    .presupuesto-container {
+        background: white;
+        padding: 0px 15px 20px 15px; /* Padding lateral solo aquí */
+        margin: 0px;
+    }
+    
+    .navigation-buttons {
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+        margin: 20px 0;
+    }
+    
     /* ESTILOS TOM SELECT MEJORADOS */
     .tom-select-container {
         margin-bottom: 20px;
-        padding: 0 15px; /* PADDING lateral consistente */
+        padding: 0 15px; /* Padding lateral */
     }
     .selector-label {
         text-align: left;
@@ -169,13 +187,12 @@ try {
             max-width: 100% !important;
         }
         
-        /* ELIMINAR reglas conflictivas - dejar que verPresupuesto.php maneje su formato */
+        /* ELIMINAR reglas conflictivas */
     }
 
     /* ESTILOS PARA IMPRESIÓN - OCULTAR ELEMENTOS NO NECESARIOS */
     @media print {
         #uperbar,
-        .header-top,
         .titulo-presupuestos,
         .tom-select-container,
         .navigation-buttons {
