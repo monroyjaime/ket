@@ -78,6 +78,7 @@ try {
             border-bottom: 2px solid #333; 
             padding-bottom: 15px; 
             margin-bottom: 15px; 
+            text-align: center;  /* AGREGAR esta línea */
         }
         .presupuesto-footer { 
             border-top: 2px solid #333; 
@@ -235,7 +236,7 @@ try {
                         Email: info@ketelectropartes.com
                     </div>
                 </div>
-                <div class="col-6 text-end">
+                <div class="col-6 text-center">
                     <h4>PRESUPUESTO</h4>
                     <div style="font-size: 0.9em;">
                         <!-- CAMBIO 1: No. Cliente primero -->
@@ -254,13 +255,13 @@ try {
                 </div>
             </div>
             
-            <div class="row mt-2">
-                <div class="col-6" style="font-size: 0.9em;">
+            <div class="row mt-2 justify-content-center">  <!-- Agregado justify-content-center -->
+                <div class="col-5 text-center" style="font-size: 0.9em;">  <!-- Cambiado a col-5 y text-center -->
                     <strong>Cliente:</strong><br>
                     <!-- CAMBIO 3: Mostrar formato "CODIGO --- NOMBRE" completo -->
                     <?php echo htmlspecialchars($presupuesto->cliente); ?>
                 </div>
-                <div class="col-6 text-end" style="font-size: 0.9em;">
+                <div class="col-5 text-end" style="font-size: 0.9em;">
                     <strong>Atendido por:</strong><br>
                     <?php echo htmlspecialchars($presupuesto->usuario_nombre ?? 'Sistema'); ?>
                 </div>

@@ -85,7 +85,7 @@ try {
         /* ESTILOS TOM SELECT MEJORADOS (igual al de clientes) */
         .tom-select-container {
             margin-bottom: 20px;
-            padding: 0 15px;
+            padding: 0 0px;
         }
         .selector-label {
             text-align: left;
