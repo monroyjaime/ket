@@ -57,7 +57,8 @@ try {
     <style>
         body {
             text-align: center;
-            padding: 0px;
+            padding: 0px !important; /* ELIMINAR PADDING GLOBAL */
+            margin: 0px !important; /* ELIMINAR MARGEN GLOBAL */
             background-color: #f8f9fa;
         }
         .header-top {
@@ -72,8 +73,8 @@ try {
         }
         .presupuesto-container {
             background: white;
-            padding: 20px;
-            margin: 0px;
+            padding: 0px; /* REDUCIDO de 20px a 0px */
+            margin: 0px; /* ELIMINADO margen */
         }
         .navigation-buttons {
             display: flex;
@@ -83,13 +84,38 @@ try {
         }
 
         #uperbar{
-            padding: 0px;
+            padding: 0px !important; /* FORZAR sin padding */
+        }
+        
+        /* CONTENEDOR PRINCIPAL SIN PADDING */
+        .container-sin-padding {
+            padding: 0 !important; /* ELIMINAR PADDING */
+            margin: 0 !important; /* ELIMINAR MARGEN */
+            max-width: 100%;
+            width: 100%;
+        }
+
+        /* TÍTULO CENTRADO Y SIN MARGEN */
+        .titulo-presupuestos {
+            background-color: #037C79; 
+            padding: 14px 0 !important; /* SOLO padding vertical */
+            color: #FFF;
+            margin: 0 !important; /* ELIMINAR margen */
+            text-align: center !important; /* FORZAR centrado */
+            width: 100%;
+        }
+        
+        .titulo-presupuestos h2 {
+            margin: 0 !important; /* ELIMINAR margen del h2 */
+            padding: 0 !important; /* ELIMINAR padding del h2 */
+            text-align: center !important; /* FORZAR centrado */
+            width: 100%;
         }
         
         /* ESTILOS TOM SELECT MEJORADOS (igual al de clientes) */
         .tom-select-container {
             margin-bottom: 20px;
-            padding: 0 0px;
+            padding: 0 15px; /* MANTENER solo padding lateral necesario */
         }
         .selector-label {
             text-align: left;
@@ -135,21 +161,6 @@ try {
             padding: 8px 12px !important;
         }
         
-        /* Título estilo index.php */
-        .titulo-presupuestos {
-            background-color: #037C79; 
-            padding: 14px 0; 
-            color: #FFF;
-            margin: 0;
-        }
-        
-        /* Contenedor principal sin padding */
-        .container-sin-padding {
-            padding: 0;
-            margin: 0;
-            max-width: 100%;
-        }
-
         /* ESTILOS PARA EL CONTENIDO CARGADO POR AJAX - SOLO PANTALLA */
         @media screen {
             #presupuesto-content .container {
