@@ -1,3 +1,50 @@
+<?php
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+
+session_start();
+require_once("../../php/dbcat_async.php");
+
+$db = new DBAsync();
+$numUsr = isset($_SESSION['usr_num']) ? intval($_SESSION['usr_num']) : -1;
+
+// Obtener el presupuesto_id de la URL o el último - CON VALOR POR DEFECTO
+$presupuesto_id = $_GET['presupuesto_id'] ?? 0;
+$presupuesto_id = intval($presupuesto_id); // Asegurar que sea entero
+
+try {
+    // Obtener lista de presupuestos no archivados
+    $presupuestos = $db->consultaSegura(
+        "SELECT pg.idx, pg.presupuesto_num, pg.fecha, pg.cliente, pg.num_valery, u.full_name as usuario_nombre
+         FROM presupuesto_gen pg
+         LEFT JOIN usuario u ON pg.user_num = u.num
+         WHERE pg.archivado = 0
+         ORDER BY pg.fecha DESC, pg.hora DESC"
+    );
+    
+    // Si no hay presupuesto_id específico, tomar el más reciente
+    if ($presupuesto_id == 0 && !empty($presupuestos)) {
+        $presupuesto_id = $presupuestos[0]->idx;
+    }
+    
+    // Obtener datos del presupuesto actual
+    $presupuesto_actual = null;
+    
+    if ($presupuesto_id > 0) {
+        foreach ($presupuestos as $pres) {
+            if ($pres->idx == $presupuesto_id) {
+                $presupuesto_actual = $pres;
+                break;
+            }
+        }
+    }
+    
+} catch (Exception $e) {
+    die("Error al cargar los presupuestos: " . $e->getMessage());
+}
+?>
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -190,7 +237,7 @@
         // Variables globales
         let presupuestosTomSel;
         let listaPresupuestos = <?php echo json_encode($presupuestos); ?>;
-        let presupuestoActualId = <?php echo $presupuesto_id; ?>;
+        let presupuestoActualId = <?php echo $presupuesto_id > 0 ? $presupuesto_id : '0'; ?>;
         
         $(document).ready(function() {
             // Inicializar selector de presupuestos
