@@ -235,12 +235,11 @@ try {
             </div>       
         </div>
     </div>
-<div class="contenedor-principal">
     <!-- TÍTULO -->
     <div class="titulo-presupuestos">
         <h2>Presupuestos Guardados</h2>
     </div>
-
+<div class="contenedor-principal">
     <div class="container-sin-padding">
         <!-- Selector de Presupuestos -->
         <div class="tom-select-container">
