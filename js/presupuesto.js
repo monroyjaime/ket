@@ -952,7 +952,7 @@ $(document).ready(function() {
         }
         
         setTimeout(initPresupuestoModal, 100);
-        
+
          // NUEVO: Generar número automático cada vez que se abre el modal
         generarNumeroAutomatico();
     });
@@ -995,7 +995,7 @@ function generarNumeroPresupuesto() {
 function obtenerProximoNumeroSecuencial() {
     return new Promise((resolve, reject) => {
         $.ajax({
-            url: "../../php/getProximoNumeroPresupuesto.php",
+            url: "https://ketelectropartes.com/admin/php/getProximoNumeroPresupuesto.php",  // URL ABSOLUTA
             type: "GET",
             dataType: "json",
             success: function(respuesta) {
