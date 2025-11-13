@@ -227,7 +227,7 @@ try {
         <!-- Encabezado -->
         <div class="presupuesto-header">
             <div class="row">
-                <div class="col-6">
+                <div class="col-6 text-start">
                     <img src="https://ketelectropartes.com/catalogo/images/logoSlogan.png" alt="KET ELECTROPARTES C.A." class="logo">
                     <div class="info-empresa">
                         RIF: J-12345678-9<br>
@@ -236,7 +236,7 @@ try {
                         Email: info@ketelectropartes.com
                     </div>
                 </div>
-                <div class="col-6 text-center">
+                <div class="col-6 text-end">
                     <h4>PRESUPUESTO</h4>
                     <div style="font-size: 0.9em;">
                         <!-- CAMBIO 1: No. Cliente primero -->
@@ -255,7 +255,7 @@ try {
                 </div>
             </div>
             
-            <div class="row mt-2 justify-content-center">  <!-- Agregado justify-content-center -->
+            <div class="row mt-2">  <!-- Removido justify-content-center -->
                 <div class="col-5 text-center" style="font-size: 0.9em;">  <!-- Cambiado a col-5 y text-center -->
                     <strong>Cliente:</strong><br>
                     <!-- CAMBIO 3: Mostrar formato "CODIGO --- NOMBRE" completo -->
