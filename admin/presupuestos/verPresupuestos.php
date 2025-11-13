@@ -220,7 +220,7 @@ try {
                 </div>
             `);
             
-            $.get(`verPresupuesto.php?presupuesto_id=${presupuestoId}`, function(data) {
+            $.get(`../php/verPresupuesto.php?presupuesto_id=${presupuestoId}`, function(data) {
                 $('#presupuesto-content').html(data);
                 
                 // Actualizar URL sin recargar la página
