@@ -399,10 +399,11 @@ $tituloLista = '<h2 style="background-color: #037C79; padding-bottom: 14px; colo
                         
                         <div class="col">
                             <div class="p-4">
-                                <h6>Número de Presupuesto:</h6>
-                                <input type="text" class="form-control" id="numero-presupuesto" placeholder="Número automático o manual">
+                                <h6 id="label-numero-presupuesto">Número de Presupuesto:</h6>
+                                <input type="text" class="form-control" id="numero-presupuesto" placeholder="Generando número automático...">
+                                <small class="text-muted">Puede usar este número o ingresar uno manual</small>
                             </div>
-                        </div>  
+                        </div>   
                     </div>
                 </div> 
 

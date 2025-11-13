@@ -66,15 +66,11 @@ function initPresupuestoModal() {
             ctrlClientSel = new TomSelect("#clients-tom-sel", {
                 sortField: { field: "text", direction: "asc" },
                 
-                // SOLUCIÓN: Simplificar los eventos para evitar recursión
                 onChange: function(value) {
                     console.log('Cliente seleccionado:', value);
-                    // Habilitar si hay cualquier valor (numérico o string)
                     const tieneValor = value !== null && value !== undefined && value !== '' && value !== '0';
                     $('#reg-presupuesto').prop('disabled', !tieneValor);
                 },
-                
-                // ELIMINAR onItemAdd para evitar conflicto con onChange
                 
                 create: function(input, callback) {
                     console.log('Creando cliente:', input);
@@ -99,8 +95,19 @@ function initPresupuestoModal() {
             console.error('❌ Error inicializando Tom Select:', e);
         }
     }
+    
+    // NUEVO: Generar número automático cuando se abre el modal
+    generarNumeroAutomatico();
 }
 
+// Función para generar y colocar el número automático
+function generarNumeroAutomatico() {
+    obtenerProximoNumeroSecuencial().then((numeroAutomatico) => {
+        $('#numero-presupuesto').val(numeroAutomatico);
+        $('#numero-presupuesto').attr('placeholder', 'Número generado automáticamente');
+        console.log('✅ Número automático generado:', numeroAutomatico);
+    });
+}
 
 // Función para forzar actualización del carrito
 
@@ -742,25 +749,30 @@ function guardarPresupuesto() {
     const selectedClient = ctrlClientSel.getValue();
     console.log('🔍 Cliente seleccionado:', selectedClient);
     
-    const numeroPresupuesto = $('#numero-presupuesto').val();
+    // Obtener el número (puede ser automático o manual)
+    let numeroPresupuesto = $('#numero-presupuesto').val();
+    
+    // Si está vacío, usar el placeholder o generar uno
+    if (!numeroPresupuesto || numeroPresupuesto.trim() === '') {
+        // Intentar usar el placeholder o generar uno de emergencia
+        numeroPresupuesto = $('#numero-presupuesto').attr('placeholder') || generarNumeroPresupuesto();
+        // Limpiar si es texto del placeholder
+        if (numeroPresupuesto.includes('Generando') || numeroPresupuesto.includes('Número')) {
+            numeroPresupuesto = generarNumeroPresupuesto();
+        }
+    }
+    
     const comentarioPresupuesto = $('#comentarioPresupuesto').val();
     const descuentoTexto = $('#descuento_texto').val();
     const descuentoMonto = parseFloat($('#descuento_monto').val()) || 0;
     const recargoTexto = $('#recargo_texto').val();
     const recargoMonto = parseFloat($('#recargo_monto').val()) || 0;
-    
-    // NUEVO: Obtener valores de IVA
     const ivaPorcentaje = parseFloat($('#iva_porcentaje').val()) || 0;
     const ivaMonto = parseFloat($('#iva_monto').val()) || 0;
 
-    // Validaciones
+    // Validaciones (solo cliente es obligatorio)
     if (!selectedClient || selectedClient === '' || selectedClient === '0') {
         alert('Por favor seleccione o ingrese un cliente');
-        return;
-    }
-
-    if (!numeroPresupuesto) {
-        alert('Por favor ingrese un número de presupuesto');
         return;
     }
 
@@ -769,6 +781,7 @@ function guardarPresupuesto() {
     const originalText = btnGuardar.html();
     btnGuardar.prop('disabled', true).html('<i class="bi bi-hourglass-split"></i> Guardando...');
 
+    // Resto del código permanece igual...
     if ($tableMakePedido && $tableMakePedido.length > 0) {
         var rows = $tableMakePedido.bootstrapTable('getData');
         const productos = [];
@@ -798,7 +811,7 @@ function guardarPresupuesto() {
         }
 
         const presupuesto = {
-            numero: numeroPresupuesto,
+            numero: numeroPresupuesto,  // Ahora siempre tiene valor
             cliente: selectedClient,
             productos: productos,
             comentario: comentarioPresupuesto,
@@ -808,8 +821,8 @@ function guardarPresupuesto() {
             descuento_monto: descuentoMonto,
             recargo_texto: recargoTexto,
             recargo_monto: recargoMonto,
-            iva_porcentaje: ivaPorcentaje,  // NUEVO
-            iva_monto: ivaMonto             // NUEVO
+            iva_porcentaje: ivaPorcentaje,
+            iva_monto: ivaMonto
         };
 
         const paramJSON = JSON.stringify(presupuesto);
@@ -939,6 +952,9 @@ $(document).ready(function() {
         }
         
         setTimeout(initPresupuestoModal, 100);
+        
+         // NUEVO: Generar número automático cada vez que se abre el modal
+        generarNumeroAutomatico();
     });
     
     // También refrescar cuando el modal esté completamente visible
@@ -974,4 +990,26 @@ function generarNumeroPresupuesto() {
     const timestamp = new Date().getTime();
     const random = Math.floor(Math.random() * 1000);
     return `PRES-${timestamp}-${random}`;
+}
+// Función para obtener el próximo número secuencial desde el servidor
+function obtenerProximoNumeroSecuencial() {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            url: "../../php/getProximoNumeroPresupuesto.php",
+            type: "GET",
+            dataType: "json",
+            success: function(respuesta) {
+                if (respuesta.success) {
+                    resolve(respuesta.proximo_numero);
+                } else {
+                    // Si falla, usar generación local
+                    resolve(generarNumeroPresupuesto());
+                }
+            },
+            error: function() {
+                // Si hay error, usar generación local
+                resolve(generarNumeroPresupuesto());
+            }
+        });
+    });
 }
