@@ -29,13 +29,11 @@ try {
     
     // Obtener datos del presupuesto actual
     $presupuesto_actual = null;
-    $indice_actual = -1;
     
     if ($presupuesto_id > 0) {
-        for ($i = 0; $i < count($presupuestos); $i++) {
-            if ($presupuestos[$i]->idx == $presupuesto_id) {
-                $presupuesto_actual = $presupuestos[$i];
-                $indice_actual = $i;
+        foreach ($presupuestos as $pres) {
+            if ($pres->idx == $presupuesto_id) {
+                $presupuesto_actual = $pres;
                 break;
             }
         }
@@ -79,13 +77,53 @@ try {
             gap: 10px;
             margin: 20px 0;
         }
+        
+        /* ESTILOS TOM SELECT MEJORADOS (igual al de clientes) */
         .tom-select-container {
             margin-bottom: 20px;
         }
         .selector-label {
+            text-align: left;
+            display: block;
+            margin-bottom: 5px;
             font-weight: bold;
             color: #037C79;
-            margin-bottom: 5px;
+        }
+        .ts-control {
+            text-align: left !important;
+            border: 1px solid #037C79 !important;
+            border-radius: 4px !important;
+            padding: 8px 12px !important;
+            background: white !important;
+        }
+        .ts-wrapper.single .ts-control {
+            background: white !important;
+        }
+        .ts-dropdown {
+            text-align: left !important;
+            border: 1px solid #037C79 !important;
+            border-top: none !important;
+            border-radius: 0 0 4px 4px !important;
+            background: white !important;
+        }
+        .ts-dropdown .option .highlight {
+            background-color: #ffeb3b !important;
+            color: #000 !important;
+            font-weight: bold !important;
+            padding: 2px 4px !important;
+            border-radius: 3px !important;
+        }
+        .ts-dropdown .active {
+            background-color: #037C79 !important;
+            color: white !important;
+        }
+        .ts-dropdown .option:hover {
+            background-color: #025a57 !important;
+            color: white !important;
+        }
+        .ts-dropdown .ts-input {
+            border-bottom: 1px solid #037C79 !important;
+            padding: 8px 12px !important;
         }
     </style>
 </head>
@@ -132,12 +170,26 @@ try {
         <div class="presupuesto-container">
             <?php if ($presupuesto_actual): ?>
                 <div id="presupuesto-content">
-                    <!-- El contenido del presupuesto se cargará aquí via JavaScript -->
                     <div class="text-center">
                         <div class="spinner-border text-primary" role="status">
                             <span class="visually-hidden">Cargando presupuesto...</span>
                         </div>
                         <p>Cargando presupuesto...</p>
+                    </div>
+                </div>
+                
+                <!-- Navegación DINÁMICA (se actualizará con JavaScript) -->
+                <div id="navigation-container">
+                    <div class="navigation-buttons">
+                        <button class="btn btn-outline-secondary" disabled>
+                            <i class="bi bi-chevron-left"></i> Anterior
+                        </button>
+                        <span class="align-self-center px-3" id="contador-navegacion">
+                            Cargando...
+                        </span>
+                        <button class="btn btn-outline-secondary" disabled>
+                            Siguiente <i class="bi bi-chevron-right"></i>
+                        </button>
                     </div>
                 </div>
             <?php else: ?>
@@ -148,38 +200,6 @@ try {
                 </div>
             <?php endif; ?>
         </div>
-
-        <!-- Navegación -->
-        <?php if ($presupuesto_actual && count($presupuestos) > 1): ?>
-        <div class="navigation-buttons">
-            <!-- Anterior -->
-            <?php if ($indice_actual > 0): ?>
-            <button class="btn btn-outline-primary" onclick="navegarPresupuesto(<?php echo $presupuestos[$indice_actual - 1]->idx; ?>)">
-                <i class="bi bi-chevron-left"></i> Anterior
-            </button>
-            <?php else: ?>
-            <button class="btn btn-outline-secondary" disabled>
-                <i class="bi bi-chevron-left"></i> Anterior
-            </button>
-            <?php endif; ?>
-
-            <!-- Contador -->
-            <span class="align-self-center px-3">
-                <?php echo ($indice_actual + 1) . ' de ' . count($presupuestos); ?>
-            </span>
-
-            <!-- Siguiente -->
-            <?php if ($indice_actual < count($presupuestos) - 1): ?>
-            <button class="btn btn-outline-primary" onclick="navegarPresupuesto(<?php echo $presupuestos[$indice_actual + 1]->idx; ?>)">
-                Siguiente <i class="bi bi-chevron-right"></i>
-            </button>
-            <?php else: ?>
-            <button class="btn btn-outline-secondary" disabled>
-                Siguiente <i class="bi bi-chevron-right"></i>
-            </button>
-            <?php endif; ?>
-        </div>
-        <?php endif; ?>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/jquery/dist/jquery.min.js"></script>
@@ -187,8 +207,10 @@ try {
     <script src="https://cdn.jsdelivr.net/npm/tom-select@2.0.0-rc.4/dist/js/tom-select.complete.min.js"></script>
     
     <script>
-        // Inicializar Tom Select
+        // Variables globales
         let presupuestosTomSel;
+        let listaPresupuestos = <?php echo json_encode($presupuestos); ?>;
+        let presupuestoActualId = <?php echo $presupuesto_id; ?>;
         
         $(document).ready(function() {
             // Inicializar selector de presupuestos
@@ -198,15 +220,17 @@ try {
                 placeholder: "Buscar presupuesto...",
                 onChange: function(value) {
                     if (value) {
+                        presupuestoActualId = value;
                         cargarPresupuesto(value);
                     }
                 }
             });
             
-            // Cargar el presupuesto actual
-            <?php if ($presupuesto_actual): ?>
-            cargarPresupuesto(<?php echo $presupuesto_id; ?>);
-            <?php endif; ?>
+            // Cargar el presupuesto actual y actualizar navegación
+            if (presupuestoActualId > 0) {
+                cargarPresupuesto(presupuestoActualId);
+                actualizarNavegacion();
+            }
         });
         
         // Función para cargar presupuesto
@@ -220,41 +244,117 @@ try {
                 </div>
             `);
             
-            $.get(`../php/verPresupuesto.php?presupuesto_id=${presupuestoId}`, function(data) {
+            // URL ABSOLUTA
+            const url = `https://ketelectropartes.com/admin/php/verPresupuesto.php?presupuesto_id=${presupuestoId}`;
+            
+            $.get(url, function(data) {
                 $('#presupuesto-content').html(data);
+                presupuestoActualId = presupuestoId;
+                actualizarNavegacion();
                 
                 // Actualizar URL sin recargar la página
                 const nuevaUrl = `verPresupuestos.php?presupuesto_id=${presupuestoId}`;
                 window.history.pushState({path: nuevaUrl}, '', nuevaUrl);
                 
-            }).fail(function() {
+            }).fail(function(xhr, status, error) {
+                console.error('Error cargando presupuesto:', error);
                 $('#presupuesto-content').html(`
                     <div class="alert alert-danger text-center">
                         <i class="bi bi-exclamation-triangle"></i>
-                        Error al cargar el presupuesto. Intente nuevamente.
+                        Error al cargar el presupuesto.
                     </div>
                 `);
             });
         }
         
-        // Función para navegación
-        function navegarPresupuesto(presupuestoId) {
-            // Actualizar el selector
-            presupuestosTomSel.setValue(presupuestoId);
+        // Función para actualizar la navegación
+        function actualizarNavegacion() {
+            if (listaPresupuestos.length === 0) return;
             
-            // Cargar el presupuesto
-            cargarPresupuesto(presupuestoId);
+            // Encontrar índice actual
+            let indiceActual = -1;
+            for (let i = 0; i < listaPresupuestos.length; i++) {
+                if (listaPresupuestos[i].idx == presupuestoActualId) {
+                    indiceActual = i;
+                    break;
+                }
+            }
+            
+            if (indiceActual === -1) return;
+            
+            // Actualizar contador
+            $('#contador-navegacion').text(`${indiceActual + 1} de ${listaPresupuestos.length}`);
+            
+            // Actualizar botones
+            let htmlNavegacion = `
+                <div class="navigation-buttons">
+                    ${indiceActual > 0 ? 
+                        `<button class="btn btn-outline-primary" onclick="navegarAnterior()">
+                            <i class="bi bi-chevron-left"></i> Anterior
+                        </button>` :
+                        `<button class="btn btn-outline-secondary" disabled>
+                            <i class="bi bi-chevron-left"></i> Anterior
+                        </button>`
+                    }
+                    
+                    <span class="align-self-center px-3">
+                        ${indiceActual + 1} de ${listaPresupuestos.length}
+                    </span>
+                    
+                    ${indiceActual < listaPresupuestos.length - 1 ? 
+                        `<button class="btn btn-outline-primary" onclick="navegarSiguiente()">
+                            Siguiente <i class="bi bi-chevron-right"></i>
+                        </button>` :
+                        `<button class="btn btn-outline-secondary" disabled>
+                            Siguiente <i class="bi bi-chevron-right"></i>
+                        </button>`
+                    }
+                </div>
+            `;
+            
+            $('#navigation-container').html(htmlNavegacion);
+        }
+        
+        // Funciones de navegación
+        function navegarAnterior() {
+            let indiceActual = -1;
+            for (let i = 0; i < listaPresupuestos.length; i++) {
+                if (listaPresupuestos[i].idx == presupuestoActualId) {
+                    indiceActual = i;
+                    break;
+                }
+            }
+            
+            if (indiceActual > 0) {
+                const presupuestoAnterior = listaPresupuestos[indiceActual - 1];
+                presupuestosTomSel.setValue(presupuestoAnterior.idx);
+                cargarPresupuesto(presupuestoAnterior.idx);
+            }
+        }
+        
+        function navegarSiguiente() {
+            let indiceActual = -1;
+            for (let i = 0; i < listaPresupuestos.length; i++) {
+                if (listaPresupuestos[i].idx == presupuestoActualId) {
+                    indiceActual = i;
+                    break;
+                }
+            }
+            
+            if (indiceActual < listaPresupuestos.length - 1) {
+                const presupuestoSiguiente = listaPresupuestos[indiceActual + 1];
+                presupuestosTomSel.setValue(presupuestoSiguiente.idx);
+                cargarPresupuesto(presupuestoSiguiente.idx);
+            }
         }
         
         // Navegación con teclado
         $(document).keydown(function(e) {
-            <?php if ($presupuesto_actual && count($presupuestos) > 1): ?>
-            if (e.key === 'ArrowLeft' && <?php echo $indice_actual > 0 ? 'true' : 'false'; ?>) {
-                navegarPresupuesto(<?php echo $indice_actual > 0 ? $presupuestos[$indice_actual - 1]->idx : 'null'; ?>);
-            } else if (e.key === 'ArrowRight' && <?php echo $indice_actual < count($presupuestos) - 1 ? 'true' : 'false'; ?>) {
-                navegarPresupuesto(<?php echo $indice_actual < count($presupuestos) - 1 ? $presupuestos[$indice_actual + 1]->idx : 'null'; ?>);
+            if (e.key === 'ArrowLeft') {
+                navegarAnterior();
+            } else if (e.key === 'ArrowRight') {
+                navegarSiguiente();
             }
-            <?php endif; ?>
         });
     </script>
 </body>
