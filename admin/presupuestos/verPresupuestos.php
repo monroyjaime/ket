@@ -175,6 +175,7 @@ try {
 
         /* ESTILOS PARA IMPRESIÓN - OCULTAR ELEMENTOS NO NECESARIOS */
         @media print {
+            #uperbar,
             .header-top,
             .titulo-presupuestos,
             .tom-select-container,
@@ -198,7 +199,7 @@ try {
 </head>
 <body>
     <!-- HEADER SUPERIOR (igual al index.php pero SIN BOTONES) -->
-    <div class="w-100 p-0" style="background-color: #CCC;">
+    <div id="uperbar" class="w-100 p-0" style="background-color: #CCC;">
         <div class="row align-items-start" style="max-height: 50px;">
             <div class="col text-start" style="max-height: 40px; padding-left: 20px;">
                 <!-- FLECHA AZUL - Corregida para apuntar al index de presupuestos -->
