@@ -614,7 +614,7 @@ $tituloLista = '<h2 style="background-color: #037C79; padding-bottom: 14px; colo
 
     function showPedidoClient() {
         // Abrir la página de ver presupuestos
-        window.open('verPresupuestos.php', '_blank');
+         window.location.href = 'verPresupuestos.php';
     }
 
     // Función para cargar el carrito al iniciar la página
