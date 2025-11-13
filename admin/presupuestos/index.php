@@ -38,8 +38,7 @@ try {
     if ($numUsr > 0) {
         $ableToPresupuesto = 't';
         $btnsPedido  = '<button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#ModalMakePedido" onClick="getSelected()" style="margin: 1px 2px 1px;"><i class="bi bi-gear"></i> Def. Presup.</button> ';
-        $btnsPedido .= '<button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#ModalShowPedido" onClick="showPedidoClient()" style="margin: 1px 2px 1px;"><i class="bi bi-file-earmark-ppt"></i> Ver Presup.</button> ';
-        
+        $btnsPedido .= '<button type="button" class="btn btn-primary btn-sm" onClick="showPedidoClient()" style="margin: 1px 2px 1px;"><i class="bi bi-file-earmark-ppt"></i> Ver Presup.</button> ';
         // Consultar datos del usuario
         $usuario = $db->consultaSegura("SELECT client, show_all_pres FROM usuario WHERE num = $1", [$numUsr]);
         
@@ -514,20 +513,6 @@ $tituloLista = '<h2 style="background-color: #037C79; padding-bottom: 14px; colo
     </div>
 </div>
 
-<!-- Modal Mostrar Pedidos (SIMPLIFICADO) -->
-<div class="modal fade" id="ModalShowPedido" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-    <div class="modal-dialog" style="max-width: 90%;" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <button type="button" class="close" data-bs-dismiss="modal">&times;</button>
-                <h4 class="modal-title">Mostrar Presupuestos</h4>
-            </div>
-            <div class="modal-body">
-                <p>Modal para mostrar presupuestos - En desarrollo</p>
-            </div>
-        </div> 
-    </div>
-</div>
 
 <script src="https://cdn.jsdelivr.net/npm/jquery/dist/jquery.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
