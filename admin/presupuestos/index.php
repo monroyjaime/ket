@@ -613,7 +613,8 @@ $tituloLista = '<h2 style="background-color: #037C79; padding-bottom: 14px; colo
     }
 
     function showPedidoClient() {
-        alert('Función mostrar pedidos - En desarrollo');
+        // Abrir la página de ver presupuestos
+        window.open('verPresupuestos.php', '_blank');
     }
 
     // Función para cargar el carrito al iniciar la página
