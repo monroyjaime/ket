@@ -46,7 +46,7 @@ $precioColumn = ($role == -1)? '' : '<th data-field="cost_max" data-halign="cent
 $precio80Column = ($role == -1)? '' : '<th data-field="cost_max_80" data-halign="center" data-align="right" data-force-hide="true" data-formatter="precioFormater">PREC.MAY.</th>';
 */
 $precioMinColumn = ($role == -1)? '' : '<th data-field="cost_min" data-halign="center" data-align="right" data-formatter="precioFormater">PREC.MIN.</th>';
-$precioMayColumn = ($role == -1 || $role > 2)? '' : '<th data-field="cost_may" data-halign="center" data-align="right" data-formatter="precioMayorFormater">PREC.MAY.</th>';
+$precioMayColumn = ($role == -1 || $role > 2)? '' : '<th data-field="cost_may" data-halign="center" data-align="right" data-formatter="precioFormater">PREC.MAY.</th>';
 
 
 
