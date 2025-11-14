@@ -22,7 +22,10 @@ if($dptoId>0 || $lineaId >0)
         $query .= " AND b.num=".$lineaId;
     if($onlyStock == 1)
          $query .= " AND current_stock > 0 ";
-    $query .= " ORDER BY a.code";
+    if($lineaId >0 && $dptoId ==0)
+        $query .= " ORDER BY a.dpto_id, a.code";
+    else
+        $query .= " ORDER BY a.code";
     echo "query: ".$query."\n";
     exit;
     $consult = $db->consultas($query);
