@@ -4,7 +4,8 @@ ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
 // Cambiar DB por DBAsync para consultas seguras
-require_once("https://ketelectropartes.com/php/dbcat_async.php");
+//require_once("https://ketelectropartes.com/php/dbcat_async.php");
+require_once("../../php/dbcat_async.php");
 
 $role = -1;
 $presupuestoId = 0;
