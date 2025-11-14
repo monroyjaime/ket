@@ -387,7 +387,7 @@ else if($lineaId>0 && $dptoId==0){
     function backTo(rol,line,from,prec){ 
       if(from == 0)
       {
-        urlString =  "../index.php";
+        urlString =  "https://ketelectropartes.com/";
         /*switch(line)
         {
           case 1:
