@@ -1,6 +1,6 @@
 <?php
 //require_once("app/php/db.php");
-require_once("../php/dbcat.php");
+require_once("https://ketelectropartes.com/php/dbcat.php");
 
 
 $role = -1;                         
