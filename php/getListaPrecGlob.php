@@ -15,7 +15,7 @@ if($dptoId>0 || $lineaId >0)
     $quePrec = ($tipoPrec == 0)? "cost_max" : "cost_mayor";
     //$query  = "SELECT id,code,name,".$quePrec.",unit,photo_url,current_stock,stock_tot FROM productos WHERE show='t'";
     $query  = "SELECT a.id,a.code,a.name,a.cost_max,a.cost_mayor,a.unit,a.photo_url,a.current_stock,a.stock_tot,b.num AS linea ";
-    $query .= "FROM productos a, departamentos b WHERE a.show='t' AND a.".$quePrec." > 0 AND a.dpto_code = b.id";
+    $query .= "FROM productos a, departamentos b WHERE a.show='t' AND a.".$quePrec." > 0 AND a.dpto_id = b.id";
     if($dptoID >0 || $lineaId==0)
         $query .= " AND a.dpto_id=".$dptoId;
     if($lineaId >0 && $dptoId ==0)
