@@ -53,8 +53,11 @@ $precioMayColumn = ($role == -1 || $role > 2)? '' : '<th data-field="cost_may" d
 
 
 $callBackLine = '<a href="#" onClick="backTo('.$role.','.$linea.','.$comeFrom.','.$tipoPrecio.')" title="Pag. Prev."><i class="bi bi-arrow-left-circle-fill icon-dark-blue icon-large"></i></a>';
+if($dptoId >0 && $lineaId==0)
+  $dataUrl = "https://ketelectropartes.com/php/getListaPrecGlob.php?dpto=".$dptoId;
+else if($lineaId>0 && $dptoId==0)
+  $dataUrl = "https://ketelectropartes.com/php/getListaPrecGlob.php?linea=".$lineaId;
 
-$dataUrl = "https://ketelectropartes.com/php/getListaPrecGlob.php?dpto=".$dptoId;
 // $dataUrl = "http://200.58.105.178/php/getListaPrecAllL1.php?prec=".$tipoPrecio;
 $query = "SELECT name FROM departamentos where id=".$dptoId;
 $consult = $db->consultas($query);
