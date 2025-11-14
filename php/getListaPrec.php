@@ -12,7 +12,9 @@ if($dptoId>0)
 {
     $numProd = 0;
     $quePrec = ($tipoPrec == 0)? "cost_max" : "cost_mayor";
-    $query  = "SELECT id,code,name,".$quePrec.",unit,photo_url,current_stock,stock_tot FROM productos WHERE show='t'";
+    //$query  = "SELECT id,code,name,".$quePrec.",unit,photo_url,current_stock,stock_tot FROM productos WHERE show='t'";
+    $query  = "SELECT id,code,name,cost_max,cost_mayor,unit,photo_url,current_stock,stock_tot FROM productos WHERE show='t'";
+
     $query .= " AND dpto_id=".$dptoId." AND ".$quePrec." > 0";
     if($onlyStock == 1)
          $query .= " AND current_stock > 0 ";
@@ -22,8 +24,11 @@ if($dptoId>0)
         $objRtn = new stdClass();
         $objRtn->code = $value->code;
         $objRtn->name = $value->name;
-        $objRtn->cost_max = ($tipoPrec == 0)? number_format(floatval($value->cost_max),3,",") : number_format(floatval($value->cost_mayor),3,",");
-        $objRtn->cost_max_80 = ($tipoPrec == 0)? number_format(floatval($value->cost_max)*0.8,3,",") : number_format(floatval($value->cost_mayor)*0.8,3,",");
+        //$objRtn->cost_max = ($tipoPrec == 0)? number_format(floatval($value->cost_max),3,",") : number_format(floatval($value->cost_mayor),3,",");
+        //$objRtn->cost_max_80 = ($tipoPrec == 0)? number_format(floatval($value->cost_max)*0.8,3,",") : number_format(floatval($value->cost_mayor)*0.8,3,",");
+        $objRtn->costo_min =  number_format(floatval($value->cost_max));
+        $objRtn->costo_may =  number_format(floatval($value->cost_mayor));
+
         $objRtn->current_stock = $value->current_stock;
 
         $objRtn->unit = $value->unit;
