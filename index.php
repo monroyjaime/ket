@@ -261,10 +261,13 @@ foreach ($consult as $value)
           {
             switch(linea){
               case 1:
-                urlString = "listas/indexL1.php?role_num="+rol;
+                //urlString = "listas/indexL1.php?role_num="+rol;
+                urlString = "listas/index1.php?linea=1";
               break
               case 2:
-                urlString = "listas/indexL2.php?role_num="+rol;
+                //urlString = "listas/indexL2.php?role_num="+rol;
+                urlString = "listas/index1.php?linea=2";
+
               break
             }
               window.location.href = urlString;
@@ -596,10 +599,10 @@ foreach ($consult as $value)
       <a  href="listas/index.php"><img class="d-block w-100" src="img/linea0.jpg" alt="linea0" style="max-height:50vh;max-width:50vh;"></a>
     </div>
     <div id="imgLinks" class="d-flex justify-content-center" >
-      <a  href="listas/indexL1.php"><img class="d-block w-100" src="img/linea1.jpg" alt="linea1" style="max-height:50vh;max-width:50vh;"></a>    
+      <a  href="listas/index1.php?linea=1"><img class="d-block w-100" src="img/linea1.jpg" alt="linea1" style="max-height:50vh;max-width:50vh;"></a>    
     </div>
     <div id="imgLinks" class="d-flex justify-content-center" >
-      <a  href="listas/indexL2.php"><img class="d-block w-100" src="img/linea2.jpg" alt="linea2" style="max-height:50vh;max-width:50vh;"></a>
+      <a  href="listas/index1.php?linea=2"><img class="d-block w-100" src="img/linea2.jpg" alt="linea2" style="max-height:50vh;max-width:50vh;"></a>
     </div>
   </div>        
 </div>
