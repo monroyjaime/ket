@@ -26,8 +26,8 @@ if($dptoId>0)
         $objRtn->name = $value->name;
         //$objRtn->cost_max = ($tipoPrec == 0)? number_format(floatval($value->cost_max),3,",") : number_format(floatval($value->cost_mayor),3,",");
         //$objRtn->cost_max_80 = ($tipoPrec == 0)? number_format(floatval($value->cost_max)*0.8,3,",") : number_format(floatval($value->cost_mayor)*0.8,3,",");
-        $objRtn->costo_min =  number_format(floatval($value->cost_max));
-        $objRtn->costo_may =  number_format(floatval($value->cost_mayor));
+        $objRtn->cost_min =  number_format(floatval($value->cost_max));
+        $objRtn->cost_may =  number_format(floatval($value->cost_mayor));
 
         $objRtn->current_stock = $value->current_stock;
 
