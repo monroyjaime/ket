@@ -26,7 +26,7 @@ if(($dptoID >0 && $lineaId==0) || ($lineaId >0 && $dptoId ==0))
         $query .= " ORDER BY a.dpto_id, a.code";
     else
         $query .= " ORDER BY a.code";
-    //echo "query: ".$query."\n";
+    echo "query: ".$query."\n";
     //exit;
     $consult = $db->consultas($query);
     foreach ($consult as $value){
