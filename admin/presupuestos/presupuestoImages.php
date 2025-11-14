@@ -50,33 +50,20 @@ $currRangeTo = ($pageNum-1)*25 + $lastPageProdNum;
 
 for ($i=$currRangeFrom; $i<=$currRangeTo; $i++){
 
-    $productVal_id = $productVals[$i]->id;
     $productVal_code =$productVals[$i]->code;
-    $productVal_desc = $productVals[$i]->desc;
     $productVal_url = $productVals[$i]->url;
-    
-    $productVal_unit = $productVals[$i]->unit;
-    $productVal_current_stock = $productVals[$i]->current_stock;
-    $productVal_cost = $productVals[$i]->cost;
-    $productVal_cost_80 = $productVals[$i]->cost_80;
 
 
-    $currUrl = $currCatImgRoute.$productVal_url;
+
     //echo "currUrl: ".$currUrl;
     $tags .=    '<div class="col" style="background-color: #DDD;">';
     $tags .=        '<div class="card h-100 text-bg-light">';
     $tags .=            '<div class="card-header" style="background-color: #037C79;">';
     $tags .=                '<h3 style="color: #FFF;">'.$productVal_code.'</h3>';
     $tags .=            '</div>';
-    $tags .=            '<img src="'.$currUrl.'" class="card-img-top" alt="'.$productVal_code.'">';
+    $tags .=            '<img src="'.$productVal_url.'" class="card-img-top" alt="'.$productVal_code.'">';
     $tags .=            '<div class="card-body" style="background-color: #0CC;">';
-    $tags .=                '<h6 class="card-text">'.$productVal_desc.'</h6>';
-    if($role>-1)
-    {
-        $tags .=            '<h5 class="card-text" >Prec. : $'.number_format($productVal_cost,3,",").'</h5>';
-        $tags .=            '<h5 class="card-text" >-20% : $'.number_format($productVal_cost_80,3,",").'</h5>';
-       // $tags .=            '<h6 class="card-text">Unidad: '.$productVal_unit.'</h6>';
-    }
+    $tags .=                '<h6 class="card-text">'.$productVal_code.'</h6>';
     $tags .=            '</div>';
     $tags .=        '</div>';
     $tags .=    '</div>';
