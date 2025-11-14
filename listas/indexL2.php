@@ -61,8 +61,11 @@ switch($role)
 }
 
 $stockColumn = ( ($role > -1 && $role < 2) || $role == 5 )? '<th data-field="current_stock" data-halign="center" data-align="right" >STOCK</th>' : '';
-$precioColumn = ($role == -1)? '' : '<th data-field="cost_max" data-halign="center" data-align="right" data-formatter="precioFormater">PRECIO</th>';
-$precio80Column = ($role == -1)? '' :'<th data-field="cost_max_80" data-halign="center" data-align="right" data-formatter="precioFormater">PREC.-20%</th>';
+/*$precioColumn = ($role == -1)? '' : '<th data-field="cost_max" data-halign="center" data-align="right" data-formatter="precioFormater">PRECIO</th>';
+$precio80Column = ($role == -1)? '' :'<th data-field="cost_max_80" data-halign="center" data-align="right" data-formatter="precioFormater">PREC.-20%</th>';*/
+$precioMinColumn = ($role == -1)? '' : '<th data-field="cost_min" data-halign="center" data-align="right" data-formatter="precioFormater">PREC.MIN.</th>';
+$precioMayColumn = ($role == -1 || $role > 2)? '' : '<th data-field="cost_may" data-halign="center" data-align="right" data-formatter="precioFormater">PREC.MAY.</th>';
+
 $tituloLista = ($role == -1)? '<h2 style="background-color: #037C79; color: #FFF;">Linea Ferretera</h2>' : '<h2 style="background-color: #037C79; color: #FFF;">Linea Ferretera '.$titlePrec .'</h2>';
 $dataUrl = "https://ketelectropartes.com/php/getListaPrecAllL2.php?prec=".$tipoPrecio."&role=".$role;
 // $dataUrl = "http://200.58.105.178/php/getListaPrecAllL1.php?prec=".$tipoPrecio;
