@@ -9,7 +9,9 @@ $tipoPrecio = 0;
 $comeFrom = 0;  
 $role = (isset($_SESSION['role']))? intval($_SESSION['role']) : -1;
 
-$dptoId =  (isset($_GET['dpto']))?  intval($_GET['dpto']) : 6;  
+$dptoId =  (isset($_GET['dpto']))?  intval($_GET['dpto']) : 0;  
+
+$lineaId = (isset($_GET['linea']))?  intval($_GET['linea']) : 0;  
 
 
 /*if ( isset($_GET['role_num']) ) 
@@ -52,7 +54,7 @@ $precioMayColumn = ($role == -1 || $role > 2)? '' : '<th data-field="cost_may" d
 
 $callBackLine = '<a href="#" onClick="backTo('.$role.','.$linea.','.$comeFrom.','.$tipoPrecio.')" title="Pag. Prev."><i class="bi bi-arrow-left-circle-fill icon-dark-blue icon-large"></i></a>';
 
-$dataUrl = "https://ketelectropartes.com/php/getListaPrec.php?dpto=".$dptoId."&prec=".$tipoPrecio;
+$dataUrl = "https://ketelectropartes.com/php/getListaPrecGlob.php?dpto=".$dptoId;
 // $dataUrl = "http://200.58.105.178/php/getListaPrecAllL1.php?prec=".$tipoPrecio;
 $query = "SELECT name FROM departamentos where id=".$dptoId;
 $consult = $db->consultas($query);
