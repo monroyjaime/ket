@@ -90,8 +90,13 @@ switch($role)
     break;
 
 }
+if($dptoId >0 && $lineaId==0)
+  $titlefull = $dptoName." ".$titlePrec;
+else if($lineaId>0 && $dptoId==0){
+  $thisLinea = ($lineaId==1)? "Linea Automotriz":"Linea Ferretera"
+  $titlefull = $thisLinea." ".$titlePrec;
+}
 
-$titlefull = $dptoName." ".$titlePrec;
 
 
 
@@ -382,7 +387,8 @@ $titlefull = $dptoName." ".$titlePrec;
     function backTo(rol,line,from,prec){ 
       if(from == 0)
       {
-        switch(line)
+        urlString =  "../index.php";
+        /*switch(line)
         {
           case 1:
             urlString =  "indexL1.php?prec="+prec;
@@ -392,7 +398,7 @@ $titlefull = $dptoName." ".$titlePrec;
             urlString =  "indexL2.php?prec="+prec;
 
           break;
-        }
+        }*/
       }
       else
         urlString =  "index.php?prec="+prec;
