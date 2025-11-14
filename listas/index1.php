@@ -93,7 +93,7 @@ switch($role)
 if($dptoId >0 && $lineaId==0)
   $titlefull = $dptoName." ".$titlePrec;
 else if($lineaId>0 && $dptoId==0){
-  $thisLinea = ($lineaId==1)? "Linea Automotriz":"Linea Ferretera"
+  $thisLinea = ($lineaId==1)? "Linea Automotriz":"Linea Ferretera";
   $titlefull = $thisLinea." ".$titlePrec;
 }
 
