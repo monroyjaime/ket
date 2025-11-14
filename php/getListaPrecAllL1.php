@@ -9,7 +9,8 @@ $role = (isset($_GET['role']))? intval($_GET['role']) : -1;
 
 $numProd = 0;
 //$query  = "SELECT a.id,a.code,a.name,a.".$quePrec.",a.unit,b.name AS dpto, a.photo_url, a.current_stock,a.stock_tot";
-$query  = "SELECT id,code,name,cost_max,cost_mayor,unit,photo_url,current_stock,stock_tot FROM productos WHERE show='t'";
+$query  = "SELECT a.id,a.code,a.name,a.cost_max,a.cost_mayor,a.unit,b.name AS dpto, a.photo_url, a.current_stock,a.stock_tot";
+
 $query .= " FROM productos a, departamentos b where b.num = 1 AND a.dpto_id = b.id";
 if($role == 6)
     $query .= " AND a.current_stock > 0";

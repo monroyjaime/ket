@@ -9,7 +9,7 @@ $role = (isset($_GET['role']))? intval($_GET['role']) : -1;
 
 $numProd = 0;
 //$query  = "SELECT a.id,a.code,a.name,a.".$quePrec.",a.unit,b.name AS dpto, a.photo_url, a.current_stock,a.stock_tot";
-$query  = "SELECT id,code,name,cost_max,cost_mayor,unit,photo_url,current_stock,stock_tot FROM productos WHERE show='t'";
+$query  = "SELECT a.id,a.code,a.name,a.cost_max,a.cost_mayor,a.unit,b.name AS dpto, a.photo_url, a.current_stock,a.stock_tot";
 $query .= " FROM productos a, departamentos b where b.num = 2 AND a.dpto_id = b.id";
 if($role == 6)
     $query .= " AND a.current_stock > 0";
@@ -27,7 +27,7 @@ foreach ($consult as $value){
     //$objRtn->cost_max_80 = ($tipoPrec == 0)? number_format(floatval($value->cost_max)*0.8,3,",") : number_format(floatval($value->cost_mayor)*0.8,3,",");
     $objRtn->cost_min =  number_format(floatval($value->cost_max),3,",");
     $objRtn->cost_may =  number_format(floatval($value->cost_mayor),3,",");
-    
+
     $objRtn->current_stock = $value->current_stock;
 
     $objRtn->unit = $value->unit;
