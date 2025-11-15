@@ -252,60 +252,73 @@ try {
     // Función para calcular el zoom automáticamente basado en el número de productos
     function calcularZoom() {
         const productosEnPagina = <?php echo $productosEnEstaPagina; ?>;
-        const columnasPorFila = <?php echo $columnasPorFila; ?>;
         
-        // Lógica de zoom basada en número de productos y columnas
+        // Lógica de zoom optimizada para una sola página
         if (productosEnPagina <= 4) {
-            return '100%'; // 100% para 1-4 productos
-        } else if (productosEnPagina <= 8) {
-            return '85%';  // 85% para 5-8 productos
-        } else if (productosEnPagina <= 12) {
-            return '75%';  // 75% para 9-12 productos
+            return 1.0;   // 100% - imágenes grandes
+        } else if (productosEnPagina <= 9) {
+            return 0.8;   // 80% - buen balance
         } else if (productosEnPagina <= 16) {
-            return '65%';  // 65% para 13-16 productos
-        } else if (productosEnPagina <= 20) {
-            return '55%';  // 55% para 17-20 productos
+            return 0.65;  // 65% - compacto pero legible
         } else {
-            return '50%';  // 50% para 21-25 productos
+            return 0.5;   // 50% - máximo compacto para 17-25 productos
         }
     }
     
-    // Función de impresión con zoom automático
+    // Función de impresión con zoom automático para una sola página
     function imprimirConZoom() {
         const zoom = calcularZoom();
+        const escala = zoom;
         
-        // Crear estilos de impresión dinámicos
+        // Crear estilos de impresión dinámicos para una sola página
         const printStyles = `
             @media print {
                 .btn-print, .bi-arrow-left-circle-fill {
                     display: none !important;
                 }
+                
+                /* Contenedor principal con escala */
                 body {
                     background: white !important;
                     padding: 0 !important;
                     margin: 0 !important;
-                    transform: scale(${zoom});
+                    transform: scale(${escala});
                     transform-origin: top left;
-                    width: ${100 / parseFloat(zoom)}vw;
-                    height: ${100 / parseFloat(zoom)}vh;
+                    width: ${100 / escala}vw;
+                    height: ${100 / escala}vh;
                 }
+                
+                /* Asegurar que todo el contenido quede en una página */
+                #productos {
+                    page-break-inside: avoid;
+                }
+                
                 .card {
-                    break-inside: avoid;
-                    margin-bottom: 10px;
+                    page-break-inside: avoid;
                 }
+                
                 .card-header {
                     background-color: #037C79 !important;
                     -webkit-print-color-adjust: exact;
                     print-color-adjust: exact;
                 }
+                
                 .card-footer {
                     background-color: #0CC !important;
                     -webkit-print-color-adjust: exact;
                     print-color-adjust: exact;
                 }
+                
+                /* Configurar página para una sola hoja */
                 @page {
-                    margin: 5mm;
+                    margin: 10mm;
                     size: A4 landscape;
+                }
+                
+                /* Forzar una sola página */
+                html, body {
+                    height: 100%;
+                    overflow: hidden;
                 }
             }
         `;
@@ -322,10 +335,24 @@ try {
         styleSheet.innerHTML = printStyles;
         document.head.appendChild(styleSheet);
         
-        // Mostrar información del zoom (opcional)
-        console.log(`Imprimiendo con zoom: ${zoom} para ${<?php echo $productosEnEstaPagina; ?>} productos`);
+        // Mostrar información del zoom
+        console.log(`Imprimiendo con zoom: ${Math.round(escala * 100)}% para ${productosEnPagina} productos`);
         
-        // Ejecutar impresión
+        // Pequeño delay para asegurar que los estilos se apliquen
+        setTimeout(() => {
+            window.print();
+            
+            // Restaurar estilos después de imprimir (opcional)
+            setTimeout(() => {
+                const styles = document.getElementById('dynamic-print-styles');
+                if (styles) styles.remove();
+            }, 1000);
+            
+        }, 200);
+    }
+    
+    // Versión simple sin zoom (para comparación)
+    function imprimirNormal() {
         window.print();
     }
     
@@ -368,6 +395,10 @@ try {
             .card-footer {
                 background-color: #0CC !important;
                 -webkit-print-color-adjust: exact;
+            }
+            @page {
+                margin: 10mm;
+                size: A4 landscape;
             }
         }
     `;
