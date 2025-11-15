@@ -3,8 +3,7 @@ ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
-// Cambiar DB por DBAsync para consultas seguras
-//require_once("https://ketelectropartes.com/php/dbcat_async.php");
+// CORREGIR: Usar ruta relativa en lugar de URL HTTP
 require_once("../../php/dbcat_async.php");
 
 $role = -1;
@@ -32,11 +31,11 @@ try {
     // Usar DBAsync en lugar de DB
     $db = new DBAsync();
     
-    // Consulta segura usando parámetros preparados
+    // CONSULTA CORREGIDA - Orden correcto de JOINs
     $query = "SELECT a.product_code, CONCAT(b.img_route, c.photo_url) AS img_full_route 
               FROM presupuesto_detail a 
-              INNER JOIN departamentos b ON b.id = c.dpto_id
               INNER JOIN productos c ON a.product_code = c.code
+              INNER JOIN departamentos b ON b.id = c.dpto_id
               WHERE b.img_route != 'no' 
                 AND a.pres_idx = $1";
     
