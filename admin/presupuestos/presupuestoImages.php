@@ -16,7 +16,7 @@ $numValery = '';
 try {
     // Validar y sanitizar parámetros GET
     $role = isset($_GET['role_num']) ? intval($_GET['role_num']) : -1;
-    $presupuestoId = isset($_GET['pres_num']) ? intval($_GET['pres_num']) : 0;
+    $presupuestoId = isset($_GET['pres_num']) ? intval($_GET['presupuestoId']) : 0;
     $pageNum = isset($_GET['page_num']) ? intval($_GET['page_num']) : 1;
     
     // Validar parámetros requeridos
@@ -227,7 +227,7 @@ try {
         </div>    
         
         <div class="col text-center" style="max-height: 40px; padding-bottom: 14px; padding-top: 1px;">
-            <button class="btn btn-print btn-sm" onclick="window.print()" title="Imprimir PDF">
+            <button class="btn btn-print btn-sm" onclick="imprimirConZoom()" title="Imprimir PDF">
                 <i class="bi bi-printer-fill"></i> Imprimir PDF
             </button>
         </div>
@@ -249,6 +249,86 @@ try {
         window.location.href = "../index.php";
     }
     
+    // Función para calcular el zoom automáticamente basado en el número de productos
+    function calcularZoom() {
+        const productosEnPagina = <?php echo $productosEnEstaPagina; ?>;
+        const columnasPorFila = <?php echo $columnasPorFila; ?>;
+        
+        // Lógica de zoom basada en número de productos y columnas
+        if (productosEnPagina <= 4) {
+            return '100%'; // 100% para 1-4 productos
+        } else if (productosEnPagina <= 8) {
+            return '85%';  // 85% para 5-8 productos
+        } else if (productosEnPagina <= 12) {
+            return '75%';  // 75% para 9-12 productos
+        } else if (productosEnPagina <= 16) {
+            return '65%';  // 65% para 13-16 productos
+        } else if (productosEnPagina <= 20) {
+            return '55%';  // 55% para 17-20 productos
+        } else {
+            return '50%';  // 50% para 21-25 productos
+        }
+    }
+    
+    // Función de impresión con zoom automático
+    function imprimirConZoom() {
+        const zoom = calcularZoom();
+        
+        // Crear estilos de impresión dinámicos
+        const printStyles = `
+            @media print {
+                .btn-print, .bi-arrow-left-circle-fill {
+                    display: none !important;
+                }
+                body {
+                    background: white !important;
+                    padding: 0 !important;
+                    margin: 0 !important;
+                    transform: scale(${zoom});
+                    transform-origin: top left;
+                    width: ${100 / parseFloat(zoom)}vw;
+                    height: ${100 / parseFloat(zoom)}vh;
+                }
+                .card {
+                    break-inside: avoid;
+                    margin-bottom: 10px;
+                }
+                .card-header {
+                    background-color: #037C79 !important;
+                    -webkit-print-color-adjust: exact;
+                    print-color-adjust: exact;
+                }
+                .card-footer {
+                    background-color: #0CC !important;
+                    -webkit-print-color-adjust: exact;
+                    print-color-adjust: exact;
+                }
+                @page {
+                    margin: 5mm;
+                    size: A4 landscape;
+                }
+            }
+        `;
+        
+        // Remover estilos anteriores si existen
+        const existingStyles = document.getElementById('dynamic-print-styles');
+        if (existingStyles) {
+            existingStyles.remove();
+        }
+        
+        // Agregar nuevos estilos
+        const styleSheet = document.createElement('style');
+        styleSheet.id = 'dynamic-print-styles';
+        styleSheet.innerHTML = printStyles;
+        document.head.appendChild(styleSheet);
+        
+        // Mostrar información del zoom (opcional)
+        console.log(`Imprimiendo con zoom: ${zoom} para ${<?php echo $productosEnEstaPagina; ?>} productos`);
+        
+        // Ejecutar impresión
+        window.print();
+    }
+    
     // Navegación por teclado
     document.addEventListener('keydown', function(e) {
         if (e.key === 'ArrowLeft') {
@@ -264,21 +344,19 @@ try {
             }
         } else if (e.key === 'p' && (e.ctrlKey || e.metaKey)) {
             e.preventDefault();
-            window.print();
+            imprimirConZoom();
         }
     });
 
-    // Estilos para impresión
-    const style = document.createElement('style');
-    style.innerHTML = `
+    // Estilos base para impresión (sin zoom)
+    const basePrintStyle = document.createElement('style');
+    basePrintStyle.innerHTML = `
         @media print {
             .btn-print, .bi-arrow-left-circle-fill {
                 display: none !important;
             }
             body {
                 background: white !important;
-                padding: 0 !important;
-                margin: 0 !important;
             }
             .card {
                 break-inside: avoid;
@@ -293,7 +371,7 @@ try {
             }
         }
     `;
-    document.head.appendChild(style);
+    document.head.appendChild(basePrintStyle);
 </script> 
 
 </body>
