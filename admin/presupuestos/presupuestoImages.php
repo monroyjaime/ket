@@ -14,9 +14,9 @@ $tags = '';
 $numValery = '';
 
 try {
-    // Validar y sanitizar parámetros GET - CORREGIR: usar 'pres_num'
+    // Validar y sanitizar parámetros GET
     $role = isset($_GET['role_num']) ? intval($_GET['role_num']) : -1;
-    $presupuestoId = isset($_GET['pres_num']) ? intval($_GET['pres_num']) : 0; // CORREGIDO: 'pres_num'
+    $presupuestoId = isset($_GET['pres_num']) ? intval($_GET['pres_num']) : 0;
     $pageNum = isset($_GET['page_num']) ? intval($_GET['page_num']) : 1;
     
     // Validar parámetros requeridos
@@ -175,10 +175,10 @@ try {
     <meta name="viewport" content="initial-scale=1, maximum-scale=1">
     <title>Imágenes del Presupuesto <?php echo htmlspecialchars($numValery); ?> - KET Electropartes</title>
     <link rel="Shortcut Icon" href="../favicon.ico" type="image/x-icon" />
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-KK94CHFLLe+nY2dmCWGMq91rCGa5gtU4mk92HdvYe+M/SXH301p5ILy+dN9+nJOZ" crossorigin="anonymous">		
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">  
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ENjdO4Dr2bkBIFxQpeoTz1HIcje39Wm4jDKdf19U8gI4ddQ3YGNS7NTKfAdVQSZe" crossorigin="anonymous"></script>        
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"></script>        
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
 
     <style>
@@ -245,13 +245,19 @@ try {
 </div>
 
 <script>
+    // VARIABLES GLOBALES PARA EVITAR ERROR
+    const productosEnPagina = <?php echo $productosEnEstaPagina; ?>;
+    const presupuestoId = <?php echo $presupuestoId; ?>;
+    const currentPage = <?php echo $pageNum; ?>;
+    const totalPages = <?php echo $numPages; ?>;
+
     function backHome() {      
         window.location.href = "../index.php";
     }
     
     // Función para calcular el zoom automáticamente basado en el número de productos
     function calcularZoom() {
-        const productosEnPagina = <?php echo $productosEnEstaPagina; ?>;
+        console.log('Calculando zoom para:', productosEnPagina, 'productos');
         
         // Lógica de zoom optimizada para una sola página
         if (productosEnPagina <= 4) {
@@ -267,107 +273,105 @@ try {
     
     // Función de impresión con zoom automático para una sola página
     function imprimirConZoom() {
-        const zoom = calcularZoom();
-        const escala = zoom;
-        
-        // Crear estilos de impresión dinámicos para una sola página
-        const printStyles = `
-            @media print {
-                .btn-print, .bi-arrow-left-circle-fill {
-                    display: none !important;
+        try {
+            const zoom = calcularZoom();
+            const escala = zoom;
+            
+            console.log(`Aplicando zoom: ${Math.round(escala * 100)}% para ${productosEnPagina} productos`);
+
+            // Crear estilos de impresión dinámicos para una sola página
+            const printStyles = `
+                @media print {
+                    .btn-print, .bi-arrow-left-circle-fill {
+                        display: none !important;
+                    }
+                    
+                    /* Contenedor principal con escala */
+                    body {
+                        background: white !important;
+                        padding: 0 !important;
+                        margin: 0 !important;
+                        transform: scale(${escala});
+                        transform-origin: top left;
+                        width: ${100 / escala}vw;
+                        height: ${100 / escala}vh;
+                    }
+                    
+                    /* Asegurar que todo el contenido quede en una página */
+                    #productos {
+                        page-break-inside: avoid;
+                    }
+                    
+                    .card {
+                        page-break-inside: avoid;
+                    }
+                    
+                    .card-header {
+                        background-color: #037C79 !important;
+                        -webkit-print-color-adjust: exact;
+                        print-color-adjust: exact;
+                    }
+                    
+                    .card-footer {
+                        background-color: #0CC !important;
+                        -webkit-print-color-adjust: exact;
+                        print-color-adjust: exact;
+                    }
+                    
+                    /* Configurar página para una sola hoja */
+                    @page {
+                        margin: 10mm;
+                        size: A4 landscape;
+                    }
+                    
+                    /* Forzar una sola página */
+                    html, body {
+                        height: 100%;
+                        overflow: hidden;
+                    }
                 }
-                
-                /* Contenedor principal con escala */
-                body {
-                    background: white !important;
-                    padding: 0 !important;
-                    margin: 0 !important;
-                    transform: scale(${escala});
-                    transform-origin: top left;
-                    width: ${100 / escala}vw;
-                    height: ${100 / escala}vh;
-                }
-                
-                /* Asegurar que todo el contenido quede en una página */
-                #productos {
-                    page-break-inside: avoid;
-                }
-                
-                .card {
-                    page-break-inside: avoid;
-                }
-                
-                .card-header {
-                    background-color: #037C79 !important;
-                    -webkit-print-color-adjust: exact;
-                    print-color-adjust: exact;
-                }
-                
-                .card-footer {
-                    background-color: #0CC !important;
-                    -webkit-print-color-adjust: exact;
-                    print-color-adjust: exact;
-                }
-                
-                /* Configurar página para una sola hoja */
-                @page {
-                    margin: 10mm;
-                    size: A4 landscape;
-                }
-                
-                /* Forzar una sola página */
-                html, body {
-                    height: 100%;
-                    overflow: hidden;
-                }
+            `;
+            
+            // Remover estilos anteriores si existen
+            const existingStyles = document.getElementById('dynamic-print-styles');
+            if (existingStyles) {
+                existingStyles.remove();
             }
-        `;
-        
-        // Remover estilos anteriores si existen
-        const existingStyles = document.getElementById('dynamic-print-styles');
-        if (existingStyles) {
-            existingStyles.remove();
-        }
-        
-        // Agregar nuevos estilos
-        const styleSheet = document.createElement('style');
-        styleSheet.id = 'dynamic-print-styles';
-        styleSheet.innerHTML = printStyles;
-        document.head.appendChild(styleSheet);
-        
-        // Mostrar información del zoom
-        console.log(`Imprimiendo con zoom: ${Math.round(escala * 100)}% para ${productosEnPagina} productos`);
-        
-        // Pequeño delay para asegurar que los estilos se apliquen
-        setTimeout(() => {
-            window.print();
             
-            // Restaurar estilos después de imprimir (opcional)
+            // Agregar nuevos estilos
+            const styleSheet = document.createElement('style');
+            styleSheet.id = 'dynamic-print-styles';
+            styleSheet.innerHTML = printStyles;
+            document.head.appendChild(styleSheet);
+            
+            // Pequeño delay para asegurar que los estilos se apliquen
             setTimeout(() => {
-                const styles = document.getElementById('dynamic-print-styles');
-                if (styles) styles.remove();
-            }, 1000);
-            
-        }, 200);
-    }
-    
-    // Versión simple sin zoom (para comparación)
-    function imprimirNormal() {
-        window.print();
+                window.print();
+                
+                // Restaurar estilos después de imprimir
+                setTimeout(() => {
+                    const styles = document.getElementById('dynamic-print-styles');
+                    if (styles) styles.remove();
+                }, 1000);
+                
+            }, 200);
+
+        } catch (error) {
+            console.error('Error en imprimirConZoom:', error);
+            // Fallback: impresión normal si hay error
+            window.print();
+        }
     }
     
     // Navegación por teclado
     document.addEventListener('keydown', function(e) {
         if (e.key === 'ArrowLeft') {
-            const currentPage = <?php echo $pageNum; ?>;
             if (currentPage > 1) {
-                window.location.href = `?pres_num=<?php echo $presupuestoId; ?>&page_num=${currentPage - 1}`;
+                window.location.href = `?pres_num=${presupuestoId}&page_num=${currentPage - 1}`;
             }
         } else if (e.key === 'ArrowRight') {
-            const currentPage = <?php echo $pageNum; ?>;
-            const totalPages = <?php echo $numPages; ?>;
             if (currentPage < totalPages) {
-                window.location.href = `?pres_num=<?php echo $presupuestoId; ?>&page_num=${currentPage + 1}`;
+                window.location.href = `?pres_num=${presupuestoId}&page_num=${currentPage + 1}`;
             }
         } else if (e.key === 'p' && (e.ctrlKey || e.metaKey)) {
             e.preventDefault();
@@ -403,6 +407,14 @@ try {
         }
     `;
     document.head.appendChild(basePrintStyle);
+
+    // Debug inicial
+    console.log('Página cargada:', {
+        productosEnPagina: productosEnPagina,
+        presupuestoId: presupuestoId,
+        currentPage: currentPage,
+        totalPages: totalPages
+    });
 </script> 
 
 </body>
