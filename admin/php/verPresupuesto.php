@@ -383,6 +383,9 @@ try {
             <button class="btn btn-primary" onclick="window.print()">🖨️ Imprimir PDF</button>
             <button class="btn btn-secondary" onclick="window.history.back()">← Volver</button>
             <a href="index.php" class="btn btn-success">🏠 Ir al Inicio</a>
+            <a href="../presupuestos/presupuestoImages.php?pres_num=<?php echo $presupuesto->idx; ?>" class="btn btn-info">
+                <i class="bi bi-images"></i> Ver Imágenes
+            </a>
         </div>
     </div>
 
