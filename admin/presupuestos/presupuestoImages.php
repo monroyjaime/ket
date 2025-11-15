@@ -30,8 +30,8 @@ try {
     // Usar DBAsync en lugar de DB
     $db = new DBAsync();
     
-    // Consulta corregida
-    $query = "SELECT a.product_code, CONCAT(b.img_route, c.photo_url) AS img_full_route 
+    // CONSULTA MEJORADA - Agregar campo name (descripción)
+    $query = "SELECT a.product_code, c.name as product_name, CONCAT(b.img_route, c.photo_url) AS img_full_route 
               FROM presupuesto_detail a 
               INNER JOIN productos c ON a.product_code = c.code
               INNER JOIN departamentos b ON b.id = c.dpto_id
@@ -48,7 +48,8 @@ try {
     // Procesar resultados
     foreach ($consult as $value) {
         $productVal = new stdClass();
-        $productVal->code = htmlspecialchars($value->code ?? '', ENT_QUOTES, 'UTF-8');
+        $productVal->code = htmlspecialchars($value->product_code ?? '', ENT_QUOTES, 'UTF-8');
+        $productVal->name = htmlspecialchars($value->product_name ?? '', ENT_QUOTES, 'UTF-8');
         $productVal->url = htmlspecialchars($value->img_full_route ?? '', ENT_QUOTES, 'UTF-8');
         
         $productVals[] = $productVal;
@@ -82,24 +83,9 @@ try {
     } else {
         $columnasPorFila = 5;  // 5 columnas para 16+ productos
     }
-    
-    // Alternativa más granular (descomenta si prefieres esta):
-    /*
-    if ($productosEnEstaPagina <= 2) {
-        $columnasPorFila = 1;
-    } elseif ($productosEnEstaPagina <= 4) {
-        $columnasPorFila = 2;
-    } elseif ($productosEnEstaPagina <= 6) {
-        $columnasPorFila = 3;
-    } elseif ($productosEnEstaPagina <= 12) {
-        $columnasPorFila = 4;
-    } else {
-        $columnasPorFila = 5;
-    }
-    */
 
     // Construir HTML
-    $tags .= '<div class="col text-center">';
+    $tags .= '<div class="col text-center mb-4">';
     $tags .= '<h2>Catálogo de Imágenes (Pag. ' . htmlspecialchars($pageNum) . ' / ' . htmlspecialchars($numPages) . ')</h2>';
     $tags .= '<p class="text-muted">Mostrando ' . $productosEnEstaPagina . ' productos en ' . $columnasPorFila . ' columnas por fila</p>';
     $tags .= '</div>';
@@ -118,6 +104,7 @@ try {
         }
         
         $productVal_code = $productVals[$i]->code;
+        $productVal_name = $productVals[$i]->name;
         $productVal_url = $productVals[$i]->url;
 
         // Validar que la URL de la imagen no esté vacía
@@ -126,15 +113,34 @@ try {
         // Ajustar altura de imagen basado en número de columnas
         $alturaImagen = $columnasPorFila >= 4 ? '180px' : '220px';
         
+        // Limitar longitud de la descripción para no romper el layout
+        $descripcionCorta = strlen($productVal_name) > 60 ? 
+            substr($productVal_name, 0, 57) . '...' : 
+            $productVal_name;
+        
         $tags .= '<div class="col">';
         $tags .= '<div class="card h-100 text-bg-light shadow-sm">';
-        $tags .= '<div class="card-header text-center" style="background-color: #037C79;">';
-        $tags .= '<h5 style="color: #FFF; margin: 0; font-size: ' . ($columnasPorFila >= 4 ? '0.9rem' : '1rem') . ';">' . $productVal_code . '</h5>';
+        
+        // HEADER - Código del producto
+        $tags .= '<div class="card-header text-center" style="background-color: #037C79; padding: 8px;">';
+        $tags .= '<h6 style="color: #FFF; margin: 0; font-weight: bold; font-size: ' . ($columnasPorFila >= 4 ? '0.85rem' : '0.9rem') . ';">' . $productVal_code . '</h6>';
         $tags .= '</div>';
+        
+        // IMAGEN
         $tags .= '<img src="' . $imageUrl . '" class="card-img-top" alt="' . $productVal_code . '" loading="lazy" style="height: ' . $alturaImagen . '; object-fit: contain; padding: 10px;">';
-        $tags .= '<div class="card-body text-center" style="background-color: #0CC; padding: 10px;">';
-        $tags .= '<small class="card-text">' . $productVal_code . '</small>';
+        
+        // BODY - Descripción del producto
+        $tags .= '<div class="card-body text-center" style="padding: 12px; background-color: #f8f9fa;">';
+        $tags .= '<p class="card-text" style="font-size: 0.8rem; margin: 0; line-height: 1.3;" title="' . $productVal_name . '">';
+        $tags .= $descripcionCorta;
+        $tags .= '</p>';
         $tags .= '</div>';
+        
+        // FOOTER - Código nuevamente (opcional)
+        $tags .= '<div class="card-footer text-center" style="background-color: #0CC; padding: 6px;">';
+        $tags .= '<small class="text-muted" style="font-weight: bold;">' . $productVal_code . '</small>';
+        $tags .= '</div>';
+        
         $tags .= '</div>';
         $tags .= '</div>';
     }
@@ -162,7 +168,7 @@ try {
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-KK94CHFLLe+nY2dmCWGMq91rCGa5gtU4mk92HdvYe+M/SXH301p5ILy+dN9+nJOZ" crossorigin="anonymous">		
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">  
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ENjdO4Dr2bkBIFxQpeoTz1HIcje39Wm4jDKdf19U8gI4ddQ3GYNS7NTKfAdVQSZe" crossorigin="anonymous"></script>        
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ENjdO4Dr2bkBIFxQpeoTz1HIcje39Wm4jDKdf19U8gI4ddQ3YGNS7NTKfAdVQSZe" crossorigin="anonymous"></script>        
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
 
     <style>
@@ -180,6 +186,12 @@ try {
         }
         .card-img-top {
             background-color: #f8f9fa;
+        }
+        .card-header {
+            border-bottom: 2px solid #025a57;
+        }
+        .card-footer {
+            border-top: 1px solid #009999;
         }
     </style>
 </head>
