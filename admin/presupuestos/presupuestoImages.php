@@ -226,11 +226,9 @@ try {
             </a>
         </div>    
         
-        <div class="col text-center" style="max-height: 40px; padding-bottom: 14px; padding-top: 1px;">
-            <button class="btn btn-print btn-sm" onclick="imprimirConZoom()" title="Imprimir PDF">
-                <i class="bi bi-printer-fill"></i> Imprimir PDF
-            </button>
-        </div>
+        <button class="btn btn-print btn-sm" onclick="imprimirPDF()" title="Imprimir PDF">
+            <i class="bi bi-printer-fill"></i> Imprimir PDF
+        </button>
         
         <div class="col text-end" style="max-height: 40px;">
             <img src="../../catalogo/images/logoMini.png" class="img-fluid" alt="logo" />
@@ -245,7 +243,7 @@ try {
 </div>
 
 <script>
-    // VARIABLES GLOBALES PARA EVITAR ERROR
+    // VARIABLES GLOBALES
     const productosEnPagina = <?php echo $productosEnEstaPagina; ?>;
     const presupuestoId = <?php echo $presupuestoId; ?>;
     const currentPage = <?php echo $pageNum; ?>;
@@ -255,134 +253,9 @@ try {
         window.location.href = "../index.php";
     }
     
-    // Función para calcular el zoom automáticamente basado en el número de productos
-    function calcularZoom() {
-        console.log('Calculando zoom para:', productosEnPagina, 'productos');
-        
-        // Lógica de zoom optimizada para portrait
-        if (productosEnPagina <= 4) {
-            return 1.0;   // 100% - imágenes grandes
-        } else if (productosEnPagina <= 9) {
-            return 0.9;   // 90% - buen balance
-        } else if (productosEnPagina <= 16) {
-            return 0.75;  // 75% - compacto pero legible
-        } else {
-            return 0.6;   // 60% - máximo compacto para 17-25 productos
-        }
-    }
-    
-    // Función de impresión con zoom automático
-    function imprimirConZoom() {
-        try {
-            const zoom = calcularZoom();
-            
-            console.log(`Aplicando zoom: ${Math.round(zoom * 100)}% para ${productosEnPagina} productos`);
-
-            // Crear estilos de impresión dinámicos
-            const printStyles = `
-                @media print {
-                    .btn-print, .bi-arrow-left-circle-fill {
-                        display: none !important;
-                    }
-                    
-                    /* Reset completo para impresión */
-                    * {
-                        box-sizing: border-box;
-                    }
-                    
-                    body {
-                        background: white !important;
-                        padding: 5mm !important;
-                        margin: 0 !important;
-                        width: 100% !important;
-                        height: 100% !important;
-                        transform: scale(${zoom});
-                        transform-origin: top left;
-                    }
-                    
-                    .container-fluid, .container {
-                        width: 100% !important;
-                        max-width: 100% !important;
-                        padding: 0 !important;
-                        margin: 0 !important;
-                    }
-                    
-                    #productos {
-                        width: 100% !important;
-                        page-break-inside: avoid;
-                    }
-                    
-                    .card {
-                        page-break-inside: avoid;
-                        break-inside: avoid;
-                    }
-                    
-                    .card-header {
-                        background-color: #037C79 !important;
-                        -webkit-print-color-adjust: exact;
-                        print-color-adjust: exact;
-                    }
-                    
-                    .card-footer {
-                        background-color: #0CC !important;
-                        -webkit-print-color-adjust: exact;
-                        print-color-adjust: exact;
-                    }
-                    
-                    /* Configurar página para portrait */
-                    @page {
-                        margin: 10mm;
-                        size: A4 portrait;
-                    }
-                    
-                    /* Forzar una sola página */
-                    html, body {
-                        height: 297mm; /* Altura A4 */
-                        overflow: hidden !important;
-                    }
-                }
-            `;
-            
-            // Remover estilos anteriores si existen
-            const existingStyles = document.getElementById('dynamic-print-styles');
-            if (existingStyles) {
-                existingStyles.remove();
-            }
-            
-            // Agregar nuevos estilos
-            const styleSheet = document.createElement('style');
-            styleSheet.id = 'dynamic-print-styles';
-            styleSheet.innerHTML = printStyles;
-            document.head.appendChild(styleSheet);
-            
-            console.log('Estilos de impresión aplicados, iniciando impresión...');
-            
-            // Pequeño delay para asegurar que los estilos se apliquen
-            setTimeout(() => {
-                window.print();
-                
-                // Limpiar estilos después de imprimir
-                setTimeout(() => {
-                    const styles = document.getElementById('dynamic-print-styles');
-                    if (styles) {
-                        styles.remove();
-                        console.log('Estilos de impresión removidos');
-                    }
-                }, 2000);
-                
-            }, 500);
-
-        } catch (error) {
-            console.error('Error en imprimirConZoom:', error);
-            // Fallback: impresión normal si hay error
-            alert('Error al aplicar zoom, usando impresión normal...');
-            window.print();
-        }
-    }
-    
-    // Función alternativa para probar sin zoom
-    function imprimirNormal() {
-        console.log('Impresión normal sin zoom');
+    // Función de impresión simple
+    function imprimirPDF() {
+        console.log(`Imprimiendo ${productosEnPagina} productos del presupuesto ${presupuestoId}`);
         window.print();
     }
     
@@ -398,13 +271,13 @@ try {
             }
         } else if (e.key === 'p' && (e.ctrlKey || e.metaKey)) {
             e.preventDefault();
-            imprimirConZoom();
+            imprimirPDF();
         }
     });
 
-    // Estilos base para impresión (sin zoom - como fallback)
-    const basePrintStyle = document.createElement('style');
-    basePrintStyle.innerHTML = `
+    // Estilos para impresión
+    const printStyle = document.createElement('style');
+    printStyle.innerHTML = `
         @media print {
             .btn-print, .bi-arrow-left-circle-fill {
                 display: none !important;
@@ -415,14 +288,17 @@ try {
             }
             .card {
                 break-inside: avoid;
+                page-break-inside: avoid;
             }
             .card-header {
                 background-color: #037C79 !important;
                 -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
             }
             .card-footer {
                 background-color: #0CC !important;
                 -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
             }
             @page {
                 margin: 10mm;
@@ -430,29 +306,13 @@ try {
             }
         }
     `;
-    document.head.appendChild(basePrintStyle);
+    document.head.appendChild(printStyle);
 
     // Debug inicial
     console.log('Página cargada:', {
-        productosEnPagina: productosEnPagina,
-        presupuestoId: presupuestoId,
-        currentPage: currentPage,
-        totalPages: totalPages,
-        zoomRecomendado: `${Math.round(calcularZoom() * 100)}%`
-    });
-    
-    // Agregar botón alternativo para testing (opcional)
-    document.addEventListener('DOMContentLoaded', function() {
-        const botonNormal = document.createElement('button');
-        botonNormal.className = 'btn btn-secondary btn-sm ms-2';
-        botonNormal.innerHTML = '<i class="bi bi-printer"></i> Sin Zoom';
-        botonNormal.onclick = imprimirNormal;
-        botonNormal.title = 'Imprimir sin zoom (para testing)';
-        
-        const contenedorBotones = document.querySelector('.col.text-center');
-        if (contenedorBotones) {
-            contenedorBotones.appendChild(botonNormal);
-        }
+        productos: productosEnPagina,
+        presupuesto: presupuestoId,
+        pagina: `${currentPage}/${totalPages}`
     });
 </script> 
 
