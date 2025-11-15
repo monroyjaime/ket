@@ -11,6 +11,7 @@ $pageNum = 1;
 $productVals = [];
 $numProducts = 0;
 $tags = '';
+$numValery = '';
 
 try {
     // Validar y sanitizar parámetros GET
@@ -30,7 +31,17 @@ try {
     // Usar DBAsync en lugar de DB
     $db = new DBAsync();
     
-    // Consulta mejorada - Agregar campo name (descripción)
+    // OBTENER EL NÚMERO REAL DEL PRESUPUESTO (num_valery)
+    $queryPresupuesto = "SELECT num_valery FROM presupuesto_gen WHERE idx = $1";
+    $resultPresupuesto = $db->consultaSegura($queryPresupuesto, [$presupuestoId]);
+    
+    if (empty($resultPresupuesto)) {
+        throw new Exception('Presupuesto no encontrado');
+    }
+    
+    $numValery = $resultPresupuesto[0]->num_valery ?? $presupuestoId;
+    
+    // Consulta para obtener las imágenes de los productos
     $query = "SELECT a.product_code, c.name as product_name, CONCAT(b.img_route, c.photo_url) AS img_full_route 
               FROM presupuesto_detail a 
               INNER JOIN productos c ON a.product_code = c.code
@@ -86,7 +97,7 @@ try {
 
     // Construir HTML
     $tags .= '<div class="col text-center mb-4">';
-    $tags .= '<h2>Imágenes del Pedido ' . htmlspecialchars($presupuestoId) . '</h2>';
+    $tags .= '<h2>Imágenes del Presupuesto ' . htmlspecialchars($numValery) . '</h2>';
     if ($numPages > 1) {
         $tags .= '<p class="text-muted">Página ' . htmlspecialchars($pageNum) . ' de ' . htmlspecialchars($numPages) . '</p>';
     }
@@ -162,7 +173,7 @@ try {
 <head>
     <meta charset="utf-8"/>
     <meta name="viewport" content="initial-scale=1, maximum-scale=1">
-    <title>Imágenes del Pedido <?php echo htmlspecialchars($presupuestoId); ?> - KET Electropartes</title>
+    <title>Imágenes del Presupuesto <?php echo htmlspecialchars($numValery); ?> - KET Electropartes</title>
     <link rel="Shortcut Icon" href="../favicon.ico" type="image/x-icon" />
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-KK94CHFLLe+nY2dmCWGMq91rCGa5gtU4mk92HdvYe+M/SXH301p5ILy+dN9+nJOZ" crossorigin="anonymous">		
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">  
