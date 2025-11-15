@@ -14,9 +14,9 @@ $tags = '';
 $numValery = '';
 
 try {
-    // Validar y sanitizar parámetros GET
+    // Validar y sanitizar parámetros GET - CORREGIR: usar 'pres_num'
     $role = isset($_GET['role_num']) ? intval($_GET['role_num']) : -1;
-    $presupuestoId = isset($_GET['pres_num']) ? intval($_GET['presupuestoId']) : 0;
+    $presupuestoId = isset($_GET['pres_num']) ? intval($_GET['pres_num']) : 0; // CORREGIDO: 'pres_num'
     $pageNum = isset($_GET['page_num']) ? intval($_GET['page_num']) : 1;
     
     // Validar parámetros requeridos
