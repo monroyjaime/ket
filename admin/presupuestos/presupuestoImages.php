@@ -3,7 +3,6 @@ ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
-// CORREGIR: Usar ruta relativa en lugar de URL HTTP
 require_once("../../php/dbcat_async.php");
 
 $role = -1;
@@ -31,7 +30,7 @@ try {
     // Usar DBAsync en lugar de DB
     $db = new DBAsync();
     
-    // CONSULTA CORREGIDA - Orden correcto de JOINs
+    // Consulta corregida
     $query = "SELECT a.product_code, CONCAT(b.img_route, c.photo_url) AS img_full_route 
               FROM presupuesto_detail a 
               INNER JOIN productos c ON a.product_code = c.code
@@ -61,21 +60,52 @@ try {
     
     // Validar que la página solicitada existe
     if ($pageNum > $numPages && $numPages > 0) {
-        $pageNum = $numPages; // Ir a la última página disponible
+        $pageNum = $numPages;
     }
     
     $lastPageProdNum = ($pageNum == $numPages) ? 
         25 - (($numPages * 25 - $numProducts)) : 
         24;
     
-    // Asegurar que no exceda el número de productos
     $lastPageProdNum = min($lastPageProdNum, 24);
+
+    // CALCULAR COLUMNAS INTELIGENTES
+    $productosEnEstaPagina = min(25, $numProducts - (($pageNum - 1) * 25));
+    
+    // Determinar número de columnas basado en cantidad de productos
+    if ($productosEnEstaPagina <= 4) {
+        $columnasPorFila = 2;  // 2 columnas para 4 productos o menos
+    } elseif ($productosEnEstaPagina <= 8) {
+        $columnasPorFila = 3;  // 3 columnas para 5-8 productos
+    } elseif ($productosEnEstaPagina <= 15) {
+        $columnasPorFila = 4;  // 4 columnas para 9-15 productos
+    } else {
+        $columnasPorFila = 5;  // 5 columnas para 16+ productos
+    }
+    
+    // Alternativa más granular (descomenta si prefieres esta):
+    /*
+    if ($productosEnEstaPagina <= 2) {
+        $columnasPorFila = 1;
+    } elseif ($productosEnEstaPagina <= 4) {
+        $columnasPorFila = 2;
+    } elseif ($productosEnEstaPagina <= 6) {
+        $columnasPorFila = 3;
+    } elseif ($productosEnEstaPagina <= 12) {
+        $columnasPorFila = 4;
+    } else {
+        $columnasPorFila = 5;
+    }
+    */
 
     // Construir HTML
     $tags .= '<div class="col text-center">';
     $tags .= '<h2>Catálogo de Imágenes (Pag. ' . htmlspecialchars($pageNum) . ' / ' . htmlspecialchars($numPages) . ')</h2>';
+    $tags .= '<p class="text-muted">Mostrando ' . $productosEnEstaPagina . ' productos en ' . $columnasPorFila . ' columnas por fila</p>';
     $tags .= '</div>';
-    $tags .= '<div class="row row-cols-1 row-cols-sm-5 g-5">';
+    
+    // Grid adaptable
+    $tags .= '<div class="row row-cols-1 row-cols-sm-' . $columnasPorFila . ' g-4">';
 
     // Calcular rangos para la paginación
     $currRangeFrom = ($pageNum - 1) * 25;
@@ -84,7 +114,7 @@ try {
     // Generar tarjetas de productos
     for ($i = $currRangeFrom; $i <= $currRangeTo; $i++) {
         if (!isset($productVals[$i])) {
-            continue; // Saltar si no existe el índice
+            continue;
         }
         
         $productVal_code = $productVals[$i]->code;
@@ -93,14 +123,17 @@ try {
         // Validar que la URL de la imagen no esté vacía
         $imageUrl = !empty($productVal_url) ? $productVal_url : '../catalogo/images/empty.jpg';
         
-        $tags .= '<div class="col" style="background-color: #DDD;">';
-        $tags .= '<div class="card h-100 text-bg-light">';
-        $tags .= '<div class="card-header" style="background-color: #037C79;">';
-        $tags .= '<h3 style="color: #FFF;">' . $productVal_code . '</h3>';
+        // Ajustar altura de imagen basado en número de columnas
+        $alturaImagen = $columnasPorFila >= 4 ? '180px' : '220px';
+        
+        $tags .= '<div class="col">';
+        $tags .= '<div class="card h-100 text-bg-light shadow-sm">';
+        $tags .= '<div class="card-header text-center" style="background-color: #037C79;">';
+        $tags .= '<h5 style="color: #FFF; margin: 0; font-size: ' . ($columnasPorFila >= 4 ? '0.9rem' : '1rem') . ';">' . $productVal_code . '</h5>';
         $tags .= '</div>';
-        $tags .= '<img src="' . $imageUrl . '" class="card-img-top" alt="' . $productVal_code . '" loading="lazy" style="height: 200px; object-fit: contain;">';
-        $tags .= '<div class="card-body" style="background-color: #0CC;">';
-        $tags .= '<h6 class="card-text">' . $productVal_code . '</h6>';
+        $tags .= '<img src="' . $imageUrl . '" class="card-img-top" alt="' . $productVal_code . '" loading="lazy" style="height: ' . $alturaImagen . '; object-fit: contain; padding: 10px;">';
+        $tags .= '<div class="card-body text-center" style="background-color: #0CC; padding: 10px;">';
+        $tags .= '<small class="card-text">' . $productVal_code . '</small>';
         $tags .= '</div>';
         $tags .= '</div>';
         $tags .= '</div>';
@@ -109,7 +142,6 @@ try {
     $tags .= '</div>';
 
 } catch (Exception $e) {
-    // Manejo de errores
     error_log("Error en presupuestoImages.php: " . $e->getMessage());
     
     $tags = '<div class="alert alert-danger text-center">';
@@ -129,7 +161,6 @@ try {
     <link rel="Shortcut Icon" href="../favicon.ico" type="image/x-icon" />
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-KK94CHFLLe+nY2dmCWGMq91rCGa5gtU4mk92HdvYe+M/SXH301p5ILy+dN9+nJOZ" crossorigin="anonymous">		
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">  
-    <link rel="stylesheet" href="css/non-responsive.css">  
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ENjdO4Dr2bkBIFxQpeoTz1HIcje39Wm4jDKdf19U8gI4ddQ3GYNS7NTKfAdVQSZe" crossorigin="anonymous"></script>        
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
@@ -141,9 +172,13 @@ try {
         .icon-dark-blue{
             color: #003272;
         }
+        .card {
+            transition: transform 0.2s;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+        }
         .card-img-top {
-            height: 200px;
-            object-fit: contain;
             background-color: #f8f9fa;
         }
     </style>
@@ -183,13 +218,11 @@ try {
     // Navegación por teclado
     document.addEventListener('keydown', function(e) {
         if (e.key === 'ArrowLeft') {
-            // Navegar a página anterior si existe
             const currentPage = <?php echo $pageNum; ?>;
             if (currentPage > 1) {
                 window.location.href = `?pres_num=<?php echo $presupuestoId; ?>&page_num=${currentPage - 1}`;
             }
         } else if (e.key === 'ArrowRight') {
-            // Navegar a página siguiente si existe
             const currentPage = <?php echo $pageNum; ?>;
             const totalPages = <?php echo $numPages; ?>;
             if (currentPage < totalPages) {
