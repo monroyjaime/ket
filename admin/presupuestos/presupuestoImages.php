@@ -30,7 +30,7 @@ try {
     // Usar DBAsync en lugar de DB
     $db = new DBAsync();
     
-    // CONSULTA MEJORADA - Agregar campo name (descripción)
+    // Consulta mejorada - Agregar campo name (descripción)
     $query = "SELECT a.product_code, c.name as product_name, CONCAT(b.img_route, c.photo_url) AS img_full_route 
               FROM presupuesto_detail a 
               INNER JOIN productos c ON a.product_code = c.code
@@ -86,8 +86,10 @@ try {
 
     // Construir HTML
     $tags .= '<div class="col text-center mb-4">';
-    $tags .= '<h2>Catálogo de Imágenes (Pag. ' . htmlspecialchars($pageNum) . ' / ' . htmlspecialchars($numPages) . ')</h2>';
-    $tags .= '<p class="text-muted">Mostrando ' . $productosEnEstaPagina . ' productos en ' . $columnasPorFila . ' columnas por fila</p>';
+    $tags .= '<h2>Imágenes del Pedido ' . htmlspecialchars($presupuestoId) . '</h2>';
+    if ($numPages > 1) {
+        $tags .= '<p class="text-muted">Página ' . htmlspecialchars($pageNum) . ' de ' . htmlspecialchars($numPages) . '</p>';
+    }
     $tags .= '</div>';
     
     // Grid adaptable
@@ -108,7 +110,7 @@ try {
         $productVal_url = $productVals[$i]->url;
 
         // Validar que la URL de la imagen no esté vacía
-        $imageUrl = !empty($productVal_url) ? $productVal_url : '../catalogo/images/empty.jpg';
+        $imageUrl = !empty($productVal_url) ? $productVal_url : '../../catalogo/images/empty.jpg';
         
         // Ajustar altura de imagen basado en número de columnas
         $alturaImagen = $columnasPorFila >= 4 ? '180px' : '220px';
@@ -121,24 +123,21 @@ try {
         $tags .= '<div class="col">';
         $tags .= '<div class="card h-100 text-bg-light shadow-sm">';
         
-        // HEADER - Código del producto
-        $tags .= '<div class="card-header text-center" style="background-color: #037C79; padding: 8px;">';
-        $tags .= '<h6 style="color: #FFF; margin: 0; font-weight: bold; font-size: ' . ($columnasPorFila >= 4 ? '0.85rem' : '0.9rem') . ';">' . $productVal_code . '</h6>';
+        // HEADER - Código del producto (más grande)
+        $tags .= '<div class="card-header text-center" style="background-color: #037C79; padding: 10px;">';
+        $tags .= '<h5 style="color: #FFF; margin: 0; font-weight: bold;">' . $productVal_code . '</h5>';
         $tags .= '</div>';
         
-        // IMAGEN
-        $tags .= '<img src="' . $imageUrl . '" class="card-img-top" alt="' . $productVal_code . '" loading="lazy" style="height: ' . $alturaImagen . '; object-fit: contain; padding: 10px;">';
+        // BODY - Solo la imagen
+        $tags .= '<div class="card-body d-flex align-items-center justify-content-center" style="padding: 15px; background-color: #f8f9fa; min-height: ' . $alturaImagen . ';">';
+        $tags .= '<img src="' . $imageUrl . '" class="card-img-top" alt="' . $productVal_code . '" loading="lazy" style="max-height: ' . $alturaImagen . '; width: auto; max-width: 100%; object-fit: contain;">';
+        $tags .= '</div>';
         
-        // BODY - Descripción del producto
-        $tags .= '<div class="card-body text-center" style="padding: 12px; background-color: #f8f9fa;">';
-        $tags .= '<p class="card-text" style="font-size: 0.8rem; margin: 0; line-height: 1.3;" title="' . $productVal_name . '">';
+        // FOOTER - Descripción del producto
+        $tags .= '<div class="card-footer text-center" style="background-color: #0CC; padding: 10px;">';
+        $tags .= '<p class="card-text" style="font-size: 0.85rem; margin: 0; line-height: 1.3;" title="' . $productVal_name . '">';
         $tags .= $descripcionCorta;
         $tags .= '</p>';
-        $tags .= '</div>';
-        
-        // FOOTER - Código nuevamente (opcional)
-        $tags .= '<div class="card-footer text-center" style="background-color: #0CC; padding: 6px;">';
-        $tags .= '<small class="text-muted" style="font-weight: bold;">' . $productVal_code . '</small>';
         $tags .= '</div>';
         
         $tags .= '</div>';
@@ -163,7 +162,7 @@ try {
 <head>
     <meta charset="utf-8"/>
     <meta name="viewport" content="initial-scale=1, maximum-scale=1">
-    <title>Catálogo KET - Presupuesto</title>
+    <title>Imágenes del Pedido <?php echo htmlspecialchars($presupuestoId); ?> - KET Electropartes</title>
     <link rel="Shortcut Icon" href="../favicon.ico" type="image/x-icon" />
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-KK94CHFLLe+nY2dmCWGMq91rCGa5gtU4mk92HdvYe+M/SXH301p5ILy+dN9+nJOZ" crossorigin="anonymous">		
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">  
@@ -178,20 +177,30 @@ try {
         .icon-dark-blue{
             color: #003272;
         }
+        .icon-green {
+            color: #28a745;
+        }
         .card {
             transition: transform 0.2s;
         }
         .card:hover {
             transform: translateY(-5px);
         }
-        .card-img-top {
-            background-color: #f8f9fa;
-        }
         .card-header {
             border-bottom: 2px solid #025a57;
         }
         .card-footer {
             border-top: 1px solid #009999;
+        }
+        .btn-print {
+            background-color: #037C79;
+            border-color: #037C79;
+            color: white;
+        }
+        .btn-print:hover {
+            background-color: #025a57;
+            border-color: #025a57;
+            color: white;
         }
     </style>
 </head>
@@ -207,11 +216,13 @@ try {
         </div>    
         
         <div class="col text-center" style="max-height: 40px; padding-bottom: 14px; padding-top: 1px;">
-            <!-- Espacio para botones si se necesitan -->
+            <button class="btn btn-print btn-sm" onclick="window.print()" title="Imprimir PDF">
+                <i class="bi bi-printer-fill"></i> Imprimir PDF
+            </button>
         </div>
         
         <div class="col text-end" style="max-height: 40px;">
-            <img src="../catalogo/images/logoMini.png" class="img-fluid" alt="logo" />
+            <img src="../../catalogo/images/logoMini.png" class="img-fluid" alt="logo" />
         </div>       
     </div>
 </div>
@@ -240,8 +251,38 @@ try {
             if (currentPage < totalPages) {
                 window.location.href = `?pres_num=<?php echo $presupuestoId; ?>&page_num=${currentPage + 1}`;
             }
+        } else if (e.key === 'p' && (e.ctrlKey || e.metaKey)) {
+            e.preventDefault();
+            window.print();
         }
     });
+
+    // Estilos para impresión
+    const style = document.createElement('style');
+    style.innerHTML = `
+        @media print {
+            .btn-print, .bi-arrow-left-circle-fill {
+                display: none !important;
+            }
+            body {
+                background: white !important;
+                padding: 0 !important;
+                margin: 0 !important;
+            }
+            .card {
+                break-inside: avoid;
+            }
+            .card-header {
+                background-color: #037C79 !important;
+                -webkit-print-color-adjust: exact;
+            }
+            .card-footer {
+                background-color: #0CC !important;
+                -webkit-print-color-adjust: exact;
+            }
+        }
+    `;
+    document.head.appendChild(style);
 </script> 
 
 </body>
