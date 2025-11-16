@@ -225,10 +225,11 @@ try {
                 <i class="bi bi-arrow-left-circle-fill icon-dark-blue icon-large"></i>
             </a>
         </div>    
-        
-        <button class="btn btn-print btn-sm" onclick="imprimirPDF()" title="Imprimir PDF">
+
+        <button class="btn btn-print btn-sm" onclick="imprimirPDF()" title="Imprimir PDF - Sugerencia: Guardar como imagenesPres-<?php echo $numValery; ?>.pdf">
             <i class="bi bi-printer-fill"></i> Imprimir PDF
         </button>
+        <small class="text-muted ms-2">Sugerencia: Guardar como imagenesPres-<?php echo $numValery; ?>.pdf</small>
         
         <div class="col text-end" style="max-height: 40px;">
             <img src="../../catalogo/images/logoMini.png" class="img-fluid" alt="logo" />
@@ -327,6 +328,19 @@ try {
         numValery: numValery,
         pagina: `${currentPage}/${totalPages}`
     });
+
+    function imprimirPDF() {
+        console.log(`Imprimiendo ${productosEnPagina} productos del presupuesto ${presupuestoId}`);
+        
+        // Mostrar mensaje útil al usuario
+        const nombreSugerido = `imagenesPres-${numValery}.pdf`;
+        console.log(`💡 Sugerencia: Guardar como "${nombreSugerido}"`);
+        
+        // Opcional: mostrar alerta (puede ser molesto)
+        // alert(`💡 Sugerencia: Guardar como "${nombreSugerido}"`);
+        
+        window.print();
+    }
 </script> 
 
 </body>
