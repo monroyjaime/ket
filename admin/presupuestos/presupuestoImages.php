@@ -248,15 +248,27 @@ try {
     const presupuestoId = <?php echo $presupuestoId; ?>;
     const currentPage = <?php echo $pageNum; ?>;
     const totalPages = <?php echo $numPages; ?>;
+    const numValery = '<?php echo $numValery; ?>';
 
     function backHome() {      
         window.location.href = "../index.php";
     }
     
-    // Función de impresión simple
+    // Función de impresión con nombre sugerido
     function imprimirPDF() {
         console.log(`Imprimiendo ${productosEnPagina} productos del presupuesto ${presupuestoId}`);
+        
+        // Establecer el título del documento para sugerir nombre de archivo
+        const tituloOriginal = document.title;
+        const nombreArchivo = `imagenesPres-${numValery}`;
+        document.title = nombreArchivo;
+        
         window.print();
+        
+        // Restaurar título original después de imprimir
+        setTimeout(() => {
+            document.title = tituloOriginal;
+        }, 1000);
     }
     
     // Navegación por teclado
@@ -312,6 +324,7 @@ try {
     console.log('Página cargada:', {
         productos: productosEnPagina,
         presupuesto: presupuestoId,
+        numValery: numValery,
         pagina: `${currentPage}/${totalPages}`
     });
 </script> 
