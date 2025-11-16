@@ -253,7 +253,7 @@ try {
     const numValery = '<?php echo $numValery; ?>';
 
     function backHome() {      
-        window.location.href = "../index.php";
+        window.location.href = "index.php";
     }
     
     // Función de impresión con nombre sugerido
