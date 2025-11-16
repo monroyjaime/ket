@@ -1,4 +1,4 @@
-// presupuesto.js - Versión con scrollTo
+// presupuesto.js - Versión con preloader durante actualizaciones
 console.log('✅ presupuesto.js cargado - Márgenes disponibles:', ganancia_min_glob, descuento_max_glob);
 
 // Variables globales
@@ -7,6 +7,50 @@ var $tableMakePedido, ctrlClientSel;
 // Variables para control del scroll
 let filaScrollIndex = 0;
 let codigoProductoScroll = '';
+
+// Función para mostrar/ocultar preloader
+function mostrarPreloader(mostrar) {
+    if (mostrar) {
+        // Crear preloader si no existe
+        if ($('#preloader-tabla').length === 0) {
+            const preloader = `
+                <div id="preloader-tabla" style="
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
+                    background: rgba(255, 255, 255, 0.9);
+                    z-index: 9999;
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                    flex-direction: column;
+                ">
+                    <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;"></div>
+                    <div class="mt-3" style="color: #037C79; font-weight: bold;">Actualizando...</div>
+                </div>
+            `;
+            $('body').append(preloader);
+        } else {
+            $('#preloader-tabla').show();
+        }
+        
+        // Deshabilitar interacciones
+        $('body').css('overflow', 'hidden');
+        $('.precio-radio, .precio-manual-input, .cantidad-input, .tiempo-select').prop('disabled', true);
+        
+    } else {
+        // Ocultar preloader
+        $('#preloader-tabla').fadeOut(300, function() {
+            $(this).remove();
+        });
+        
+        // Rehabilitar interacciones
+        $('body').css('overflow', '');
+        $('.precio-radio, .precio-manual-input, .cantidad-input, .tiempo-select').prop('disabled', false);
+    }
+}
 
 // Función para verificar márgenes
 function verificarMargenPrecio(costo, precio) {
@@ -26,7 +70,7 @@ function verificarMargenPrecio(costo, precio) {
     return { cumpleMargen: cumpleMargen, esCero: false };
 }
 
-// Funciones para control del scroll usando scrollTo
+// Funciones para control del scroll usando scrollTo (SIN animación)
 function guardarPosicionScroll(code) {
     if ($tableMakePedido && $tableMakePedido.length > 0) {
         const rows = $tableMakePedido.bootstrapTable('getData');
@@ -40,39 +84,27 @@ function restaurarPosicionScroll() {
     if ($tableMakePedido && $tableMakePedido.length > 0 && filaScrollIndex >= 0) {
         console.log('🔄 Intentando restaurar a fila:', filaScrollIndex);
         
-        // Estrategia 1: Usar scrollTo si está disponible
+        // Estrategia 1: Usar scrollTo sin animación
         if (typeof $tableMakePedido.bootstrapTable('scrollTo') === 'function') {
             setTimeout(() => {
                 $tableMakePedido.bootstrapTable('scrollTo', { unit: 'rows', value: filaScrollIndex });
                 console.log('✅ ScrollTo ejecutado a fila:', filaScrollIndex);
-            }, 300);
+            }, 100);
         } 
-        // Estrategia 2: Buscar la fila por código y hacer scroll manualmente
+        // Estrategia 2: Buscar la fila por código y hacer scroll instantáneo
         else if (codigoProductoScroll) {
             setTimeout(() => {
                 const rows = $tableMakePedido.bootstrapTable('getData');
                 const currentIndex = rows.findIndex(row => row.code === codigoProductoScroll);
                 if (currentIndex >= 0) {
-                    // Encontrar el elemento TR en el DOM
                     const $fila = $(`tr[data-index="${currentIndex}"]`);
                     if ($fila.length > 0) {
-                        $fila[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        $fila[0].scrollIntoView({ behavior: 'instant', block: 'center' });
                         console.log('✅ Scroll manual a fila:', currentIndex);
                     }
                 }
-            }, 300);
+            }, 100);
         }
-        
-        // Estrategia 3: Fallback - buscar el elemento con clase active o focused
-        setTimeout(() => {
-            if (codigoProductoScroll) {
-                const $fila = $(`input[data-code="${codigoProductoScroll}"]`).closest('tr');
-                if ($fila.length > 0) {
-                    $fila[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    console.log('✅ Scroll por código a producto:', codigoProductoScroll);
-                }
-            }
-        }, 500);
     }
 }
 
@@ -209,16 +241,23 @@ function refreshCarritoTable() {
             $tableMakePedido.one('load-success.bs.table', function() {
                 console.log('✅ Tabla refrescada, restaurando posición...');
                 restaurarPosicionScroll();
-                resolve();
+                setTimeout(() => {
+                    mostrarPreloader(false);
+                    resolve();
+                }, 200);
             });
             
             // Timeout de seguridad por si el evento no se dispara
             setTimeout(() => {
                 console.log('⏰ Timeout de seguridad, restaurando posición...');
                 restaurarPosicionScroll();
-                resolve();
+                setTimeout(() => {
+                    mostrarPreloader(false);
+                    resolve();
+                }, 200);
             }, 1500);
         } else {
+            mostrarPreloader(false);
             resolve();
         }
     });
@@ -241,89 +280,6 @@ function llegandoFormater(value, row) {
     } else {
         return '<span class="badge bg-secondary">0</span>';
     }
-}
-
-function precioOpcionesFormater(value, row) {
-    const precMin = parseFloat(row.prec_min) || 0;
-    const precMay = parseFloat(row.prec_may) || 0;
-    const prec3 = parseFloat(row.prec_3) || 0;
-    const costo = parseFloat(row.costo) || 0;
-    const precioActual = parseFloat(row.precio) || 0;
-    
-    let selectedMin = '';
-    let selectedMay = '';
-    let selected3 = '';
-    
-    if (precioActual === precMin) {
-        selectedMin = 'checked';
-    } else if (precioActual === precMay) {
-        selectedMay = 'checked';
-    } else if (precioActual === prec3) {
-        selected3 = 'checked';
-    }
-    
-    // Verificar márgenes para cada precio
-    const resultadoMin = verificarMargenPrecio(costo, precMin);
-    const resultadoMay = verificarMargenPrecio(costo, precMay);
-    const resultado3 = verificarMargenPrecio(costo, prec3);
-    
-    // Calcular el factor de ganancia actual para cada precio
-    const factorMin = costo > 0 ? (precMin / costo).toFixed(2) : 'N/A';
-    const factorMay = costo > 0 ? (precMay / costo).toFixed(2) : 'N/A';
-    const factor3 = costo > 0 ? (prec3 / costo).toFixed(2) : 'N/A';
-    
-    return `
-        <div class="form-check">
-            <input class="form-check-input precio-radio" type="radio" name="precio_${row.code}" 
-                   value="${precMin}" ${selectedMin} ${!resultadoMin.cumpleMargen ? 'disabled' : ''} onchange="seleccionarPrecio(this, '${row.code}')">
-            <label class="form-check-label small">
-                Precio 1: $${precMin.toFixed(3).replace('.', ',')}
-                ${costo > 0 ? `<span class="badge badge-margen ${resultadoMin.cumpleMargen ? 'bg-success' : 'bg-danger'}">${factorMin}x</span>` : ''}
-                ${!resultadoMin.cumpleMargen && !resultadoMin.esCero ? '<span class="badge bg-danger ms-1">Margen</span>' : ''}
-                ${resultadoMin.esCero ? '<span class="badge bg-secondary ms-1">Cero</span>' : ''}
-            </label>
-        </div>
-        <div class="form-check">
-            <input class="form-check-input precio-radio" type="radio" name="precio_${row.code}" 
-                   value="${precMay}" ${selectedMay} ${!resultadoMay.cumpleMargen ? 'disabled' : ''} onchange="seleccionarPrecio(this, '${row.code}')">
-            <label class="form-check-label small">
-                Precio 2: $${precMay.toFixed(3).replace('.', ',')}
-                ${costo > 0 ? `<span class="badge badge-margen ${resultadoMay.cumpleMargen ? 'bg-success' : 'bg-danger'}">${factorMay}x</span>` : ''}
-                ${!resultadoMay.cumpleMargen && !resultadoMay.esCero ? '<span class="badge bg-danger ms-1">Margen</span>' : ''}
-                ${resultadoMay.esCero ? '<span class="badge bg-secondary ms-1">Cero</span>' : ''}
-            </label>
-        </div>
-        <div class="form-check">
-            <input class="form-check-input precio-radio" type="radio" name="precio_${row.code}" 
-                   value="${prec3}" ${selected3} ${!resultado3.cumpleMargen ? 'disabled' : ''} onchange="seleccionarPrecio(this, '${row.code}')">
-            <label class="form-check-label small">
-                Precio 3: $${prec3.toFixed(3).replace('.', ',')}
-                ${costo > 0 ? `<span class="badge badge-margen ${resultado3.cumpleMargen ? 'bg-success' : 'bg-danger'}">${factor3}x</span>` : ''}
-                ${!resultado3.cumpleMargen && !resultado3.esCero ? '<span class="badge bg-danger ms-1">Margen</span>' : ''}
-                ${resultado3.esCero ? '<span class="badge bg-secondary ms-1">Cero</span>' : ''}
-            </label>
-        </div>
-        <div class="small text-muted mt-1">
-            Costo: $${costo.toFixed(3).replace('.', ',')} | Mínimo requerido: ${ganancia_min_glob}x
-        </div>
-    `;
-}
-
-function precioManualFormater(value, row) {
-    const precioActual = parseFloat(row.precio) || 0;
-    const precMin = parseFloat(row.prec_min) || 0;
-    const precMay = parseFloat(row.prec_may) || 0;
-    
-    const mostrarManual = (precioActual !== precMin && precioActual !== precMay && precioActual > 0);
-    
-    return `
-        <input class="form-control precio-manual-input" type="number" step="0.001" min="0" 
-               value="${mostrarManual ? precioActual : ''}" 
-               data-code="${row.code}" 
-               placeholder="Manual..."
-               onfocus="this.select()" 
-               oninput="actualizarPrecioManual(this)"/>
-    `;
 }
 
 function precioCombinadoFormater(value, row) {
@@ -353,11 +309,6 @@ function precioCombinadoFormater(value, row) {
     const resultadoMin = verificarMargenPrecio(costo, precMin);
     const resultadoMay = verificarMargenPrecio(costo, precMay);
     const resultado3 = verificarMargenPrecio(costo, prec3);
-    
-    // Calcular factores de ganancia
-    const factorMin = costo > 0 ? (precMin / costo).toFixed(2) : 'N/A';
-    const factorMay = costo > 0 ? (precMay / costo).toFixed(2) : 'N/A';
-    const factor3 = costo > 0 ? (prec3 / costo).toFixed(2) : 'N/A';
     
     return `
         <div class="precio-combinado-container">
@@ -485,9 +436,10 @@ function relacionadoFormater(value, row) {
     return '';
 }
 
-// Funciones de interacción del carrito CON CONTROL DE SCROLL MEJORADO
+// Funciones de interacción del carrito CON PRELOADER
 function seleccionarPrecio(radio, code) {
     guardarPosicionScroll(code);
+    mostrarPreloader(true);
     
     const precio = parseFloat(radio.value) || 0;
     $(`.precio-manual-input[data-code="${code}"]`).val(precio);
@@ -501,7 +453,11 @@ function seleccionarPrecio(radio, code) {
                 refreshCarritoTable().then(() => {
                     updateTotal();
                 });
+            } else {
+                mostrarPreloader(false);
             }
+        }).fail(function() {
+            mostrarPreloader(false);
         });
     })();
 }
@@ -509,6 +465,7 @@ function seleccionarPrecio(radio, code) {
 function actualizarPrecioManual(input) {
     const code = input.getAttribute('data-code');
     guardarPosicionScroll(code);
+    mostrarPreloader(true);
     
     const precio = parseFloat(input.value) || 0;
     
@@ -523,7 +480,11 @@ function actualizarPrecioManual(input) {
                 refreshCarritoTable().then(() => {
                     updateTotal();
                 });
+            } else {
+                mostrarPreloader(false);
             }
+        }).fail(function() {
+            mostrarPreloader(false);
         });
     })();
 }
@@ -531,6 +492,7 @@ function actualizarPrecioManual(input) {
 function actualizarCantidad(input) {
     const code = input.getAttribute('data-code');
     guardarPosicionScroll(code);
+    mostrarPreloader(true);
     
     const cantidad = parseInt(input.value) || 0;
     
@@ -544,7 +506,11 @@ function actualizarCantidad(input) {
                     updateTotal();
                     recalcularTiempoEntrega(code, cantidad);
                 });
+            } else {
+                mostrarPreloader(false);
             }
+        }).fail(function() {
+            mostrarPreloader(false);
         });
     })();
 }
@@ -558,8 +524,7 @@ function actualizarTiempoEntrega(select) {
             code: code,
             tiempo_entrega: tiempo
         }, function(data) {
-            console.log('Tiempo actualizado: ' + data);
-            // No refrescamos la tabla completa solo por tiempo de entrega
+            // No mostrar preloader para tiempo de entrega (es instantáneo)
         });
     })();
 }
