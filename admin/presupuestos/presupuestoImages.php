@@ -228,6 +228,8 @@ try {
 
         <button class="btn btn-print btn-sm" onclick="imprimirPDF()" title="Imprimir PDF - Sugerencia: Guardar como imagenesPres-<?php echo $numValery; ?>.pdf">
             <i class="bi bi-printer-fill"></i> Imprimir PDF
+            <small class="text-muted ms-2">Sugerencia: Guardar como imagenesPres-<?php echo $numValery; ?>.pdf</small>
+
         </button>
         
         <div class="col text-end" style="max-height: 40px;">
