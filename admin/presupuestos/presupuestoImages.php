@@ -221,15 +221,15 @@ try {
 <div class="w-100 p-0" style="background-color: #CCC;">
     <div class="row align-items-start" style="max-height: 50px;">
         <div class="col text-start" style="max-height: 40px; padding-left: 20px;">
-            <div class="col-6 text-start">
-                <a href="#" onClick="backHome()" title="Pag. Prev.">
-                    <i class="bi bi-arrow-left-circle-fill icon-dark-blue icon-large"></i>
-                </a>
-            </div>
-            <div class="col-6 text-end">
-                <small class="text-muted ms-2">imagenesPres-<?php echo $numValery; ?>.pdf</small>
-            </div>
-        </div>    
+            
+            <a href="#" onClick="backHome()" title="Pag. Prev.">
+                <i class="bi bi-arrow-left-circle-fill icon-dark-blue icon-large"></i>
+            </a>
+
+        </div>  
+        <div class="col text-end" style="max-height: 40px; padding-left: 20px;">
+            <small class="text-muted ms-2">imagenesPres-<?php echo $numValery; ?>.pdf</small>
+        </div>
 
         <button class="btn btn-print btn-sm" onclick="imprimirPDF()" title="Imprimir PDF - Sugerencia: Guardar como imagenesPres-<?php echo $numValery; ?>.pdf">
             <i class="bi bi-printer-fill"></i> Imprimir PDF
