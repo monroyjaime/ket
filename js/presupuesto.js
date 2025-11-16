@@ -1,12 +1,12 @@
-// presupuesto.js - Versión con control de scroll
+// presupuesto.js - Versión con scrollTo
 console.log('✅ presupuesto.js cargado - Márgenes disponibles:', ganancia_min_glob, descuento_max_glob);
 
 // Variables globales
 var $tableMakePedido, ctrlClientSel;
 
 // Variables para control del scroll
-let tablaScrollPosition = 0;
-let isTableScrolling = false;
+let filaScrollIndex = 0;
+let codigoProductoScroll = '';
 
 // Función para verificar márgenes
 function verificarMargenPrecio(costo, precio) {
@@ -26,33 +26,53 @@ function verificarMargenPrecio(costo, precio) {
     return { cumpleMargen: cumpleMargen, esCero: false };
 }
 
-// Funciones para control del scroll
-function guardarPosicionScroll() {
+// Funciones para control del scroll usando scrollTo
+function guardarPosicionScroll(code) {
     if ($tableMakePedido && $tableMakePedido.length > 0) {
-        const tableContainer = $tableMakePedido.closest('.bootstrap-table');
-        if (tableContainer.length > 0) {
-            const fixedTableBody = tableContainer.find('.fixed-table-body');
-            if (fixedTableBody.length > 0) {
-                tablaScrollPosition = fixedTableBody.scrollTop() || 0;
-                console.log('📏 Scroll guardado:', tablaScrollPosition);
-            }
-        }
+        const rows = $tableMakePedido.bootstrapTable('getData');
+        filaScrollIndex = rows.findIndex(row => row.code === code);
+        codigoProductoScroll = code;
+        console.log('📏 Scroll guardado - Fila:', filaScrollIndex, 'Producto:', code);
     }
 }
 
 function restaurarPosicionScroll() {
-    if ($tableMakePedido && $tableMakePedido.length > 0 && tablaScrollPosition > 0) {
-        const tableContainer = $tableMakePedido.closest('.bootstrap-table');
-        if (tableContainer.length > 0) {
-            const fixedTableBody = tableContainer.find('.fixed-table-body');
-            if (fixedTableBody.length > 0) {
-                setTimeout(() => {
-                    fixedTableBody.scrollTop(tablaScrollPosition);
-                    isTableScrolling = false;
-                    console.log('📏 Scroll restaurado:', tablaScrollPosition);
-                }, 100);
-            }
+    if ($tableMakePedido && $tableMakePedido.length > 0 && filaScrollIndex >= 0) {
+        console.log('🔄 Intentando restaurar a fila:', filaScrollIndex);
+        
+        // Estrategia 1: Usar scrollTo si está disponible
+        if (typeof $tableMakePedido.bootstrapTable('scrollTo') === 'function') {
+            setTimeout(() => {
+                $tableMakePedido.bootstrapTable('scrollTo', { unit: 'rows', value: filaScrollIndex });
+                console.log('✅ ScrollTo ejecutado a fila:', filaScrollIndex);
+            }, 300);
+        } 
+        // Estrategia 2: Buscar la fila por código y hacer scroll manualmente
+        else if (codigoProductoScroll) {
+            setTimeout(() => {
+                const rows = $tableMakePedido.bootstrapTable('getData');
+                const currentIndex = rows.findIndex(row => row.code === codigoProductoScroll);
+                if (currentIndex >= 0) {
+                    // Encontrar el elemento TR en el DOM
+                    const $fila = $(`tr[data-index="${currentIndex}"]`);
+                    if ($fila.length > 0) {
+                        $fila[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        console.log('✅ Scroll manual a fila:', currentIndex);
+                    }
+                }
+            }, 300);
         }
+        
+        // Estrategia 3: Fallback - buscar el elemento con clase active o focused
+        setTimeout(() => {
+            if (codigoProductoScroll) {
+                const $fila = $(`input[data-code="${codigoProductoScroll}"]`).closest('tr');
+                if ($fila.length > 0) {
+                    $fila[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    console.log('✅ Scroll por código a producto:', codigoProductoScroll);
+                }
+            }
+        }, 500);
     }
 }
 
@@ -184,20 +204,20 @@ function debounce(func, timeout = 1000) {
 // Función para refrescar tabla con Promise y control de scroll
 function refreshCarritoTable() {
     return new Promise((resolve) => {
-        guardarPosicionScroll();
-        
         if ($tableMakePedido && $tableMakePedido.length > 0) {
             $tableMakePedido.bootstrapTable('refresh');
             $tableMakePedido.one('load-success.bs.table', function() {
+                console.log('✅ Tabla refrescada, restaurando posición...');
                 restaurarPosicionScroll();
                 resolve();
             });
             
             // Timeout de seguridad por si el evento no se dispara
             setTimeout(() => {
+                console.log('⏰ Timeout de seguridad, restaurando posición...');
                 restaurarPosicionScroll();
                 resolve();
-            }, 1000);
+            }, 1500);
         } else {
             resolve();
         }
@@ -465,9 +485,9 @@ function relacionadoFormater(value, row) {
     return '';
 }
 
-// Funciones de interacción del carrito CON CONTROL DE SCROLL
+// Funciones de interacción del carrito CON CONTROL DE SCROLL MEJORADO
 function seleccionarPrecio(radio, code) {
-    guardarPosicionScroll();
+    guardarPosicionScroll(code);
     
     const precio = parseFloat(radio.value) || 0;
     $(`.precio-manual-input[data-code="${code}"]`).val(precio);
@@ -487,9 +507,9 @@ function seleccionarPrecio(radio, code) {
 }
 
 function actualizarPrecioManual(input) {
-    guardarPosicionScroll();
-    
     const code = input.getAttribute('data-code');
+    guardarPosicionScroll(code);
+    
     const precio = parseFloat(input.value) || 0;
     
     $(`.precio-radio[name="precio_${code}"]`).prop('checked', false);
@@ -509,9 +529,9 @@ function actualizarPrecioManual(input) {
 }
 
 function actualizarCantidad(input) {
-    guardarPosicionScroll();
-    
     const code = input.getAttribute('data-code');
+    guardarPosicionScroll(code);
+    
     const cantidad = parseInt(input.value) || 0;
     
     debounce(() => {
@@ -859,7 +879,8 @@ $(document).ready(function() {
     // Inicializar Tom Select cuando se abre el modal Y refrescar tabla
     $('#ModalMakePedido').on('show.bs.modal', function() {
         console.log('🎯 Modal de presupuesto abriéndose...');
-        tablaScrollPosition = 0; // Resetear scroll al abrir modal
+        filaScrollIndex = 0; // Resetear al abrir modal
+        codigoProductoScroll = '';
         
         // Refrescar la tabla del carrito cuando el modal se muestre
         if ($tableMakePedido && $tableMakePedido.length > 0) {
