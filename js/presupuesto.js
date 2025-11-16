@@ -1,10 +1,14 @@
-// presupuesto.js - Versión simplificada con márgenes desde PHP
+// presupuesto.js - Versión con control de scroll
 console.log('✅ presupuesto.js cargado - Márgenes disponibles:', ganancia_min_glob, descuento_max_glob);
 
 // Variables globales
 var $tableMakePedido, ctrlClientSel;
 
-// Función simplificada para verificar márgenes
+// Variables para control del scroll
+let tablaScrollPosition = 0;
+let isTableScrolling = false;
+
+// Función para verificar márgenes
 function verificarMargenPrecio(costo, precio) {
     if (precio <= 0) {
         return { cumpleMargen: false, esCero: true };
@@ -22,8 +26,37 @@ function verificarMargenPrecio(costo, precio) {
     return { cumpleMargen: cumpleMargen, esCero: false };
 }
 
-// Función getSelected 
+// Funciones para control del scroll
+function guardarPosicionScroll() {
+    if ($tableMakePedido && $tableMakePedido.length > 0) {
+        const tableContainer = $tableMakePedido.closest('.bootstrap-table');
+        if (tableContainer.length > 0) {
+            const fixedTableBody = tableContainer.find('.fixed-table-body');
+            if (fixedTableBody.length > 0) {
+                tablaScrollPosition = fixedTableBody.scrollTop() || 0;
+                console.log('📏 Scroll guardado:', tablaScrollPosition);
+            }
+        }
+    }
+}
 
+function restaurarPosicionScroll() {
+    if ($tableMakePedido && $tableMakePedido.length > 0 && tablaScrollPosition > 0) {
+        const tableContainer = $tableMakePedido.closest('.bootstrap-table');
+        if (tableContainer.length > 0) {
+            const fixedTableBody = tableContainer.find('.fixed-table-body');
+            if (fixedTableBody.length > 0) {
+                setTimeout(() => {
+                    fixedTableBody.scrollTop(tablaScrollPosition);
+                    isTableScrolling = false;
+                    console.log('📏 Scroll restaurado:', tablaScrollPosition);
+                }, 100);
+            }
+        }
+    }
+}
+
+// Función getSelected 
 function getSelected() {
     console.log('🎯 getSelected ejecutado');
     verificarEstadoCarrito();
@@ -39,7 +72,6 @@ function getSelected() {
                 console.log('🔄 Refrescando tabla del carrito...');
                 $tableMakePedido.bootstrapTable('refresh');
                 
-                // Verificar datos de la tabla después de refrescar
                 setTimeout(() => {
                     const tableData = $tableMakePedido.bootstrapTable('getData');
                     console.log('📊 Datos en tabla carrito:', tableData.length, 'filas');
@@ -49,10 +81,7 @@ function getSelected() {
     });
 }
 
-
-
 // Función para inicializar el Tom Select en el modal
-
 function initPresupuestoModal() {
     console.log('🔧 Inicializando Tom Select...');
     
@@ -96,7 +125,7 @@ function initPresupuestoModal() {
         }
     }
     
-    // NUEVO: Generar número automático cuando se abre el modal
+    // Generar número automático cuando se abre el modal
     generarNumeroAutomatico();
 }
 
@@ -110,7 +139,6 @@ function generarNumeroAutomatico() {
 }
 
 // Función para forzar actualización del carrito
-
 function forzarActualizacionCarrito() {
     return new Promise((resolve) => {
         console.log('🔄 Forzando actualización del carrito...');
@@ -130,7 +158,7 @@ function forzarActualizacionCarrito() {
                     $tableMain.bootstrapTable('refresh');
                 }
                 
-                resolve(); // Resolver la Promise cuando termine
+                resolve();
             } catch (e) {
                 console.error('Error parseando carrito:', e);
                 codes_carrito = [];
@@ -153,14 +181,23 @@ function debounce(func, timeout = 1000) {
     };
 }
 
-// Función para refrescar tabla con Promise
+// Función para refrescar tabla con Promise y control de scroll
 function refreshCarritoTable() {
     return new Promise((resolve) => {
+        guardarPosicionScroll();
+        
         if ($tableMakePedido && $tableMakePedido.length > 0) {
             $tableMakePedido.bootstrapTable('refresh');
             $tableMakePedido.one('load-success.bs.table', function() {
+                restaurarPosicionScroll();
                 resolve();
             });
+            
+            // Timeout de seguridad por si el evento no se dispara
+            setTimeout(() => {
+                restaurarPosicionScroll();
+                resolve();
+            }, 1000);
         } else {
             resolve();
         }
@@ -359,7 +396,6 @@ function precioCombinadoFormater(value, row) {
     `;
 }
 
-
 function cantidadFormater(value, row) {
     return `
         <input class="form-control cantidad-input" type="number" min="0" 
@@ -429,12 +465,11 @@ function relacionadoFormater(value, row) {
     return '';
 }
 
-// Funciones de interacción del carrito
-
+// Funciones de interacción del carrito CON CONTROL DE SCROLL
 function seleccionarPrecio(radio, code) {
-    const precio = parseFloat(radio.value) || 0;
+    guardarPosicionScroll();
     
-    // CAMBIAR ESTO: en lugar de vaciar el input, poner el precio seleccionado
+    const precio = parseFloat(radio.value) || 0;
     $(`.precio-manual-input[data-code="${code}"]`).val(precio);
     
     debounce(() => {
@@ -451,14 +486,12 @@ function seleccionarPrecio(radio, code) {
     })();
 }
 
-
-
-
 function actualizarPrecioManual(input) {
+    guardarPosicionScroll();
+    
     const code = input.getAttribute('data-code');
     const precio = parseFloat(input.value) || 0;
     
-    // Deseleccionar cualquier radio button cuando se usa precio manual
     $(`.precio-radio[name="precio_${code}"]`).prop('checked', false);
     
     debounce(() => {
@@ -475,8 +508,9 @@ function actualizarPrecioManual(input) {
     })();
 }
 
-
 function actualizarCantidad(input) {
+    guardarPosicionScroll();
+    
     const code = input.getAttribute('data-code');
     const cantidad = parseInt(input.value) || 0;
     
@@ -505,6 +539,7 @@ function actualizarTiempoEntrega(select) {
             tiempo_entrega: tiempo
         }, function(data) {
             console.log('Tiempo actualizado: ' + data);
+            // No refrescamos la tabla completa solo por tiempo de entrega
         });
     })();
 }
@@ -593,8 +628,6 @@ function updateTotal() {
     }
 }
 
-
-
 function inicializarTiemposEntrega() {
     if ($tableMakePedido && $tableMakePedido.length > 0) {
         var rows = $tableMakePedido.bootstrapTable('getData');
@@ -631,118 +664,6 @@ function inicializarTiemposEntrega() {
 }
 
 // Función para guardar presupuesto
-/*
-function guardarPresupuesto() {
-
-    console.log('🎯 guardarPresupuesto() EJECUTADA');
-
-    const selectedClientNum = parseInt(ctrlClientSel.getValue()) || 0;
-    const numeroPresupuesto = $('#numero-presupuesto').val();
-    const comentarioPresupuesto = $('#comentarioPresupuesto').val();
-    
-    // NUEVO: Obtener valores de descuento y recargo
-    const descuentoTexto = $('#descuento-texto').val();
-    const descuentoMonto = parseFloat($('#descuento_monto').val()) || 0;
-    const recargoTexto = $('#recargo-texto').val();
-    const recargoMonto = parseFloat($('#recargo_monto').val()) || 0;
-
-    // DEBUG: Aquí sí las variables ya están definidas
-    console.log('🔍 DEBUG - Campos descuento/recargo:');
-    console.log('descuento_texto:', descuentoTexto);
-    console.log('descuento_monto:', descuentoMonto);
-    console.log('recargo_texto:', recargoTexto);
-    console.log('recargo_monto:', recargoMonto);
-
-    if (selectedClientNum === 0) {
-        alert('Por favor seleccione un cliente');
-        return;
-    }
-
-    if (!numeroPresupuesto) {
-        alert('Por favor ingrese un número de presupuesto');
-        return;
-    }
-
-    // MOSTRAR LOADING
-    const btnGuardar = $('#reg-presupuesto');
-    const originalText = btnGuardar.html();
-    btnGuardar.prop('disabled', true).html('<i class="bi bi-hourglass-split"></i> Guardando...');
-
-    if ($tableMakePedido && $tableMakePedido.length > 0) {
-        var rows = $tableMakePedido.bootstrapTable('getData');
-        const productos = [];
-
-        for (let i = 0; i < rows.length; i++) {
-            if (parseInt(rows[i].cantidad) > 0) {
-                const producto = {
-                    code: rows[i].code,
-                    name: rows[i].name,
-                    cantidad: parseInt(rows[i].cantidad),
-                    precio: parseFloat(rows[i].precio) || 0,
-                    tiempo_entrega: parseInt(rows[i].tiempo_entrega) || 0,
-                    unidad: rows[i].unidad,
-                    stock: parseInt(rows[i].stock) || 0,
-                    llegando: parseInt(rows[i].llegando) || 0,
-                    prec_min: parseFloat(rows[i].prec_min) || 0,
-                    prec_may: parseFloat(rows[i].prec_may) || 0
-                };
-                productos.push(producto);
-            }
-        }
-
-        if (productos.length === 0) {
-            alert('No hay productos en el presupuesto');
-            btnGuardar.prop('disabled', false).html(originalText);
-            return;
-        }
-
-        const presupuesto = {
-            numero: numeroPresupuesto,
-            cliente: selectedClientNum,
-            productos: productos,
-            comentario: comentarioPresupuesto,
-            usuario: numUsr,
-            total: calcularTotalPresupuesto(),
-            // NUEVO: Campos de descuento y recargo
-            descuento_texto: descuentoTexto,
-            descuento_monto: descuentoMonto,
-            recargo_texto: recargoTexto,
-            recargo_monto: recargoMonto
-        };
-
-        const paramJSON = JSON.stringify(presupuesto);
-        
-        console.log('📤 Enviando presupuesto completo:', presupuesto);
-        
-        $.ajax({
-            url: "../../php/guardarPresupuesto.php",
-            type: "POST",
-            data: { data: paramJSON },
-            dataType: "json",
-            success: function(respuesta) {
-                console.log('📥 Respuesta del servidor:', respuesta);
-                
-                if (respuesta.success) {
-                    $('#ModalMakePedido').modal('hide');
-                    
-                    // Redirigir directamente a la página del presupuesto
-                    window.location.href = `../php/verPresupuesto.php?presupuesto_id=${respuesta.presupuesto_id}`;
-                } else {
-                    alert('❌ Error al guardar el presupuesto: ' + respuesta.error);
-                    btnGuardar.prop('disabled', false).html(originalText);
-                }
-            },
-            error: function(xhr, status, error) {
-                console.error('Error en la petición:', status, error);
-                console.error('Respuesta del servidor:', xhr.responseText);
-                alert('❌ Error de conexión al guardar el presupuesto');
-                btnGuardar.prop('disabled', false).html(originalText);
-            }
-        });
-    }
-}
-*/
-
 function guardarPresupuesto() {
     console.log('🎯 guardarPresupuesto() EJECUTADA');
     
@@ -872,14 +793,12 @@ function calcularTotalPresupuesto() {
     return 0;
 }
 
-
 function verificarEstadoCarrito() {
     console.log('=== ESTADO CARRITO ===');
     console.log('codes_carrito:', codes_carrito);
     console.log('Número de productos:', codes_carrito.length);
     console.log('=====================');
 }
-
 
 // Función para calcular descuento desde porcentaje
 function calcularDescuentoDesdePorcentaje() {
@@ -929,9 +848,7 @@ function calcularIVA() {
     }
 }
 
-
 // Inicialización
-
 $(document).ready(function() {
     console.log('🚀 presupuesto.js inicializado');
     $tableMakePedido = $('#table-carrito');
@@ -942,6 +859,7 @@ $(document).ready(function() {
     // Inicializar Tom Select cuando se abre el modal Y refrescar tabla
     $('#ModalMakePedido').on('show.bs.modal', function() {
         console.log('🎯 Modal de presupuesto abriéndose...');
+        tablaScrollPosition = 0; // Resetear scroll al abrir modal
         
         // Refrescar la tabla del carrito cuando el modal se muestre
         if ($tableMakePedido && $tableMakePedido.length > 0) {
@@ -952,8 +870,6 @@ $(document).ready(function() {
         }
         
         setTimeout(initPresupuestoModal, 100);
-
-         // NUEVO: Generar número automático cada vez que se abre el modal
         generarNumeroAutomatico();
     });
     
@@ -970,7 +886,7 @@ $(document).ready(function() {
         updateTotal();
     });
 
-    // NUEVO: Event listener para los campos de descuento/recargo (AGREGAR ESTO)
+    // Event listener para los campos de descuento/recargo
     $('#descuento_porcentaje, #recargo_monto, #iva_porcentaje').on('input', function() {
         updateTotal();
     });
@@ -982,20 +898,18 @@ $(document).ready(function() {
     });
 });
 
-
-
-
 // Función para generar número de presupuesto automático
 function generarNumeroPresupuesto() {
     const timestamp = new Date().getTime();
     const random = Math.floor(Math.random() * 1000);
     return `PRES-${timestamp}-${random}`;
 }
+
 // Función para obtener el próximo número secuencial desde el servidor
 function obtenerProximoNumeroSecuencial() {
     return new Promise((resolve, reject) => {
         $.ajax({
-            url: "https://ketelectropartes.com/admin/php/getProximoNumeroPresupuesto.php",  // URL ABSOLUTA
+            url: "https://ketelectropartes.com/admin/php/getProximoNumeroPresupuesto.php",
             type: "GET",
             dataType: "json",
             success: function(respuesta) {
