@@ -663,9 +663,26 @@ $tituloLista = '<h2 style="background-color: #037C79; padding-bottom: 14px; colo
     {
         $tableMain.bootstrapTable({})
             .on('check.bs.table', function(e, row) {
+                // DETERMINAR PRECIO POR DEFECTO
+                let precioPorDefecto = 0;
+                const precMin = parseFloat(row.prec_min) || 0;
+                const precMay = parseFloat(row.prec_may) || 0;
+                const prec3 = parseFloat(row.prec_3) || 0;
+                
+                // Elegir el primer precio disponible (Precio 1 → Precio 2 → Precio 3)
+                if (precMin > 0) {
+                    precioPorDefecto = precMin;
+                } else if (precMay > 0) {
+                    precioPorDefecto = precMay;
+                } else if (prec3 > 0) {
+                    precioPorDefecto = prec3;
+                }
+                // Si todos son 0, queda en 0 (precio manual)
+                
                 $.post("../../php/insDelOneProdCarrito.php", { 
                     action: 1, 
-                    code: row.code 
+                    code: row.code,
+                    precio: precioPorDefecto  // ENVIAR EL PRECIO POR DEFECTO
                 }, function(data) {
                     console.log('Producto agregado al carrito: ' + data);
                     // ACTUALIZAR la variable global codes_carrito
@@ -675,11 +692,11 @@ $tituloLista = '<h2 style="background-color: #037C79; padding-bottom: 14px; colo
                             codes_carrito.push({
                                 code: row.code,
                                 cantidad: 1,
-                                precio: 0,
+                                precio: precioPorDefecto,  // USAR EL PRECIO POR DEFECTO
                                 tiempo_entrega: 0
                             });
                         }
-                        console.log('Carrito actualizado:', codes_carrito);
+                        console.log('Carrito actualizado - Precio por defecto:', precioPorDefecto, codes_carrito);
                     }
                 });
             })
