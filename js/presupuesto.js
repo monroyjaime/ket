@@ -1,4 +1,4 @@
-// presupuesto.js - Versión con debounce ajustado y ancho fijo en columna precio
+// presupuesto.js - Versión con delay en bloqueo y ajuste de columnas
 console.log('✅ presupuesto.js cargado - Márgenes disponibles:', ganancia_min_glob, descuento_max_glob);
 
 // Variables globales
@@ -7,6 +7,9 @@ var $tableMakePedido, ctrlClientSel;
 // Variables para control del scroll
 let filaScrollIndex = 0;
 let codigoProductoScroll = '';
+
+// Variables para control de timeout de bloqueo
+let timeoutBloqueo = null;
 
 // Función para bloquear/desbloquear interfaz
 function bloquearInterfaz(bloquear) {
@@ -215,7 +218,7 @@ function debounce(func, timeout = 300) {
 }
 
 // Debounce específico para campos de entrada (más lento)
-function debounceInput(func, timeout = 800) {
+function debounceInput(func, timeout = 1200) {
     let timer;
     return (...args) => {
         clearTimeout(timer);
@@ -297,7 +300,7 @@ function precioCombinadoFormater(value, row) {
     const resultado3 = verificarMargenPrecio(costo, prec3);
     
     return `
-        <div class="precio-combinado-container" style="min-width: 280px;">
+        <div class="precio-combinado-container" style="min-width: 320px;">
             <!-- Selector de precios predefinidos -->
             <div class="precio-opciones mb-2">
                 <div class="form-check form-check-inline">
@@ -333,7 +336,7 @@ function precioCombinadoFormater(value, row) {
             
             <!-- Input de precio manual -->
             <div class="precio-manual-container">
-                <div class="input-group input-group-sm" style="min-width: 150px;">
+                <div class="input-group input-group-sm" style="min-width: 180px;">
                     <span class="input-group-text">Manual:</span>
                     <input class="form-control precio-manual-input" type="number" step="0.001" min="0" 
                            value="${esManual ? precioActual : ''}" 
@@ -341,7 +344,7 @@ function precioCombinadoFormater(value, row) {
                            placeholder="0.000"
                            onfocus="this.select()" 
                            oninput="actualizarPrecioManual(this)"
-                           style="min-width: 100px;"/>
+                           style="min-width: 120px;"/>
                     <span class="input-group-text">$</span>
                 </div>
             </div>
@@ -425,9 +428,10 @@ function relacionadoFormater(value, row) {
     return '';
 }
 
-// Funciones de interacción del carrito CON BLOQUEO Y DEBOUNCE AJUSTADO
+// Funciones de interacción del carrito CON DELAY EN BLOQUEO
 function seleccionarPrecio(radio, code) {
     guardarPosicionScroll(code);
+    // Bloqueo inmediato para radios
     bloquearInterfaz(true);
     
     const precio = parseFloat(radio.value) || 0;
@@ -454,14 +458,29 @@ function seleccionarPrecio(radio, code) {
 function actualizarPrecioManual(input) {
     const code = input.getAttribute('data-code');
     guardarPosicionScroll(code);
-    bloquearInterfaz(true);
+    
+    // LIMPIAR timeout anterior si existe
+    if (timeoutBloqueo) {
+        clearTimeout(timeoutBloqueo);
+    }
+    
+    // DELAY de 1.5 segundos antes de bloquear (para permitir escribir)
+    timeoutBloqueo = setTimeout(() => {
+        bloquearInterfaz(true);
+    }, 1500);
     
     const precio = parseFloat(input.value) || 0;
     
     $(`.precio-radio[name="precio_${code}"]`).prop('checked', false);
     
-    // DEBOUNCE MÁS LARGO para precio manual (800ms)
+    // DEBOUNCE MÁS LARGO para precio manual (1200ms)
     debounceInput(() => {
+        // Cancelar el bloqueo pendiente ya que vamos a procesar
+        if (timeoutBloqueo) {
+            clearTimeout(timeoutBloqueo);
+        }
+        bloquearInterfaz(true);
+        
         $.post("../../php/updPrecioOneProdCarrito.php", {
             code: code,
             precio: precio
@@ -482,12 +501,27 @@ function actualizarPrecioManual(input) {
 function actualizarCantidad(input) {
     const code = input.getAttribute('data-code');
     guardarPosicionScroll(code);
-    bloquearInterfaz(true);
+    
+    // LIMPIAR timeout anterior si existe
+    if (timeoutBloqueo) {
+        clearTimeout(timeoutBloqueo);
+    }
+    
+    // DELAY de 1.5 segundos antes de bloquear (para permitir escribir)
+    timeoutBloqueo = setTimeout(() => {
+        bloquearInterfaz(true);
+    }, 1500);
     
     const cantidad = parseInt(input.value) || 0;
     
-    // DEBOUNCE MÁS LARGO para cantidad (800ms)
+    // DEBOUNCE MÁS LARGO para cantidad (1200ms)
     debounceInput(() => {
+        // Cancelar el bloqueo pendiente ya que vamos a procesar
+        if (timeoutBloqueo) {
+            clearTimeout(timeoutBloqueo);
+        }
+        bloquearInterfaz(true);
+        
         $.post("../../php/updCantOneProdCarrito.php", {
             code: code,
             cantidad: cantidad
@@ -837,6 +871,12 @@ $(document).ready(function() {
         filaScrollIndex = 0; // Resetear al abrir modal
         codigoProductoScroll = '';
         
+        // Limpiar timeout de bloqueo
+        if (timeoutBloqueo) {
+            clearTimeout(timeoutBloqueo);
+            timeoutBloqueo = null;
+        }
+        
         // Refrescar la tabla del carrito cuando el modal se muestre
         if ($tableMakePedido && $tableMakePedido.length > 0) {
             setTimeout(() => {
@@ -856,6 +896,15 @@ $(document).ready(function() {
             $tableMakePedido.bootstrapTable('refresh');
             updateTotal();
         }
+    });
+    
+    // Limpiar timeout cuando se cierra el modal
+    $('#ModalMakePedido').on('hide.bs.modal', function() {
+        if (timeoutBloqueo) {
+            clearTimeout(timeoutBloqueo);
+            timeoutBloqueo = null;
+        }
+        bloquearInterfaz(false);
     });
     
     $('#descuento_monto, #recargo_monto').on('input', function() {
