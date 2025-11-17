@@ -282,7 +282,7 @@ function precioCombinadoFormater(value, row) {
     // Determinar qué precio está seleccionado actualmente
     let precioSeleccionado = '';
     let esManual = false;
-    
+
     if (precioActual === precMin) {
         precioSeleccionado = 'precio1';
     } else if (precioActual === precMay) {
@@ -292,6 +292,19 @@ function precioCombinadoFormater(value, row) {
     } else if (precioActual > 0) {
         precioSeleccionado = 'manual';
         esManual = true;
+    } else {
+        // SI NO HAY PRECIO SELECCIONADO, ELEGIR EL PRIMERO DISPONIBLE
+        if (precMin > 0) {
+            precioSeleccionado = 'precio1';
+            precioActual = precMin; // Actualizar para que se muestre correctamente
+        } else if (precMay > 0) {
+            precioSeleccionado = 'precio2';
+            precioActual = precMay;
+        } else if (prec3 > 0) {
+            precioSeleccionado = 'precio3';
+            precioActual = prec3;
+        }
+        // Si ninguno tiene valor, queda como manual/vacío
     }
     
     // Verificar márgenes para cada precio
