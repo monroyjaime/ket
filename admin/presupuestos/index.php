@@ -669,7 +669,7 @@ $tituloLista = '<h2 style="background-color: #037C79; padding-bottom: 14px; colo
                 const precMay = parseFloat(row.prec_may) || 0;
                 const prec3 = parseFloat(row.prec_3) || 0;
                 
-                // Elegir el primer precio disponible (Precio 1 → Precio 2 → Precio 3)
+                // Elegir el primer precio disponible
                 if (precMin > 0) {
                     precioPorDefecto = precMin;
                 } else if (precMay > 0) {
@@ -677,27 +677,31 @@ $tituloLista = '<h2 style="background-color: #037C79; padding-bottom: 14px; colo
                 } else if (prec3 > 0) {
                     precioPorDefecto = prec3;
                 }
-                // Si todos son 0, queda en 0 (precio manual)
+                
+                console.log('🔄 Agregando producto:', row.code, 'Precio por defecto:', precioPorDefecto);
                 
                 $.post("../../php/insDelOneProdCarrito.php", { 
                     action: 1, 
                     code: row.code,
-                    precio: precioPorDefecto  // ENVIAR EL PRECIO POR DEFECTO
+                    precio: precioPorDefecto
                 }, function(data) {
-                    console.log('Producto agregado al carrito: ' + data);
-                    // ACTUALIZAR la variable global codes_carrito
+                    console.log('Respuesta del servidor:', data);
                     if (data == '1') {
-                        // Agregar a codes_carrito
+                        // Actualizar codes_carrito
                         if (!codes_carrito.some(item => item.code === row.code)) {
                             codes_carrito.push({
                                 code: row.code,
                                 cantidad: 1,
-                                precio: precioPorDefecto,  // USAR EL PRECIO POR DEFECTO
+                                precio: precioPorDefecto,
                                 tiempo_entrega: 0
                             });
                         }
-                        console.log('Carrito actualizado - Precio por defecto:', precioPorDefecto, codes_carrito);
+                        console.log('✅ Carrito actualizado:', codes_carrito);
+                    } else {
+                        console.error('❌ Error al agregar al carrito');
                     }
+                }).fail(function(xhr, status, error) {
+                    console.error('❌ Error AJAX:', status, error);
                 });
             })
             .on('uncheck.bs.table', function(e, row) {
