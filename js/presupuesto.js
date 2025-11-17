@@ -1,4 +1,4 @@
-// presupuesto.js - Versión sin preloader, solo bloqueo de interfaz
+// presupuesto.js - Versión con debounce ajustado y ancho fijo en columna precio
 console.log('✅ presupuesto.js cargado - Márgenes disponibles:', ganancia_min_glob, descuento_max_glob);
 
 // Variables globales
@@ -206,7 +206,16 @@ function forzarActualizacionCarrito() {
 }
 
 // Función debounce optimizada
-function debounce(func, timeout = 1000) {
+function debounce(func, timeout = 300) {
+    let timer;
+    return (...args) => {
+        clearTimeout(timer);
+        timer = setTimeout(() => { func.apply(this, args); }, timeout);
+    };
+}
+
+// Debounce específico para campos de entrada (más lento)
+function debounceInput(func, timeout = 800) {
     let timer;
     return (...args) => {
         clearTimeout(timer);
@@ -288,7 +297,7 @@ function precioCombinadoFormater(value, row) {
     const resultado3 = verificarMargenPrecio(costo, prec3);
     
     return `
-        <div class="precio-combinado-container">
+        <div class="precio-combinado-container" style="min-width: 280px;">
             <!-- Selector de precios predefinidos -->
             <div class="precio-opciones mb-2">
                 <div class="form-check form-check-inline">
@@ -324,14 +333,15 @@ function precioCombinadoFormater(value, row) {
             
             <!-- Input de precio manual -->
             <div class="precio-manual-container">
-                <div class="input-group input-group-sm">
+                <div class="input-group input-group-sm" style="min-width: 150px;">
                     <span class="input-group-text">Manual:</span>
                     <input class="form-control precio-manual-input" type="number" step="0.001" min="0" 
                            value="${esManual ? precioActual : ''}" 
                            data-code="${row.code}" 
                            placeholder="0.000"
                            onfocus="this.select()" 
-                           oninput="actualizarPrecioManual(this)"/>
+                           oninput="actualizarPrecioManual(this)"
+                           style="min-width: 100px;"/>
                     <span class="input-group-text">$</span>
                 </div>
             </div>
@@ -350,7 +360,8 @@ function cantidadFormater(value, row) {
                value="${value}" 
                data-code="${row.code}" 
                onfocus="this.select()" 
-               oninput="actualizarCantidad(this)"/>
+               oninput="actualizarCantidad(this)"
+               style="min-width: 80px;"/>
     `;
 }
 
@@ -374,7 +385,8 @@ function tiempoEntregaFormater(value, row) {
     const tiempoMostrar = tiempoActual > 0 ? tiempoActual : tiempoSugerido;
     
     return `
-        <select class="form-control tiempo-select" data-code="${row.code}" onchange="actualizarTiempoEntrega(this)">
+        <select class="form-control tiempo-select" data-code="${row.code}" onchange="actualizarTiempoEntrega(this)"
+                style="min-width: 110px;">
             <option value="0" ${tiempoMostrar === 0 ? 'selected' : ''}>Inmediato</option>
             <option value="7" ${tiempoMostrar === 7 ? 'selected' : ''}>7 días</option>
             <option value="15" ${tiempoMostrar === 15 ? 'selected' : ''}>15 días</option>
@@ -413,10 +425,10 @@ function relacionadoFormater(value, row) {
     return '';
 }
 
-// Funciones de interacción del carrito CON BLOQUEO PERO SIN PRELOADER
+// Funciones de interacción del carrito CON BLOQUEO Y DEBOUNCE AJUSTADO
 function seleccionarPrecio(radio, code) {
     guardarPosicionScroll(code);
-    bloquearInterfaz(true); // BLOQUEAR aquí
+    bloquearInterfaz(true);
     
     const precio = parseFloat(radio.value) || 0;
     $(`.precio-manual-input[data-code="${code}"]`).val(precio);
@@ -431,10 +443,10 @@ function seleccionarPrecio(radio, code) {
                     updateTotal();
                 });
             } else {
-                bloquearInterfaz(false); // DESBLOQUEAR en error
+                bloquearInterfaz(false);
             }
         }).fail(function() {
-            bloquearInterfaz(false); // DESBLOQUEAR en error
+            bloquearInterfaz(false);
         });
     })();
 }
@@ -442,13 +454,14 @@ function seleccionarPrecio(radio, code) {
 function actualizarPrecioManual(input) {
     const code = input.getAttribute('data-code');
     guardarPosicionScroll(code);
-    bloquearInterfaz(true); // BLOQUEAR aquí
+    bloquearInterfaz(true);
     
     const precio = parseFloat(input.value) || 0;
     
     $(`.precio-radio[name="precio_${code}"]`).prop('checked', false);
     
-    debounce(() => {
+    // DEBOUNCE MÁS LARGO para precio manual (800ms)
+    debounceInput(() => {
         $.post("../../php/updPrecioOneProdCarrito.php", {
             code: code,
             precio: precio
@@ -458,10 +471,10 @@ function actualizarPrecioManual(input) {
                     updateTotal();
                 });
             } else {
-                bloquearInterfaz(false); // DESBLOQUEAR en error
+                bloquearInterfaz(false);
             }
         }).fail(function() {
-            bloquearInterfaz(false); // DESBLOQUEAR en error
+            bloquearInterfaz(false);
         });
     })();
 }
@@ -469,11 +482,12 @@ function actualizarPrecioManual(input) {
 function actualizarCantidad(input) {
     const code = input.getAttribute('data-code');
     guardarPosicionScroll(code);
-    bloquearInterfaz(true); // BLOQUEAR aquí
+    bloquearInterfaz(true);
     
     const cantidad = parseInt(input.value) || 0;
     
-    debounce(() => {
+    // DEBOUNCE MÁS LARGO para cantidad (800ms)
+    debounceInput(() => {
         $.post("../../php/updCantOneProdCarrito.php", {
             code: code,
             cantidad: cantidad
@@ -484,10 +498,10 @@ function actualizarCantidad(input) {
                     recalcularTiempoEntrega(code, cantidad);
                 });
             } else {
-                bloquearInterfaz(false); // DESBLOQUEAR en error
+                bloquearInterfaz(false);
             }
         }).fail(function() {
-            bloquearInterfaz(false); // DESBLOQUEAR en error
+            bloquearInterfaz(false);
         });
     })();
 }
