@@ -291,6 +291,30 @@ $tituloLista = '<h2 style="background-color: #037C79; padding-bottom: 14px; colo
             vertical-align: top;
         }
 
+        /* Estilo para texto relacionado (en lugar de badge) - COMPRESIBLE */
+        .relacionado-text {
+            font-size: 0.75rem;
+            background-color: #0dcaf0;
+            color: #000;
+            padding: 2px 6px;
+            border-radius: 4px;
+            display: inline-block;
+            max-width: 120px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            cursor: help;
+            line-height: 1.2;
+        }
+
+        /* Para que la columna "Relacionado" se pueda comprimir más */
+        #table-carrito th:nth-child(3), 
+        #table-carrito td:nth-child(3) {
+            max-width: 150px;
+            min-width: 80px;
+            width: 120px; /* Ancho preferido */
+        }
+
     </style>
 </head>
 
@@ -418,7 +442,7 @@ $tituloLista = '<h2 style="background-color: #037C79; padding-bottom: 14px; colo
                         <tr>
                             <th data-field="edo" data-formatter="edoFormater" data-width="40"></th>
                             <th data-field="code" data-halign="center" data-align="left" data-width="100">Código</th>
-                            <th data-field="relacionado" data-halign="center" data-align="left" data-width="100" data-formatter="relacionadoFormater">Relacionado</th> <!-- NUEVA COLUMNA -->                            <th data-field="name" data-halign="center" data-align="left" data-width="300">Descripción</th>
+                            <th data-field="relacionado" data-halign="center" data-align="left" data-width="120" data-formatter="relacionadoFormater">Relacionado</th>
                             <th data-field="stock" data-halign="center" data-align="center" data-width="80" data-formatter="stockFormater">Stock</th>
                             <th data-field="llegando" data-halign="center" data-align="center" data-width="90" data-formatter="llegandoFormater">Llegando</th>
                             <!--<th data-field="precio_opciones" data-halign="center" data-align="center" data-width="200" data-formatter="precioOpcionesFormater">Precio</th>

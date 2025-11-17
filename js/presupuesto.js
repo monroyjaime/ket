@@ -423,7 +423,8 @@ function edoFormater(value, row) {
 
 function relacionadoFormater(value, row) {
     if (value && value.trim() !== '') {
-        return '<span class="badge bg-info text-dark" title="Productos relacionados">' + value + '</span>';
+        // En lugar de badge, usar un span con estilo similar pero que se pueda comprimir
+        return '<span class="relacionado-text" title="Productos relacionados: ' + value + '">' + value + '</span>';
     }
     return '';
 }
