@@ -1,4 +1,4 @@
-// presupuesto.js - Versión corregida con preloader y scroll funcional
+// presupuesto.js - Versión sin preloader, solo bloqueo de interfaz
 console.log('✅ presupuesto.js cargado - Márgenes disponibles:', ganancia_min_glob, descuento_max_glob);
 
 // Variables globales
@@ -8,47 +8,16 @@ var $tableMakePedido, ctrlClientSel;
 let filaScrollIndex = 0;
 let codigoProductoScroll = '';
 
-// Función para mostrar/ocultar preloader
-function mostrarPreloader(mostrar) {
-    if (mostrar) {
-        // Crear preloader si no existe
-        if ($('#preloader-tabla').length === 0) {
-            const preloader = `
-                <div id="preloader-tabla" style="
-                    position: fixed;
-                    top: 0;
-                    left: 0;
-                    width: 100%;
-                    height: 100%;
-                    background: rgba(255, 255, 255, 0.9);
-                    z-index: 9999;
-                    display: flex;
-                    justify-content: center;
-                    align-items: center;
-                    flex-direction: column;
-                ">
-                    <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;"></div>
-                    <div class="mt-3" style="color: #037C79; font-weight: bold;">Actualizando...</div>
-                </div>
-            `;
-            $('body').append(preloader);
-        } else {
-            $('#preloader-tabla').show();
-        }
-        
+// Función para bloquear/desbloquear interfaz
+function bloquearInterfaz(bloquear) {
+    if (bloquear) {
         // Deshabilitar interacciones
-        $('body').css('overflow', 'hidden');
         $('.precio-radio, .precio-manual-input, .cantidad-input, .tiempo-select').prop('disabled', true);
-        
+        $('body').css('cursor', 'wait');
     } else {
-        // Ocultar preloader
-        $('#preloader-tabla').fadeOut(300, function() {
-            $(this).remove();
-        });
-        
         // Rehabilitar interacciones
-        $('body').css('overflow', '');
         $('.precio-radio, .precio-manual-input, .cantidad-input, .tiempo-select').prop('disabled', false);
+        $('body').css('cursor', '');
     }
 }
 
@@ -70,113 +39,53 @@ function verificarMargenPrecio(costo, precio) {
     return { cumpleMargen: cumpleMargen, esCero: false };
 }
 
-// Funciones para control del scroll MEJORADAS
+// Funciones para control del scroll (VERSION ORIGINAL QUE FUNCIONABA)
 function guardarPosicionScroll(code) {
     if ($tableMakePedido && $tableMakePedido.length > 0) {
         const rows = $tableMakePedido.bootstrapTable('getData');
         filaScrollIndex = rows.findIndex(row => row.code === code);
         codigoProductoScroll = code;
         console.log('📏 Scroll guardado - Fila:', filaScrollIndex, 'Producto:', code);
-        
-        // Guardar también en sessionStorage como respaldo
-        sessionStorage.setItem('scrollPosition', JSON.stringify({
-            filaScrollIndex: filaScrollIndex,
-            codigoProductoScroll: codigoProductoScroll,
-            timestamp: Date.now()
-        }));
     }
 }
 
-// Y MODIFICAR la función restaurarPosicionScroll para que sea más agresiva:
 function restaurarPosicionScroll() {
-    if ($tableMakePedido && $tableMakePedido.length > 0) {
-        console.log('🔄 Intentando restaurar posición...');
+    if ($tableMakePedido && $tableMakePedido.length > 0 && filaScrollIndex >= 0) {
+        console.log('🔄 Intentando restaurar a fila:', filaScrollIndex);
         
-        // Intentar recuperar de sessionStorage si se perdió
-        if (filaScrollIndex < 0 && codigoProductoScroll === '') {
-            const savedScroll = sessionStorage.getItem('scrollPosition');
-            if (savedScroll) {
-                const scrollData = JSON.parse(savedScroll);
-                filaScrollIndex = scrollData.filaScrollIndex || 0;
-                codigoProductoScroll = scrollData.codigoProductoScroll || '';
-                console.log('📏 Scroll recuperado de sessionStorage:', filaScrollIndex, codigoProductoScroll);
+        // Estrategia 1: Usar scrollTo si está disponible
+        if (typeof $tableMakePedido.bootstrapTable('scrollTo') === 'function') {
+            setTimeout(() => {
+                $tableMakePedido.bootstrapTable('scrollTo', { unit: 'rows', value: filaScrollIndex });
+                console.log('✅ ScrollTo ejecutado a fila:', filaScrollIndex);
+            }, 300);
+        } 
+        // Estrategia 2: Buscar la fila por código y hacer scroll manualmente
+        else if (codigoProductoScroll) {
+            setTimeout(() => {
+                const rows = $tableMakePedido.bootstrapTable('getData');
+                const currentIndex = rows.findIndex(row => row.code === codigoProductoScroll);
+                if (currentIndex >= 0) {
+                    // Encontrar el elemento TR en el DOM
+                    const $fila = $(`tr[data-index="${currentIndex}"]`);
+                    if ($fila.length > 0) {
+                        $fila[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        console.log('✅ Scroll manual a fila:', currentIndex);
+                    }
+                }
+            }, 300);
+        }
+        
+        // Estrategia 3: Fallback - buscar el elemento con clase active o focused
+        setTimeout(() => {
+            if (codigoProductoScroll) {
+                const $fila = $(`input[data-code="${codigoProductoScroll}"]`).closest('tr');
+                if ($fila.length > 0) {
+                    $fila[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    console.log('✅ Scroll por código a producto:', codigoProductoScroll);
+                }
             }
-        }
-        
-        if (filaScrollIndex >= 0 || codigoProductoScroll) {
-            const attemptScroll = (attempt = 1) => {
-                console.log(`🎯 Intento ${attempt} de scroll...`);
-                
-                // Estrategia 1: Buscar por código en el DOM directamente (PRIMERO AHORA)
-                if (codigoProductoScroll) {
-                    const $input = $(`input[data-code="${codigoProductoScroll}"]`);
-                    if ($input.length > 0) {
-                        const $fila = $input.closest('tr');
-                        if ($fila.length > 0) {
-                            // FORZAR el scroll de manera más agresiva
-                            const container = $tableMakePedido.closest('.fixed-table-body')[0] || 
-                                            $tableMakePedido.closest('.bootstrap-table')[0] ||
-                                            window;
-                            const filaRect = $fila[0].getBoundingClientRect();
-                            const containerRect = container.getBoundingClientRect
-                                ? container.getBoundingClientRect()
-                                : { top: 0, height: window.innerHeight };
-                            
-                            // Calcular posición relativa
-                            const offsetTop = filaRect.top - containerRect.top;
-                            const targetScroll = offsetTop - (containerRect.height / 2) + (filaRect.height / 2);
-                            
-                            if (container.scrollTo) {
-                                container.scrollTo({ top: targetScroll, behavior: 'instant' });
-                            } else {
-                                container.scrollTop = targetScroll;
-                            }
-                            
-                            console.log('✅ Scroll agresivo a producto:', codigoProductoScroll);
-                            return true;
-                        }
-                    }
-                }
-                
-                // Estrategia 2: Usar scrollTo de Bootstrap Table
-                if (typeof $tableMakePedido.bootstrapTable('scrollTo') === 'function' && filaScrollIndex >= 0) {
-                    try {
-                        $tableMakePedido.bootstrapTable('scrollTo', { unit: 'rows', value: filaScrollIndex });
-                        console.log('✅ ScrollTo ejecutado a fila:', filaScrollIndex);
-                        return true;
-                    } catch (e) {
-                        console.log('❌ ScrollTo falló:', e);
-                    }
-                }
-                
-                // Estrategia 3: Buscar por código en los datos actuales
-                if (codigoProductoScroll) {
-                    const rows = $tableMakePedido.bootstrapTable('getData');
-                    const currentIndex = rows.findIndex(row => row.code === codigoProductoScroll);
-                    if (currentIndex >= 0) {
-                        const $fila = $(`tr[data-index="${currentIndex}"]`);
-                        if ($fila.length > 0) {
-                            $fila[0].scrollIntoView({ behavior: 'instant', block: 'center' });
-                            console.log('✅ Scroll manual a fila:', currentIndex);
-                            return true;
-                        }
-                    }
-                }
-                
-                // Si falla y aún tenemos intentos, reintentar
-                if (attempt < 5) { // Aumentar a 5 intentos
-                    console.log(`🔄 Reintentando scroll en 150ms...`);
-                    setTimeout(() => attemptScroll(attempt + 1), 150);
-                    return false;
-                }
-                
-                console.log('❌ No se pudo restaurar la posición después de 5 intentos');
-                return false;
-            };
-            
-            // Iniciar el primer intento con un delay mayor
-            setTimeout(attemptScroll, 200);
-        }
+        }, 500);
     }
 }
 
@@ -305,57 +214,27 @@ function debounce(func, timeout = 1000) {
     };
 }
 
-// Función para refrescar tabla con Promise y control de scroll MEJORADA
+// Función para refrescar tabla con Promise y control de scroll (SIN PRELOADER)
 function refreshCarritoTable() {
     return new Promise((resolve) => {
         if ($tableMakePedido && $tableMakePedido.length > 0) {
-            // Guardar la posición actual ANTES de refrescar
-            const currentScrollData = {
-                filaScrollIndex: filaScrollIndex,
-                codigoProductoScroll: codigoProductoScroll
-            };
-            
-            console.log('🔄 Refrescando tabla, posición guardada:', currentScrollData);
-            
             $tableMakePedido.bootstrapTable('refresh');
-            
-            // Usar el evento load-success para restaurar posición
             $tableMakePedido.one('load-success.bs.table', function() {
                 console.log('✅ Tabla refrescada, restaurando posición...');
-                
-                // Restaurar los valores guardados
-                filaScrollIndex = currentScrollData.filaScrollIndex;
-                codigoProductoScroll = currentScrollData.codigoProductoScroll;
-                
-                // Ocultar el preloader ANTES de hacer scroll
-                mostrarPreloader(false);
-                
-                // Dar tiempo al DOM para que se actualice sin el preloader
-                setTimeout(() => {
-                    restaurarPosicionScroll();
-                    resolve();
-                }, 100);
+                restaurarPosicionScroll();
+                bloquearInterfaz(false); // DESBLOQUEAR aquí
+                resolve();
             });
             
             // Timeout de seguridad por si el evento no se dispara
             setTimeout(() => {
                 console.log('⏰ Timeout de seguridad, restaurando posición...');
-                
-                // Restaurar los valores guardados
-                filaScrollIndex = currentScrollData.filaScrollIndex;
-                codigoProductoScroll = currentScrollData.codigoProductoScroll;
-                
-                // Ocultar el preloader ANTES de hacer scroll
-                mostrarPreloader(false);
-                
-                // Dar tiempo al DOM para que se actualice sin el preloader
-                setTimeout(() => {
-                    restaurarPosicionScroll();
-                    resolve();
-                }, 100);
-            }, 2000);
+                restaurarPosicionScroll();
+                bloquearInterfaz(false); // DESBLOQUEAR aquí
+                resolve();
+            }, 1500);
         } else {
-            mostrarPreloader(false);
+            bloquearInterfaz(false); // DESBLOQUEAR aquí
             resolve();
         }
     });
@@ -534,10 +413,10 @@ function relacionadoFormater(value, row) {
     return '';
 }
 
-// Funciones de interacción del carrito CON PRELOADER Y SCROLL CORREGIDO
+// Funciones de interacción del carrito CON BLOQUEO PERO SIN PRELOADER
 function seleccionarPrecio(radio, code) {
     guardarPosicionScroll(code);
-    mostrarPreloader(true);
+    bloquearInterfaz(true); // BLOQUEAR aquí
     
     const precio = parseFloat(radio.value) || 0;
     $(`.precio-manual-input[data-code="${code}"]`).val(precio);
@@ -552,10 +431,10 @@ function seleccionarPrecio(radio, code) {
                     updateTotal();
                 });
             } else {
-                mostrarPreloader(false);
+                bloquearInterfaz(false); // DESBLOQUEAR en error
             }
         }).fail(function() {
-            mostrarPreloader(false);
+            bloquearInterfaz(false); // DESBLOQUEAR en error
         });
     })();
 }
@@ -563,7 +442,7 @@ function seleccionarPrecio(radio, code) {
 function actualizarPrecioManual(input) {
     const code = input.getAttribute('data-code');
     guardarPosicionScroll(code);
-    mostrarPreloader(true);
+    bloquearInterfaz(true); // BLOQUEAR aquí
     
     const precio = parseFloat(input.value) || 0;
     
@@ -579,10 +458,10 @@ function actualizarPrecioManual(input) {
                     updateTotal();
                 });
             } else {
-                mostrarPreloader(false);
+                bloquearInterfaz(false); // DESBLOQUEAR en error
             }
         }).fail(function() {
-            mostrarPreloader(false);
+            bloquearInterfaz(false); // DESBLOQUEAR en error
         });
     })();
 }
@@ -590,7 +469,7 @@ function actualizarPrecioManual(input) {
 function actualizarCantidad(input) {
     const code = input.getAttribute('data-code');
     guardarPosicionScroll(code);
-    mostrarPreloader(true);
+    bloquearInterfaz(true); // BLOQUEAR aquí
     
     const cantidad = parseInt(input.value) || 0;
     
@@ -605,10 +484,10 @@ function actualizarCantidad(input) {
                     recalcularTiempoEntrega(code, cantidad);
                 });
             } else {
-                mostrarPreloader(false);
+                bloquearInterfaz(false); // DESBLOQUEAR en error
             }
         }).fail(function() {
-            mostrarPreloader(false);
+            bloquearInterfaz(false); // DESBLOQUEAR en error
         });
     })();
 }
@@ -617,12 +496,11 @@ function actualizarTiempoEntrega(select) {
     const code = select.getAttribute('data-code');
     const tiempo = parseInt(select.value) || 0;
     
+    // No bloquear para tiempo de entrega (es instantáneo)
     debounce(() => {
         $.post("../../php/updTiempoOneProdCarrito.php", {
             code: code,
             tiempo_entrega: tiempo
-        }, function(data) {
-            // No mostrar preloader para tiempo de entrega (es instantáneo)
         });
     })();
 }
@@ -931,7 +809,7 @@ function calcularIVA() {
     }
 }
 
-// Inicialización MEJORADA
+// Inicialización
 $(document).ready(function() {
     console.log('🚀 presupuesto.js inicializado');
     $tableMakePedido = $('#table-carrito');
@@ -944,9 +822,6 @@ $(document).ready(function() {
         console.log('🎯 Modal de presupuesto abriéndose...');
         filaScrollIndex = 0; // Resetear al abrir modal
         codigoProductoScroll = '';
-        
-        // Limpiar sessionStorage al abrir modal
-        sessionStorage.removeItem('scrollPosition');
         
         // Refrescar la tabla del carrito cuando el modal se muestre
         if ($tableMakePedido && $tableMakePedido.length > 0) {
