@@ -276,12 +276,13 @@ function precioCombinadoFormater(value, row) {
     const precMay = parseFloat(row.prec_may) || 0;
     const prec3 = parseFloat(row.prec_3) || 0;
     const costo = parseFloat(row.costo) || 0;
-    const precioActual = parseFloat(row.precio) || 0;
+    let precioActual = parseFloat(row.precio) || 0; // Cambiar a let para poder modificarlo
     const minimoPrecio = parseFloat(costo*(ganancia_min_glob/descuento_max_glob)) || 0;
     
     // Determinar qué precio está seleccionado actualmente
     let precioSeleccionado = '';
     let esManual = false;
+    let necesitaActualizarPrecio = false;
 
     if (precioActual === precMin) {
         precioSeleccionado = 'precio1';
@@ -296,17 +297,34 @@ function precioCombinadoFormater(value, row) {
         // SI NO HAY PRECIO SELECCIONADO, ELEGIR EL PRIMERO DISPONIBLE
         if (precMin > 0) {
             precioSeleccionado = 'precio1';
-            precioActual = precMin; // Actualizar para que se muestre correctamente
+            precioActual = precMin;
+            necesitaActualizarPrecio = true;
         } else if (precMay > 0) {
             precioSeleccionado = 'precio2';
             precioActual = precMay;
+            necesitaActualizarPrecio = true;
         } else if (prec3 > 0) {
             precioSeleccionado = 'precio3';
             precioActual = prec3;
+            necesitaActualizarPrecio = true;
         }
-        // Si ninguno tiene valor, queda como manual/vacío
     }
-    
+
+    // Si necesita actualizar el precio, hacerlo automáticamente
+    if (necesitaActualizarPrecio && precioActual > 0) {
+        setTimeout(() => {
+            $.post("../../php/updPrecioOneProdCarrito.php", {
+                code: row.code,
+                precio: precioActual
+            }, function(data) {
+                if (data == '1') {
+                    // Actualizar el total después de establecer el precio por defecto
+                    updateTotal();
+                }
+            });
+        }, 100);
+    }
+
     // Verificar márgenes para cada precio
     const resultadoMin = verificarMargenPrecio(costo, precMin);
     const resultadoMay = verificarMargenPrecio(costo, precMay);
