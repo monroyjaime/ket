@@ -87,6 +87,7 @@ function guardarPosicionScroll(code) {
     }
 }
 
+// Y MODIFICAR la función restaurarPosicionScroll para que sea más agresiva:
 function restaurarPosicionScroll() {
     if ($tableMakePedido && $tableMakePedido.length > 0) {
         console.log('🔄 Intentando restaurar posición...');
@@ -106,7 +107,38 @@ function restaurarPosicionScroll() {
             const attemptScroll = (attempt = 1) => {
                 console.log(`🎯 Intento ${attempt} de scroll...`);
                 
-                // Estrategia 1: Usar scrollTo de Bootstrap Table
+                // Estrategia 1: Buscar por código en el DOM directamente (PRIMERO AHORA)
+                if (codigoProductoScroll) {
+                    const $input = $(`input[data-code="${codigoProductoScroll}"]`);
+                    if ($input.length > 0) {
+                        const $fila = $input.closest('tr');
+                        if ($fila.length > 0) {
+                            // FORZAR el scroll de manera más agresiva
+                            const container = $tableMakePedido.closest('.fixed-table-body')[0] || 
+                                            $tableMakePedido.closest('.bootstrap-table')[0] ||
+                                            window;
+                            const filaRect = $fila[0].getBoundingClientRect();
+                            const containerRect = container.getBoundingClientRect
+                                ? container.getBoundingClientRect()
+                                : { top: 0, height: window.innerHeight };
+                            
+                            // Calcular posición relativa
+                            const offsetTop = filaRect.top - containerRect.top;
+                            const targetScroll = offsetTop - (containerRect.height / 2) + (filaRect.height / 2);
+                            
+                            if (container.scrollTo) {
+                                container.scrollTo({ top: targetScroll, behavior: 'instant' });
+                            } else {
+                                container.scrollTop = targetScroll;
+                            }
+                            
+                            console.log('✅ Scroll agresivo a producto:', codigoProductoScroll);
+                            return true;
+                        }
+                    }
+                }
+                
+                // Estrategia 2: Usar scrollTo de Bootstrap Table
                 if (typeof $tableMakePedido.bootstrapTable('scrollTo') === 'function' && filaScrollIndex >= 0) {
                     try {
                         $tableMakePedido.bootstrapTable('scrollTo', { unit: 'rows', value: filaScrollIndex });
@@ -117,7 +149,7 @@ function restaurarPosicionScroll() {
                     }
                 }
                 
-                // Estrategia 2: Buscar por código en los datos actuales
+                // Estrategia 3: Buscar por código en los datos actuales
                 if (codigoProductoScroll) {
                     const rows = $tableMakePedido.bootstrapTable('getData');
                     const currentIndex = rows.findIndex(row => row.code === codigoProductoScroll);
@@ -131,32 +163,19 @@ function restaurarPosicionScroll() {
                     }
                 }
                 
-                // Estrategia 3: Buscar por código en el DOM directamente
-                if (codigoProductoScroll) {
-                    const $input = $(`input[data-code="${codigoProductoScroll}"]`);
-                    if ($input.length > 0) {
-                        const $fila = $input.closest('tr');
-                        if ($fila.length > 0) {
-                            $fila[0].scrollIntoView({ behavior: 'instant', block: 'center' });
-                            console.log('✅ Scroll por código a producto:', codigoProductoScroll);
-                            return true;
-                        }
-                    }
-                }
-                
                 // Si falla y aún tenemos intentos, reintentar
-                if (attempt < 3) {
-                    console.log(`🔄 Reintentando scroll en 200ms...`);
-                    setTimeout(() => attemptScroll(attempt + 1), 200);
+                if (attempt < 5) { // Aumentar a 5 intentos
+                    console.log(`🔄 Reintentando scroll en 150ms...`);
+                    setTimeout(() => attemptScroll(attempt + 1), 150);
                     return false;
                 }
                 
-                console.log('❌ No se pudo restaurar la posición después de 3 intentos');
+                console.log('❌ No se pudo restaurar la posición después de 5 intentos');
                 return false;
             };
             
-            // Iniciar el primer intento
-            setTimeout(attemptScroll, 100);
+            // Iniciar el primer intento con un delay mayor
+            setTimeout(attemptScroll, 200);
         }
     }
 }
@@ -308,12 +327,14 @@ function refreshCarritoTable() {
                 filaScrollIndex = currentScrollData.filaScrollIndex;
                 codigoProductoScroll = currentScrollData.codigoProductoScroll;
                 
-                restaurarPosicionScroll();
+                // Ocultar el preloader ANTES de hacer scroll
+                mostrarPreloader(false);
                 
+                // Dar tiempo al DOM para que se actualice sin el preloader
                 setTimeout(() => {
-                    mostrarPreloader(false);
+                    restaurarPosicionScroll();
                     resolve();
-                }, 300);
+                }, 100);
             });
             
             // Timeout de seguridad por si el evento no se dispara
@@ -324,12 +345,14 @@ function refreshCarritoTable() {
                 filaScrollIndex = currentScrollData.filaScrollIndex;
                 codigoProductoScroll = currentScrollData.codigoProductoScroll;
                 
-                restaurarPosicionScroll();
+                // Ocultar el preloader ANTES de hacer scroll
+                mostrarPreloader(false);
                 
+                // Dar tiempo al DOM para que se actualice sin el preloader
                 setTimeout(() => {
-                    mostrarPreloader(false);
+                    restaurarPosicionScroll();
                     resolve();
-                }, 300);
+                }, 100);
             }, 2000);
         } else {
             mostrarPreloader(false);
