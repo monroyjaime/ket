@@ -663,30 +663,39 @@ $tituloLista = '<h2 style="background-color: #037C79; padding-bottom: 14px; colo
     {
         $tableMain.bootstrapTable({})
             .on('check.bs.table', function(e, row) {
-                // DETERMINAR PRECIO POR DEFECTO
-                let precioPorDefecto = 0;
-                const precMin = parseFloat(row.prec_min) || 0;
-                const precMay = parseFloat(row.prec_may) || 0;
-                const prec3 = parseFloat(row.prec_3) || 0;
-                
-                // Elegir el primer precio disponible
-                if (precMin > 0) {
-                    precioPorDefecto = precMin;
-                } else if (precMay > 0) {
-                    precioPorDefecto = precMay;
-                } else if (prec3 > 0) {
-                    precioPorDefecto = prec3;
-                }
-                
-                console.log('🔄 Agregando producto:', row.code, 'Precio por defecto:', precioPorDefecto);
-                
+                // PRIMERO agregar al carrito (sin precio)
                 $.post("../../php/insDelOneProdCarrito.php", { 
                     action: 1, 
-                    code: row.code,
-                    precio: precioPorDefecto
+                    code: row.code 
                 }, function(data) {
-                    console.log('Respuesta del servidor:', data);
+                    console.log('Producto agregado al carrito: ' + data);
                     if (data == '1') {
+                        // LUEGO establecer precio por defecto si es necesario
+                        const precMin = parseFloat(row.prec_min) || 0;
+                        const precMay = parseFloat(row.prec_may) || 0;
+                        const prec3 = parseFloat(row.prec_3) || 0;
+                        
+                        let precioPorDefecto = 0;
+                        if (precMin > 0) {
+                            precioPorDefecto = precMin;
+                        } else if (precMay > 0) {
+                            precioPorDefecto = precMay;
+                        } else if (prec3 > 0) {
+                            precioPorDefecto = prec3;
+                        }
+                        
+                        // Solo actualizar precio si hay uno por defecto
+                        if (precioPorDefecto > 0) {
+                            setTimeout(() => {
+                                $.post("../../php/updPrecioOneProdCarrito.php", {
+                                    code: row.code,
+                                    precio: precioPorDefecto
+                                }, function(updateData) {
+                                    console.log('Precio por defecto establecido: ' + updateData);
+                                });
+                            }, 100);
+                        }
+                        
                         // Actualizar codes_carrito
                         if (!codes_carrito.some(item => item.code === row.code)) {
                             codes_carrito.push({
@@ -696,12 +705,8 @@ $tituloLista = '<h2 style="background-color: #037C79; padding-bottom: 14px; colo
                                 tiempo_entrega: 0
                             });
                         }
-                        console.log('✅ Carrito actualizado:', codes_carrito);
-                    } else {
-                        console.error('❌ Error al agregar al carrito');
+                        console.log('Carrito actualizado:', codes_carrito);
                     }
-                }).fail(function(xhr, status, error) {
-                    console.error('❌ Error AJAX:', status, error);
                 });
             })
             .on('uncheck.bs.table', function(e, row) {
