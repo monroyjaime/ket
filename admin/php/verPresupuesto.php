@@ -405,8 +405,10 @@ try {
     btn.disabled = true;
     
     // CORRECCIÓN: URL correcta con /admin/
-    const url = '../../php/precargarPresupuestoCarrito.php';
-    console.log('📤 Enviando solicitud a:', url);
+    //onst url = '../../php/precargarPresupuestoCarrito.php';
+    //console.log('📤 Enviando solicitud a:', url);
+    const url = 'https://ketelectropartes.com/admin/php/precargarPresupuestoCarrito.php';
+    console.log('📤 Enviando solicitud a URL absoluta:', url);
     
     // Usar jQuery para mayor compatibilidad
     $.ajax({
