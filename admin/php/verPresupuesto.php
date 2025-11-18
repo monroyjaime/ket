@@ -95,7 +95,7 @@ try {
             word-wrap: break-word;
         }
         .table-presupuesto th:nth-child(1), .table-presupuesto td:nth-child(1) { width: 5%; } /* Ítem */
-        .table-presupuesto th:nth-child(2), .table-presupuesto td:nth-child(2) { width: 8%; } /* Código */
+        .table-presupuesto th:nth-child(2), .table-presupuesto td:nth-child(2) { width: 12%; } /* Código */
         .table-presupuesto th:nth-child(3), .table-presupuesto td:nth-child(3) { width: 32%; } /* Descripción */
         .table-presupuesto th:nth-child(4), .table-presupuesto td:nth-child(4) { width: 7%; } /* Cantidad */
         .table-presupuesto th:nth-child(5), .table-presupuesto td:nth-child(5) { width: 7%; } /* Unidad */
@@ -303,7 +303,7 @@ try {
                         }
                         ?>
                     </td>
-                    <td class="text-right">$<?php echo number_format($detalle->cantidad * $detalle->precio, 3, ',', '.'); ?></td>
+                    <td class="text-right">$<?php echo number_format($detalle->cantidad * $detalle->precio, 2, ',', '.'); ?></td>
                 </tr>
                 <?php 
                 $contador_item++;
@@ -344,29 +344,29 @@ try {
                 <table class="totales-table">
                     <tr>
                         <td class="label">Sub-Total:</td>
-                        <td class="text-right">$<?php echo number_format($subtotal, 3, ',', '.'); ?></td>
+                        <td class="text-right">$<?php echo number_format($subtotal, 2, ',', '.'); ?></td>
                     </tr>
                     <?php if ($descuento > 0): ?>
                     <tr>
                         <td class="label">Descuento:</td>
-                        <td class="text-right">-$<?php echo number_format($descuento, 3, ',', '.'); ?></td>
+                        <td class="text-right">-$<?php echo number_format($descuento, 2, ',', '.'); ?></td>
                     </tr>
                     <?php endif; ?>
                     <?php if ($recargo > 0): ?>
                     <tr>
                         <td class="label">Recargo:</td>
-                        <td class="text-right">+$<?php echo number_format($recargo, 3, ',', '.'); ?></td>
+                        <td class="text-right">+$<?php echo number_format($recargo, 2, ',', '.'); ?></td>
                     </tr>
                     <?php endif; ?>
                     <?php if ($iva > 0): ?>
                     <tr>
                         <td class="label">IVA (<?php echo $iva_porcentaje; ?>%):</td>
-                        <td class="text-right">+$<?php echo number_format($iva, 3, ',', '.'); ?></td>
+                        <td class="text-right">+$<?php echo number_format($iva, 2, ',', '.'); ?></td>
                     </tr>
                     <?php endif; ?>
                     <tr class="total-row">
                         <td class="label">TOTAL:</td>
-                        <td class="text-right"><strong>$<?php echo number_format($total, 3, ',', '.'); ?></strong></td>
+                        <td class="text-right"><strong>$<?php echo number_format($total, 2, ',', '.'); ?></strong></td>
                     </tr>
                 </table>
             </div>
