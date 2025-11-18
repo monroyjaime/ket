@@ -394,50 +394,59 @@ try {
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
     function precargarEnCarrito(presupuestoId) {
-    if (!confirm('¿Está seguro de que desea precargar este presupuesto en el carrito?\n\nSe eliminarán los productos actuales del carrito y se cargarán los productos de este presupuesto.')) {
-        return;
-    }
-    
-    // Mostrar loading
-    const btn = event.target;
-    const originalText = btn.innerHTML;
-    btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Cargando...';
-    btn.disabled = true;
-    
-    // CORRECCIÓN: URL correcta con /admin/
-    //onst url = '../../php/precargarPresupuestoCarrito.php';
-    //console.log('📤 Enviando solicitud a:', url);
-    const url = 'https://ketelectropartes.com/admin/php/precargarPresupuestoCarrito.php';
-    console.log('📤 Enviando solicitud a URL absoluta:', url);
-    
-    // Usar jQuery para mayor compatibilidad
-    $.ajax({
-        url: url,
-        type: 'POST',
-        contentType: 'application/json',
-        data: JSON.stringify({
+        if (!confirm('¿Precargar presupuesto en carrito?')) {
+            return;
+        }
+        
+        const btn = event.target;
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Cargando...';
+        btn.disabled = true;
+        
+        const url = 'https://ketelectropartes.com/admin/php/precargarPresupuestoCarrito.php';
+        const datos = {
             presupuesto_id: presupuestoId,
             usuario_id: <?php echo $numUsr ?? -1; ?>
-        }),
-        success: function(data) {
-            console.log('📥 Respuesta recibida:', data);
-            if (data.success) {
-                // Redirigir a index.php y abrir modal automáticamente
-                window.location.href = 'index.php?abrir_modal=1';
-            } else {
-                alert('Error: ' + data.error);
+        };
+        
+        // Usar fetch para ver la respuesta cruda
+        fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(datos)
+        })
+        .then(response => response.text())  // Leer como texto primero
+        .then(text => {
+            console.log('Respuesta CRUDA:', text);
+            
+            try {
+                // Intentar parsear como JSON
+                const data = JSON.parse(text);
+                console.log('JSON parseado:', data);
+                
+                if (data.success) {
+                    window.location.href = 'index.php?abrir_modal=1';
+                } else {
+                    alert('Error: ' + data.error);
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
+                }
+            } catch (e) {
+                console.error('No es JSON válido:', e);
+                alert('El servidor devolvió un formato inválido. Ver consola para detalles.');
                 btn.innerHTML = originalText;
                 btn.disabled = false;
             }
-        },
-        error: function(xhr, status, error) {
-            console.error('Error completo:', {xhr: xhr, status: status, error: error});
-            alert('Error de conexión: ' + error);
+        })
+        .catch(error => {
+            console.error('Error de red:', error);
+            alert('Error de conexión: ' + error.message);
             btn.innerHTML = originalText;
             btn.disabled = false;
-        }
-    });
-}
-</script>
+        });
+    }
+    </script>
 </body>
 </html>

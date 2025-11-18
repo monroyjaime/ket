@@ -4,66 +4,63 @@ ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
 session_start();
-require_once("../../php/dbcat_async.php");
 
+// Respuesta inicial para debug
 header('Content-Type: application/json');
 
-// SIMPLIFICADO - Sin transacciones complejas
 try {
-    $db = new DBAsync();
-    $numUsr = filter_var($_SESSION['usr_num'] ?? -1, FILTER_VALIDATE_INT) ?: -1;
-
-    if ($numUsr <= 0) {
+    // Verificar sesión primero
+    if (!isset($_SESSION['usr_num']) || $_SESSION['usr_num'] <= 0) {
         throw new Exception('Usuario no autenticado');
     }
-
-    // LEER JSON
+    
+    $numUsr = $_SESSION['usr_num'];
+    
+    // Leer JSON del body
     $json_input = file_get_contents('php://input');
     $data = json_decode($json_input, true);
-
-    if (empty($data)) {
-        throw new Exception('Datos vacíos');
+    
+    if (!$data || !isset($data['presupuesto_id'])) {
+        throw new Exception('Datos inválidos');
     }
-
-    $presupuesto_id = intval($data['presupuesto_id'] ?? 0);
-    $usuario_id = intval($data['usuario_id'] ?? $numUsr);
-
+    
+    $presupuesto_id = intval($data['presupuesto_id']);
+    
     if ($presupuesto_id <= 0) {
         throw new Exception('ID de presupuesto inválido');
     }
-
-    // 1. LIMPIAR CARRITO ACTUAL (SIMPLE)
+    
+    // Incluir DB después de las validaciones básicas
+    require_once("../../php/dbcat_async.php");
+    $db = new DBAsync();
+    
+    // 1. Limpiar carrito actual
     $db->consultaSegura(
         "DELETE FROM presupuesto_carrito WHERE user_num = $1",
-        [$usuario_id]
+        [$numUsr]
     );
-
-    // 2. OBTENER DETALLES
+    
+    // 2. Obtener detalles del presupuesto
     $detalles = $db->consultaSegura(
         "SELECT product_code, cantidad, precio, tiempo_entrega 
          FROM presupuesto_detail 
          WHERE pres_idx = $1",
         [$presupuesto_id]
     );
-
+    
     if (empty($detalles)) {
         throw new Exception('No se encontraron productos en el presupuesto');
     }
-
-    // 3. INSERTAR PRODUCTOS
+    
+    // 3. Insertar productos en el carrito (sin verificar existencia)
     $productosCargados = 0;
     foreach ($detalles as $detalle) {
-        // Insertar directamente sin verificar existencia (más rápido)
         $db->consultaSegura(
             "INSERT INTO presupuesto_carrito 
             (user_num, product_code, cantidad, precio, tiempo_entrega) 
-            VALUES ($1, $2, $3, $4, $5)
-            ON CONFLICT (user_num, product_code) DO UPDATE SET
-            cantidad = EXCLUDED.cantidad,
-            precio = EXCLUDED.precio,
-            tiempo_entrega = EXCLUDED.tiempo_entrega",
+            VALUES ($1, $2, $3, $4, $5)",
             [
-                $usuario_id,
+                $numUsr,
                 $detalle->product_code,
                 $detalle->cantidad,
                 $detalle->precio,
@@ -72,18 +69,17 @@ try {
         );
         $productosCargados++;
     }
-
+    
+    // Éxito
     echo json_encode([
         'success' => true,
         'message' => 'Presupuesto precargado correctamente',
         'productos_cargados' => $productosCargados,
         'total_productos' => count($detalles)
     ]);
-
-} catch (Exception $e) {
-    // Log del error
-    error_log("Error en precargarPresupuestoCarrito: " . $e->getMessage());
     
+} catch (Exception $e) {
+    // Error en formato JSON
     echo json_encode([
         'success' => false,
         'error' => $e->getMessage()
