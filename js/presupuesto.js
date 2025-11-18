@@ -235,6 +235,7 @@ function refreshCarritoTable() {
                 console.log('✅ Tabla refrescada, restaurando posición...');
                 restaurarPosicionScroll();
                 bloquearInterfaz(false); // DESBLOQUEAR aquí
+                updateTotal(); // ← AGREGAR ESTA LÍNEA
                 resolve();
             });
             
@@ -243,6 +244,7 @@ function refreshCarritoTable() {
                 console.log('⏰ Timeout de seguridad, restaurando posición...');
                 restaurarPosicionScroll();
                 bloquearInterfaz(false); // DESBLOQUEAR aquí
+                updateTotal(); // ← AGREGAR ESTA LÍNEA
                 resolve();
             }, 1500);
         } else {
@@ -888,7 +890,7 @@ function calcularIVA() {
         updateTotal();
     }
 }
-
+$('#ModalMakePedido').on('shown.bs.modal')
 // Inicialización
 $(document).ready(function() {
     console.log('🚀 presupuesto.js inicializado');

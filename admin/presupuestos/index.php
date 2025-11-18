@@ -692,6 +692,15 @@ $tituloLista = '<h2 style="background-color: #037C79; padding-bottom: 14px; colo
                                     precio: precioPorDefecto
                                 }, function(updateData) {
                                     console.log('Precio por defecto establecido: ' + updateData);
+                                    
+                                    // ACTUALIZAR EL TOTAL DEL PRESUPUESTO
+                                    if (typeof updateTotal === 'function') {
+                                        // Pequeño delay para asegurar que la BD se actualizó
+                                        setTimeout(() => {
+                                            updateTotal();
+                                            console.log('✅ Total actualizado después de precio por defecto');
+                                        }, 300);
+                                    }
                                 });
                             }, 100);
                         }
