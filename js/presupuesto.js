@@ -235,7 +235,7 @@ function refreshCarritoTable() {
                 console.log('✅ Tabla refrescada, restaurando posición...');
                 restaurarPosicionScroll();
                 bloquearInterfaz(false); // DESBLOQUEAR aquí
-                updateTotal(); // ← AGREGAR ESTA LÍNEA
+                //updateTotal(); // ← AGREGAR ESTA LÍNEA
                 resolve();
             });
             
@@ -244,7 +244,7 @@ function refreshCarritoTable() {
                 console.log('⏰ Timeout de seguridad, restaurando posición...');
                 restaurarPosicionScroll();
                 bloquearInterfaz(false); // DESBLOQUEAR aquí
-                updateTotal(); // ← AGREGAR ESTA LÍNEA
+                //updateTotal(); // ← AGREGAR ESTA LÍNEA
                 resolve();
             }, 1500);
         } else {
@@ -621,6 +621,20 @@ function recalcularTiempoEntrega(code, cantidad) {
 function updateTotal() {
     if ($tableMakePedido && $tableMakePedido.length > 0) {
         var rows = $tableMakePedido.bootstrapTable('getData');
+        
+        // Si no hay filas o todas tienen cantidad 0, mostrar mensaje
+        if (rows.length === 0 || rows.every(row => parseInt(row.cantidad) === 0)) {
+            $('#MontoTotal').html(`
+                <div class="text-muted">
+                    <i class="bi bi-arrow-clockwise"></i> 
+                    <button class="btn btn-sm btn-outline-primary" onclick="updateTotal()">
+                        Actualizar Total
+                    </button>
+                </div>
+            `);
+            return;
+        }
+        
         let subtotal = 0;
         
         for (let i = 0; i < rows.length; i++) {
@@ -629,14 +643,13 @@ function updateTotal() {
             subtotal += cantidad * precio;
         }
         
-        // Obtener valores actuales
+        // ... el resto del código de cálculos permanece igual ...
         const descuentoPorcentaje = parseFloat($('#descuento_porcentaje').val()) || 0;
         let descuentoMonto = parseFloat($('#descuento_monto').val()) || 0;
         const recargoMonto = parseFloat($('#recargo_monto').val()) || 0;
         const ivaPorcentaje = parseFloat($('#iva_porcentaje').val()) || 0;
         let ivaMonto = parseFloat($('#iva_monto').val()) || 0;
         
-        // Recalcular descuento si hay porcentaje
         if (descuentoPorcentaje > 0) {
             descuentoMonto = subtotal * (descuentoPorcentaje / 100);
             $('#descuento_monto').val(descuentoMonto.toFixed(3));
@@ -645,7 +658,6 @@ function updateTotal() {
             descuentoMonto = 0;
         }
         
-        // Recalcular IVA si hay porcentaje
         const baseIVA = subtotal - descuentoMonto + recargoMonto;
         if (ivaPorcentaje > 0) {
             ivaMonto = baseIVA * (ivaPorcentaje / 100);
@@ -660,13 +672,22 @@ function updateTotal() {
         const totalFormateado = total.toFixed(3).replace('.', ',');
         const subtotalFormateado = subtotal.toFixed(3).replace('.', ',');
         
-        // Mostrar solo los campos que tienen valores > 0
         $('#MontoTotal').html(`
             <div>Sub-Total: $${subtotalFormateado}</div>
             ${descuentoMonto > 0 ? `<div>Descuento (${descuentoPorcentaje}%): -$${descuentoMonto.toFixed(3).replace('.', ',')}</div>` : ''}
             ${recargoMonto > 0 ? `<div>Recargo: +$${recargoMonto.toFixed(3).replace('.', ',')}</div>` : ''}
             ${ivaMonto > 0 ? `<div>IVA (${ivaPorcentaje}%): +$${ivaMonto.toFixed(3).replace('.', ',')}</div>` : ''}
             <div><strong>Total: $${totalFormateado}</strong></div>
+        `);
+    } else {
+        // Si no hay tabla, mostrar mensaje
+        $('#MontoTotal').html(`
+            <div class="text-muted">
+                <i class="bi bi-arrow-clockwise"></i> 
+                <button class="btn btn-sm btn-outline-primary" onclick="updateTotal()">
+                    Actualizar Total
+                </button>
+            </div>
         `);
     }
 }
@@ -928,7 +949,7 @@ $(document).ready(function() {
         console.log('✅ Modal completamente visible, refrescando tabla...');
         if ($tableMakePedido && $tableMakePedido.length > 0) {
             $tableMakePedido.bootstrapTable('refresh');
-            updateTotal();
+            //updateTotal();
         }
     });
     
