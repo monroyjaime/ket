@@ -921,15 +921,24 @@ $(document).ready(function() {
     console.log('📊 Márgenes en presupuesto.js:', {ganancia_min_glob, descuento_max_glob});
     
     // Inicializar Tom Select cuando se abre el modal Y refrescar tabla
+    // Modificar el evento show.bs.modal para manejar precargas
     $('#ModalMakePedido').on('show.bs.modal', function() {
         console.log('🎯 Modal de presupuesto abriéndose...');
-        filaScrollIndex = 0; // Resetear al abrir modal
+        filaScrollIndex = 0;
         codigoProductoScroll = '';
         
         // Limpiar timeout de bloqueo
         if (timeoutBloqueo) {
             clearTimeout(timeoutBloqueo);
             timeoutBloqueo = null;
+        }
+        
+        // Verificar si viene de una precarga
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('abrir_modal') === '1') {
+            console.log('📥 Modal abierto por precarga de presupuesto');
+            // Ejecutar manejo de precarga
+            setTimeout(manejarPrecargaPresupuesto, 100);
         }
         
         // Refrescar la tabla del carrito cuando el modal se muestre
@@ -1005,5 +1014,34 @@ function obtenerProximoNumeroSecuencial() {
                 resolve(generarNumeroPresupuesto());
             }
         });
+    });
+}
+
+// Función para manejar la precarga de presupuestos
+function manejarPrecargaPresupuesto() {
+    console.log('🔄 Verificando precarga de presupuesto...');
+    
+    // Forzar una actualización más completa del carrito
+    forzarActualizacionCarrito().then(() => {
+        console.log('✅ Carrito actualizado después de precarga');
+        
+        // Refrescar la tabla principal para actualizar checks
+        if (typeof $tableMain !== 'undefined' && $tableMain.length > 0) {
+            $tableMain.bootstrapTable('refresh');
+        }
+        
+        // Refrescar la tabla del carrito
+        if ($tableMakePedido && $tableMakePedido.length > 0) {
+            setTimeout(() => {
+                $tableMakePedido.bootstrapTable('refresh');
+                console.log('🔄 Tabla del carrito refrescada después de precarga');
+                
+                // Actualizar total después de un breve delay
+                setTimeout(() => {
+                    updateTotal();
+                    console.log('💰 Total actualizado después de precarga');
+                }, 800);
+            }, 300);
+        }
     });
 }

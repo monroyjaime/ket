@@ -382,6 +382,8 @@ try {
         <div class="no-print text-center">
             <button class="btn btn-primary" onclick="window.print()">🖨️ Imprimir PDF</button>
             <button class="btn btn-secondary" onclick="window.history.back()">← Volver</button>
+<!-- NUEVO BOTÓN PARA PRECARGAR EN CARRITO -->
+    <button class="btn btn-warning" onclick="precargarEnCarrito(<?php echo $presupuesto->idx; ?>)"><i class="bi bi-cart-plus"></i> Usar para Nuevo Presupuesto</button>
             <a href="index.php" class="btn btn-success">🏠 Ir al Inicio</a>
             <a href="../presupuestos/presupuestoImages.php?pres_num=<?php echo $presupuesto->idx; ?>" class="btn btn-info">
                 <i class="bi bi-images"></i> Ver Imágenes
@@ -390,5 +392,47 @@ try {
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+    function precargarEnCarrito(presupuestoId) {
+        if (!confirm('¿Está seguro de que desea precargar este presupuesto en el carrito?\n\nSe eliminarán los productos actuales del carrito y se cargarán los productos de este presupuesto.')) {
+            return;
+        }
+        
+        // Mostrar loading
+        const btn = event.target;
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Cargando...';
+        btn.disabled = true;
+        
+        // Llamar al servicio PHP para precargar
+        fetch('../../php/precargarPresupuestoCarrito.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                presupuesto_id: presupuestoId,
+                usuario_id: <?php echo $numUsr ?? -1; ?>
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Redirigir a index.php y abrir modal automáticamente
+                window.location.href = 'index.php?abrir_modal=1';
+            } else {
+                alert('Error: ' + data.error);
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error de conexión');
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+        });
+    }
+    </script>
 </body>
 </html>

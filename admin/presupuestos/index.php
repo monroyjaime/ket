@@ -748,6 +748,71 @@ $tituloLista = '<h2 style="background-color: #037C79; padding-bottom: 14px; colo
     });
 
     console.log('Página cargada correctamente');
+
+    // Función para abrir modal automáticamente cuando viene con parámetro
+    function verificarAbrirModal() {
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('abrir_modal') === '1') {
+            console.log('Abriendo modal automáticamente...');
+            
+            // Pequeño delay para asegurar que todo esté cargado
+            setTimeout(() => {
+                // Forzar actualización del carrito primero
+                forzarActualizacionCarrito().then(() => {
+                    console.log('Carrito actualizado, abriendo modal...');
+                    
+                    // Mostrar el modal
+                    $('#ModalMakePedido').modal('show');
+                    
+                    // Limpiar el parámetro de la URL sin recargar
+                    const nuevaUrl = window.location.pathname;
+                    window.history.replaceState({}, '', nuevaUrl);
+                    
+                    // Mostrar mensaje informativo
+                    setTimeout(() => {
+                        if (typeof showToast === 'function') {
+                            showToast('success', 'Presupuesto precargado', 'Los productos del presupuesto anterior se han cargado en el carrito. Recuerde seleccionar cliente y número de presupuesto.');
+                        } else {
+                            alert('✅ Presupuesto precargado correctamente. Recuerde seleccionar cliente y número de presupuesto.');
+                        }
+                    }, 1000);
+                });
+            }, 500);
+        }
+    }
+
+    // Función auxiliar para mostrar notificaciones (si no existe)
+    function showToast(type, title, message) {
+        // Crear toast básico si no hay sistema de notificaciones
+        const toastId = 'toast-' + Date.now();
+        const toastHtml = `
+            <div id="${toastId}" class="toast align-items-center text-bg-${type} border-0 position-fixed top-0 end-0 m-3" role="alert">
+                <div class="d-flex">
+                    <div class="toast-body">
+                        <strong>${title}</strong><br>${message}
+                    </div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                </div>
+            </div>
+        `;
+        
+        $('body').append(toastHtml);
+        const toastElement = document.getElementById(toastId);
+        const toast = new bootstrap.Toast(toastElement);
+        toast.show();
+        
+        // Remover del DOM después de ocultar
+        toastElement.addEventListener('hidden.bs.toast', function () {
+            $(this).remove();
+        });
+    }
+
+    // Llamar la función cuando el documento esté listo
+    $(document).ready(function() {
+        verificarAbrirModal();
+    });
+
+
 </script>
 </body>
 </html>
