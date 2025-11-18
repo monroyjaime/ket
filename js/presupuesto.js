@@ -335,6 +335,16 @@ function precioCombinadoFormater(value, row) {
     const resultadoMay = verificarMargenPrecio(costo, precMay);
     const resultado3 = verificarMargenPrecio(costo, prec3);
     
+    // CORRECCIÓN: Condiciones de disabled más estrictas
+    const minDisabled = precMin === 0 ? 'disabled' : '';
+    const mayDisabled = precMay === 0 ? 'disabled' : '';
+    const prec3Disabled = prec3 === 0 ? 'disabled' : '';
+    
+    // CORRECCIÓN: Asegurar que los radio buttons deshabilitados no puedan estar checked
+    const minChecked = (precioSeleccionado === 'precio1' && precMin > 0) ? 'checked' : '';
+    const mayChecked = (precioSeleccionado === 'precio2' && precMay > 0) ? 'checked' : '';
+    const prec3Checked = (precioSeleccionado === 'precio3' && prec3 > 0) ? 'checked' : '';
+    
     // Indicador de precio histórico
     const indicadorHistorico = esPrecioHistorico ? 
         `<div class="alert alert-warning py-1 mt-1 small" style="font-size: 0.7rem; margin-bottom: 8px;">
@@ -351,8 +361,8 @@ function precioCombinadoFormater(value, row) {
             <div class="precio-opciones mb-2">
                 <div class="form-check form-check-inline">
                     <input class="form-check-input precio-radio" type="radio" name="precio_${row.code}" 
-                           value="${precMin}" ${precioSeleccionado === 'precio1' ? 'checked' : ''} 
-                           ${precMin === 0 ? 'disabled' : ''} 
+                           value="${precMin}" ${minChecked} 
+                           ${minDisabled}
                            onchange="seleccionarPrecio(this, '${row.code}')">
                     <label class="form-check-label small">
                         <span class="badge badge-margen ${resultadoMin.cumpleMargen ? 'bg-success' : 'bg-danger'}">$${precMin.toFixed(3).replace('.', ',')}</span> 
@@ -361,8 +371,8 @@ function precioCombinadoFormater(value, row) {
                 
                 <div class="form-check form-check-inline">
                     <input class="form-check-input precio-radio" type="radio" name="precio_${row.code}" 
-                           value="${precMay}" ${precioSeleccionado === 'precio2' ? 'checked' : ''} 
-                           ${precMay === 0 ? 'disabled' : ''} 
+                           value="${precMay}" ${mayChecked} 
+                           ${mayDisabled}
                            onchange="seleccionarPrecio(this, '${row.code}')">
                     <label class="form-check-label small">
                         <span class="badge badge-margen ${resultadoMay.cumpleMargen ? 'bg-success' : 'bg-danger'}">$${precMay.toFixed(3).replace('.', ',')}</span>
@@ -371,8 +381,8 @@ function precioCombinadoFormater(value, row) {
                 
                 <div class="form-check form-check-inline">
                     <input class="form-check-input precio-radio" type="radio" name="precio_${row.code}" 
-                           value="${prec3}" ${precioSeleccionado === 'precio3' ? 'checked' : ''} 
-                           ${prec3 === 0 ? 'disabled' : ''} 
+                           value="${prec3}" ${prec3Checked} 
+                           ${prec3Disabled}
                            onchange="seleccionarPrecio(this, '${row.code}')">
                     <label class="form-check-label small">
                         <span class="badge badge-margen ${resultado3.cumpleMargen ? 'bg-success' : 'bg-danger'}">$${prec3.toFixed(3).replace('.', ',')}</span>
