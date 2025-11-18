@@ -278,13 +278,19 @@ function precioCombinadoFormater(value, row) {
     const precMay = parseFloat(row.prec_may) || 0;
     const prec3 = parseFloat(row.prec_3) || 0;
     const costo = parseFloat(row.costo) || 0;
-    let precioActual = parseFloat(row.precio) || 0; // Cambiar a let para poder modificarlo
-    const minimoPrecio = parseFloat(costo*(ganancia_min_glob/descuento_max_glob)) || 0;
+    
+    // USAR SIEMPRE EL PRECIO DEL CARRITO (precio histórico cuando se precarga)
+    let precioActual = parseFloat(row.precio) || 0;
     
     // Determinar qué precio está seleccionado actualmente
     let precioSeleccionado = '';
     let esManual = false;
-    let necesitaActualizarPrecio = false;
+
+    // Verificar si es un precio histórico (diferente a los precios actuales)
+    const esPrecioHistorico = (precioActual > 0) && 
+                             (precioActual !== precMin) && 
+                             (precioActual !== precMay) && 
+                             (precioActual !== prec3);
 
     if (precioActual === precMin) {
         precioSeleccionado = 'precio1';
@@ -296,31 +302,28 @@ function precioCombinadoFormater(value, row) {
         precioSeleccionado = 'manual';
         esManual = true;
     } else {
-        // SI NO HAY PRECIO SELECCIONADO, ELEGIR EL PRIMERO DISPONIBLE
+        // SOLO SI NO HAY PRECIO SELECCIONADO, ELEGIR EL PRIMERO DISPONIBLE
+        // Esto solo pasa cuando el producto es nuevo en el carrito, no cuando se precarga
         if (precMin > 0) {
             precioSeleccionado = 'precio1';
             precioActual = precMin;
-            necesitaActualizarPrecio = true;
         } else if (precMay > 0) {
             precioSeleccionado = 'precio2';
             precioActual = precMay;
-            necesitaActualizarPrecio = true;
         } else if (prec3 > 0) {
             precioSeleccionado = 'precio3';
             precioActual = prec3;
-            necesitaActualizarPrecio = true;
         }
     }
 
-    // Si necesita actualizar el precio, hacerlo automáticamente
-    if (necesitaActualizarPrecio && precioActual > 0) {
+    // Si se estableció un precio por defecto (solo para productos nuevos), guardarlo
+    if (precioActual > 0 && parseFloat(row.precio) !== precioActual) {
         setTimeout(() => {
             $.post("../../php/updPrecioOneProdCarrito.php", {
                 code: row.code,
                 precio: precioActual
             }, function(data) {
                 if (data == '1') {
-                    // Actualizar el total después de establecer el precio por defecto
                     updateTotal();
                 }
             });
@@ -332,8 +335,18 @@ function precioCombinadoFormater(value, row) {
     const resultadoMay = verificarMargenPrecio(costo, precMay);
     const resultado3 = verificarMargenPrecio(costo, prec3);
     
+    // Indicador de precio histórico
+    const indicadorHistorico = esPrecioHistorico ? 
+        `<div class="alert alert-warning py-1 mt-1 small" style="font-size: 0.7rem; margin-bottom: 8px;">
+            <i class="bi bi-clock-history"></i> 
+            <strong>Precio histórico:</strong> $${precioActual.toFixed(3).replace('.', ',')}
+            <br><small>Del presupuesto original - Puede cambiarlo si lo desea</small>
+        </div>` : '';
+
     return `
         <div class="precio-combinado-container" style="min-width: 320px;">
+            ${indicadorHistorico}
+            
             <!-- Selector de precios predefinidos -->
             <div class="precio-opciones mb-2">
                 <div class="form-check form-check-inline">
@@ -372,7 +385,7 @@ function precioCombinadoFormater(value, row) {
                 <div class="input-group input-group-sm" style="min-width: 180px;">
                     <span class="input-group-text">Manual:</span>
                     <input class="form-control precio-manual-input" type="number" step="0.001" min="0" 
-                           value="${esManual ? precioActual : ''}" 
+                           value="${esManual || esPrecioHistorico ? precioActual : ''}" 
                            data-code="${row.code}" 
                            placeholder="0.000"
                            onfocus="this.select()" 
@@ -384,7 +397,7 @@ function precioCombinadoFormater(value, row) {
             
             <!-- Información de costos -->
             <div class="precio-info small text-muted mt-1">
-                Costo: $${costo.toFixed(3).replace('.', ',')} | Mínimo: $${minimoPrecio.toFixed(3).replace('.', ',')} | (${ganancia_min_glob}/${descuento_max_glob})x
+                Costo: $${costo.toFixed(3).replace('.', ',')} | Mínimo: $${(costo*(ganancia_min_glob/descuento_max_glob)).toFixed(3).replace('.', ',')} | (${ganancia_min_glob}/${descuento_max_glob})x
             </div>
         </div>
     `;

@@ -52,34 +52,58 @@ try {
         throw new Exception('No se encontraron productos en el presupuesto');
     }
     
-    // 3. Insertar productos en el carrito (sin verificar existencia)
+    // 3. Insertar productos en el carrito (manteniendo precios históricos)
     $productosCargados = 0;
+    $productosNoEncontrados = 0;
+    
     foreach ($detalles as $detalle) {
-        $db->consultaSegura(
-            "INSERT INTO presupuesto_carrito 
-            (user_num, product_code, cantidad, precio, tiempo_entrega) 
-            VALUES ($1, $2, $3, $4, $5)",
-            [
-                $numUsr,
-                $detalle->product_code,
-                $detalle->cantidad,
-                $detalle->precio,
-                $detalle->tiempo_entrega
-            ]
+        // Verificar que el producto existe antes de insertar
+        $productoExiste = $db->consultaSegura(
+            "SELECT code FROM productos WHERE code = $1",
+            [$detalle->product_code]
         );
-        $productosCargados++;
+        
+        if (!empty($productoExiste)) {
+            // Insertar con precio histórico del presupuesto original
+            $db->consultaSegura(
+                "INSERT INTO presupuesto_carrito 
+                (user_num, product_code, cantidad, precio, tiempo_entrega) 
+                VALUES ($1, $2, $3, $4, $5)",
+                [
+                    $numUsr,
+                    $detalle->product_code,
+                    $detalle->cantidad,
+                    $detalle->precio,  // Precio histórico del presupuesto original
+                    $detalle->tiempo_entrega
+                ]
+            );
+            $productosCargados++;
+        } else {
+            // Producto no encontrado en la base de datos actual
+            $productosNoEncontrados++;
+            error_log("Producto no encontrado al precargar: " . $detalle->product_code);
+        }
+    }
+    
+    // Mensaje informativo
+    $mensaje = 'Presupuesto precargado correctamente';
+    if ($productosNoEncontrados > 0) {
+        $mensaje .= ". " . $productosNoEncontrados . " productos no se encontraron en el catálogo actual.";
     }
     
     // Éxito
     echo json_encode([
         'success' => true,
-        'message' => 'Presupuesto precargado correctamente',
+        'message' => $mensaje,
         'productos_cargados' => $productosCargados,
-        'total_productos' => count($detalles)
+        'total_productos' => count($detalles),
+        'productos_no_encontrados' => $productosNoEncontrados
     ]);
     
 } catch (Exception $e) {
     // Error en formato JSON
+    error_log("Error en precargarPresupuestoCarrito: " . $e->getMessage());
+    
     echo json_encode([
         'success' => false,
         'error' => $e->getMessage()

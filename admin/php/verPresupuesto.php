@@ -394,6 +394,10 @@ try {
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
     function precargarEnCarrito(presupuestoId) {
+        // Preguntar qué hacer con los precios
+        const opcionPrecios = confirm('¿Desea usar los precios actuales de los productos?\n\n' +
+                                    '• OK = Usar precios ACTUALES\n' +
+                                    '• Cancelar = Mantener precios HISTÓRICOS del presupuesto');
         if (!confirm('¿Precargar presupuesto en carrito?')) {
             return;
         }
@@ -406,7 +410,8 @@ try {
         const url = 'https://ketelectropartes.com/admin/php/precargarPresupuestoCarrito.php';
         const datos = {
             presupuesto_id: presupuestoId,
-            usuario_id: <?php echo $numUsr ?? -1; ?>
+            usuario_id: <?php echo $numUsr ?? -1; ?>,
+            usar_precios_actuales: opcionPrecios // true = actuales, false = históricos
         };
         
         // Usar fetch para ver la respuesta cruda
