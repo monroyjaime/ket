@@ -393,8 +393,7 @@ try {
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-    <script>
-function precargarEnCarrito(presupuestoId) {
+    function precargarEnCarrito(presupuestoId) {
     if (!confirm('¿Está seguro de que desea precargar este presupuesto en el carrito?\n\nSe eliminarán los productos actuales del carrito y se cargarán los productos de este presupuesto.')) {
         return;
     }
@@ -409,42 +408,34 @@ function precargarEnCarrito(presupuestoId) {
     const url = '../../php/precargarPresupuestoCarrito.php';
     console.log('📤 Enviando solicitud a:', url);
     
-    // Llamar al servicio PHP para precargar
-    fetch(url, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
+    // Usar jQuery para mayor compatibilidad
+    $.ajax({
+        url: url,
+        type: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({
             presupuesto_id: presupuestoId,
             usuario_id: <?php echo $numUsr ?? -1; ?>
-        })
-    })
-    .then(response => {
-        if (!response.ok) {
-            throw new Error('Error HTTP: ' + response.status);
-        }
-        return response.json();
-    })
-    .then(data => {
-        console.log('📥 Respuesta recibida:', data);
-        if (data.success) {
-            // Redirigir a index.php y abrir modal automáticamente
-            window.location.href = 'index.php?abrir_modal=1';
-        } else {
-            alert('Error: ' + data.error);
+        }),
+        success: function(data) {
+            console.log('📥 Respuesta recibida:', data);
+            if (data.success) {
+                // Redirigir a index.php y abrir modal automáticamente
+                window.location.href = 'index.php?abrir_modal=1';
+            } else {
+                alert('Error: ' + data.error);
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        },
+        error: function(xhr, status, error) {
+            console.error('Error completo:', {xhr: xhr, status: status, error: error});
+            alert('Error de conexión: ' + error);
             btn.innerHTML = originalText;
             btn.disabled = false;
         }
-    })
-    .catch(error => {
-        console.error('Error completo:', error);
-        alert('Error de conexión: ' + error.message);
-        btn.innerHTML = originalText;
-        btn.disabled = false;
     });
 }
 </script>
-    </script>
 </body>
 </html>
