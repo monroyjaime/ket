@@ -263,7 +263,7 @@ try {
                     <?php echo htmlspecialchars($presupuesto->cliente); ?>
                 </div>
                 <div class="col-md-6 text-end" style="font-size: 0.9em;">
-                    <strong>Atendido por:</strong><br>
+                    <strong>Elaborado por:</strong><br>
                     <?php echo htmlspecialchars($presupuesto->usuario_nombre ?? 'Sistema'); ?>
                 </div>
             </div>
