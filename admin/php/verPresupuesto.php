@@ -376,7 +376,7 @@ try {
         <!-- Pie de página -->
         <div class="presupuesto-footer text-center" style="font-size: 0.9em;">
             <p>¡Gracias por su preferencia!<br>
-            Este presupuesto es válido por 30 días</p>
+            Este presupuesto es válido por 3 días</p>
         </div>
 
         <!-- Botones de acción -->
