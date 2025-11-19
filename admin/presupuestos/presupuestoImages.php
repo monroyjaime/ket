@@ -102,6 +102,41 @@ try {
         $tags .= '<p class="text-muted">Página ' . htmlspecialchars($pageNum) . ' de ' . htmlspecialchars($numPages) . '</p>';
     }
     $tags .= '</div>';
+
+
+    // AGREGAR CONTROLES DE NAVEGACIÓN SI HAY MÁS DE 1 PÁGINA
+    if ($numPages > 1) {
+        $tags .= '<div class="row mb-4">';
+        $tags .= '<div class="col text-center">';
+        $tags .= '<div class="btn-group" role="group">';
+        
+        // Botón Anterior
+        if ($pageNum > 1) {
+            $tags .= '<a href="?pres_num=' . $presupuestoId . '&page_num=' . ($pageNum - 1) . '" class="btn btn-outline-primary">';
+            $tags .= '<i class="bi bi-chevron-left"></i> Anterior';
+            $tags .= '</a>';
+        } else {
+            $tags .= '<button class="btn btn-outline-secondary" disabled><i class="bi bi-chevron-left"></i> Anterior</button>';
+        }
+        
+        // Indicador de página
+        $tags .= '<span class="btn btn-light disabled">Página ' . $pageNum . ' de ' . $numPages . '</span>';
+        
+        // Botón Siguiente
+        if ($pageNum < $numPages) {
+            $tags .= '<a href="?pres_num=' . $presupuestoId . '&page_num=' . ($pageNum + 1) . '" class="btn btn-outline-primary">';
+            $tags .= 'Siguiente <i class="bi bi-chevron-right"></i>';
+            $tags .= '</a>';
+        } else {
+            $tags .= '<button class="btn btn-outline-secondary" disabled>Siguiente <i class="bi bi-chevron-right"></i></button>';
+        }
+        
+        $tags .= '</div>';
+        $tags .= '</div>';
+        $tags .= '</div>';
+    }
+
+
     
     // Grid adaptable
     $tags .= '<div class="row row-cols-1 row-cols-sm-' . $columnasPorFila . ' g-4">';
@@ -231,8 +266,9 @@ try {
             <small class="text-muted ms-2">imagenesPres-<?php echo $numValery; ?>.pdf</small>
         </div>
 
-        <button class="btn btn-print btn-sm" onclick="imprimirPDF()" title="Imprimir PDF - Sugerencia: Guardar como imagenesPres-<?php echo $numValery; ?>.pdf">
-            <i class="bi bi-printer-fill"></i> Imprimir PDF
+        <button class="btn btn-print btn-sm" onclick="imprimirPDF()" 
+                title="Imprimir PDF - Página <?php echo $pageNum; ?> de <?php echo $numPages; ?>">
+            <i class="bi bi-printer-fill"></i> Imprimir PDF (Pág. <?php echo $pageNum; ?>)
         </button>
         
         <div class="col text-end" style="max-height: 40px;">
@@ -258,14 +294,14 @@ try {
     function backHome() {      
         window.location.href = "index.php";
     }
-    
+
     // Función de impresión con nombre sugerido
     function imprimirPDF() {
         console.log(`Imprimiendo ${productosEnPagina} productos del presupuesto ${presupuestoId}`);
         
         // Establecer el título del documento para sugerir nombre de archivo
         const tituloOriginal = document.title;
-        const nombreArchivo = `imagenesPres-${numValery}`;
+        const nombreArchivo = `imagenesPres-${numValery}-pag${currentPage}`;
         document.title = nombreArchivo;
         
         window.print();
@@ -275,28 +311,51 @@ try {
             document.title = tituloOriginal;
         }, 1000);
     }
-    
-    // Navegación por teclado
+
+    // Navegación por teclado MEJORADA
     document.addEventListener('keydown', function(e) {
-        if (e.key === 'ArrowLeft') {
-            if (currentPage > 1) {
-                window.location.href = `?pres_num=${presupuestoId}&page_num=${currentPage - 1}`;
+        // Solo si no estamos en un input de texto
+        if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
+            if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+                // Anterior página
+                if (currentPage > 1) {
+                    window.location.href = `?pres_num=${presupuestoId}&page_num=${currentPage - 1}`;
+                }
+            } else if (e.key === 'ArrowRight' || e.key === 'PageDown') {
+                // Siguiente página
+                if (currentPage < totalPages) {
+                    window.location.href = `?pres_num=${presupuestoId}&page_num=${currentPage + 1}`;
+                }
+            } else if (e.key === 'Home') {
+                // Primera página
+                if (currentPage > 1) {
+                    window.location.href = `?pres_num=${presupuestoId}&page_num=1`;
+                }
+            } else if (e.key === 'End') {
+                // Última página
+                if (currentPage < totalPages) {
+                    window.location.href = `?pres_num=${presupuestoId}&page_num=${totalPages}`;
+                }
+            } else if (e.key === 'p' && (e.ctrlKey || e.metaKey)) {
+                e.preventDefault();
+                imprimirPDF();
             }
-        } else if (e.key === 'ArrowRight') {
-            if (currentPage < totalPages) {
-                window.location.href = `?pres_num=${presupuestoId}&page_num=${currentPage + 1}`;
-            }
-        } else if (e.key === 'p' && (e.ctrlKey || e.metaKey)) {
-            e.preventDefault();
-            imprimirPDF();
         }
     });
+
+    // Mostrar ayuda de navegación por teclado
+    console.log('🎮 Controles de navegación:');
+    console.log('← / PageUp: Página anterior');
+    console.log('→ / PageDown: Página siguiente');
+    console.log('Home: Primera página');
+    console.log('End: Última página');
+    console.log('Ctrl+P: Imprimir PDF');
 
     // Estilos para impresión
     const printStyle = document.createElement('style');
     printStyle.innerHTML = `
         @media print {
-            .btn-print, .bi-arrow-left-circle-fill {
+            .btn-print, .bi-arrow-left-circle-fill, .pagination {
                 display: none !important;
             }
             body {
@@ -332,19 +391,6 @@ try {
         numValery: numValery,
         pagina: `${currentPage}/${totalPages}`
     });
-
-    function imprimirPDF() {
-        console.log(`Imprimiendo ${productosEnPagina} productos del presupuesto ${presupuestoId}`);
-        
-        // Mostrar mensaje útil al usuario
-        const nombreSugerido = `imagenesPres-${numValery}.pdf`;
-        console.log(`💡 Sugerencia: Guardar como "${nombreSugerido}"`);
-        
-        // Opcional: mostrar alerta (puede ser molesto)
-        // alert(`💡 Sugerencia: Guardar como "${nombreSugerido}"`);
-        
-        window.print();
-    }
 </script> 
 
 </body>
