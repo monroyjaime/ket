@@ -769,68 +769,50 @@ function inicializarTiemposEntrega() {
 
 // Función para guardar presupuesto
 function guardarPresupuesto() {
-
-console.log('🎯 guardarPresupuesto() EJECUTADA');
-    
-    // DEBUG: Ver qué datos tiene la tabla actualmente
-    if ($tableMakePedido && $tableMakePedido.length > 0) {
-        var rows = $tableMakePedido.bootstrapTable('getData');
-        console.log('📊 Datos actuales en tabla carrito:', rows);
-        
-        // Verificar tiempos de entrega específicamente
-        rows.forEach((row, index) => {
-            console.log(`Producto ${index}: ${row.code} - Tiempo: ${row.tiempo_entrega} - Cantidad: ${row.cantidad} - Precio: ${row.precio}`);
-        });
-    }
+    console.log('🎯 guardarPresupuesto() EJECUTADA - VERSIÓN CORREGIDA');
     
     const selectedClient = ctrlClientSel.getValue();
     console.log('🔍 Cliente seleccionado:', selectedClient);
     
-    // Obtener el número (puede ser automático o manual)
-    let numeroPresupuesto = $('#numero-presupuesto').val();
-    
-    // Si está vacío, usar el placeholder o generar uno
-    if (!numeroPresupuesto || numeroPresupuesto.trim() === '') {
-        // Intentar usar el placeholder o generar uno de emergencia
-        numeroPresupuesto = $('#numero-presupuesto').attr('placeholder') || generarNumeroPresupuesto();
-        // Limpiar si es texto del placeholder
-        if (numeroPresupuesto.includes('Generando') || numeroPresupuesto.includes('Número')) {
-            numeroPresupuesto = generarNumeroPresupuesto();
-        }
-    }
-    
-    const comentarioPresupuesto = $('#comentarioPresupuesto').val();
-    const descuentoTexto = $('#descuento_texto').val();
-    const descuentoMonto = parseFloat($('#descuento_monto').val()) || 0;
-    const recargoTexto = $('#recargo_texto').val();
-    const recargoMonto = parseFloat($('#recargo_monto').val()) || 0;
-    const ivaPorcentaje = parseFloat($('#iva_porcentaje').val()) || 0;
-    const ivaMonto = parseFloat($('#iva_monto').val()) || 0;
-
-    // Validaciones (solo cliente es obligatorio)
     if (!selectedClient || selectedClient === '' || selectedClient === '0') {
         alert('Por favor seleccione o ingrese un cliente');
         return;
     }
 
-    // MOSTRAR LOADING
     const btnGuardar = $('#reg-presupuesto');
     const originalText = btnGuardar.html();
     btnGuardar.prop('disabled', true).html('<i class="bi bi-hourglass-split"></i> Guardando...');
 
-    // Resto del código permanece igual...
+    // SOLUCIÓN: Leer directamente los valores actuales de los elementos HTML
     if ($tableMakePedido && $tableMakePedido.length > 0) {
         var rows = $tableMakePedido.bootstrapTable('getData');
         const productos = [];
 
+        console.log('📊 Filas en tabla:', rows.length);
+        
         for (let i = 0; i < rows.length; i++) {
             if (parseInt(rows[i].cantidad) > 0) {
+                const code = rows[i].code;
+                
+                // LEER VALORES ACTUALES DIRECTAMENTE DE LOS ELEMENTOS HTML
+                const $tiempoSelect = $(`.tiempo-select[data-code="${code}"]`);
+                
+                // DEBUG: Ver qué estamos leyendo
+                console.log(`🔍 Buscando select para ${code}:`, $tiempoSelect.length ? 'ENCONTRADO' : 'NO ENCONTRADO');
+                if ($tiempoSelect.length) {
+                    console.log(`📋 Valor del select para ${code}:`, $tiempoSelect.val());
+                }
+                
+                const tiempoActual = $tiempoSelect.length ? parseInt($tiempoSelect.val()) || 0 : parseInt(rows[i].tiempo_entrega);
+                
+                console.log(`✅ Producto ${code}: Tiempo ORIGINAL=${rows[i].tiempo_entrega}, Tiempo ACTUAL=${tiempoActual}`);
+                
                 const producto = {
-                    code: rows[i].code,
+                    code: code,
                     name: rows[i].name,
                     cantidad: parseInt(rows[i].cantidad),
                     precio: parseFloat(rows[i].precio) || 0,
-                    tiempo_entrega: parseInt(rows[i].tiempo_entrega) || 0,
+                    tiempo_entrega: tiempoActual, // ← USAR VALOR ACTUAL DEL SELECT
                     unidad: rows[i].unidad,
                     stock: parseInt(rows[i].stock) || 0,
                     llegando: parseInt(rows[i].llegando) || 0,
@@ -847,8 +829,25 @@ console.log('🎯 guardarPresupuesto() EJECUTADA');
             return;
         }
 
+        // Obtener el número
+        let numeroPresupuesto = $('#numero-presupuesto').val();
+        if (!numeroPresupuesto || numeroPresupuesto.trim() === '') {
+            numeroPresupuesto = $('#numero-presupuesto').attr('placeholder') || generarNumeroPresupuesto();
+            if (numeroPresupuesto.includes('Generando') || numeroPresupuesto.includes('Número')) {
+                numeroPresupuesto = generarNumeroPresupuesto();
+            }
+        }
+
+        const comentarioPresupuesto = $('#comentarioPresupuesto').val();
+        const descuentoTexto = $('#descuento_texto').val();
+        const descuentoMonto = parseFloat($('#descuento_monto').val()) || 0;
+        const recargoTexto = $('#recargo_texto').val();
+        const recargoMonto = parseFloat($('#recargo_monto').val()) || 0;
+        const ivaPorcentaje = parseFloat($('#iva_porcentaje').val()) || 0;
+        const ivaMonto = parseFloat($('#iva_monto').val()) || 0;
+
         const presupuesto = {
-            numero: numeroPresupuesto,  // Ahora siempre tiene valor
+            numero: numeroPresupuesto,
             cliente: selectedClient,
             productos: productos,
             comentario: comentarioPresupuesto,
@@ -862,9 +861,9 @@ console.log('🎯 guardarPresupuesto() EJECUTADA');
             iva_monto: ivaMonto
         };
 
-        const paramJSON = JSON.stringify(presupuesto);
+        console.log('📤 Presupuesto completo a enviar:', presupuesto);
         
-        console.log('📤 Enviando presupuesto completo:', presupuesto);
+        const paramJSON = JSON.stringify(presupuesto);
         
         $.ajax({
             url: "https://ketelectropartes.com/admin/php/guardarPresupuesto.php",
@@ -876,8 +875,12 @@ console.log('🎯 guardarPresupuesto() EJECUTADA');
                 console.log('📥 Respuesta del servidor:', respuesta);
                 
                 if (respuesta.success) {
-                    //$('#ModalMakePedido').modal('hide');
-                    //window.location.href = "https://ketelectropartes.com/admin/php/verPresupuesto.php?presupuesto_id=" + respuesta.presupuesto_id;
+                    $('#ModalMakePedido').modal('hide');
+                    // TEMPORAL: comentar para ver logs
+                    alert('✅ Presupuesto guardado - Ver consola para tiempos de entrega');
+                    console.log('✅ PRESUPUESTO GUARDADO - Revisa los tiempos de entrega arriba ↑');
+                    // window.location.href = "https://ketelectropartes.com/admin/php/verPresupuesto.php?presupuesto_id=" + respuesta.presupuesto_id;
+                    btnGuardar.prop('disabled', false).html(originalText);
                 } else {
                     alert('❌ Error al guardar el presupuesto: ' + respuesta.error);
                     btnGuardar.prop('disabled', false).html(originalText);
@@ -885,11 +888,13 @@ console.log('🎯 guardarPresupuesto() EJECUTADA');
             },
             error: function(xhr, status, error) {
                 console.error('Error en la petición:', status, error);
-                console.error('Respuesta del servidor:', xhr.responseText);
                 alert('❌ Error de conexión al guardar el presupuesto');
                 btnGuardar.prop('disabled', false).html(originalText);
             }
         });
+    } else {
+        alert('Error: No se pudo obtener la información del carrito');
+        btnGuardar.prop('disabled', false).html(originalText);
     }
 }
 
