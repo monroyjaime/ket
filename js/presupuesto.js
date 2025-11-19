@@ -769,7 +769,7 @@ function inicializarTiemposEntrega() {
 
 // Función para guardar presupuesto
 function guardarPresupuesto() {
-    console.log('🎯 guardarPresupuesto() EJECUTADA - VERSIÓN CORREGIDA');
+    console.log('🎯 guardarPresupuesto() EJECUTADA');
     
     const selectedClient = ctrlClientSel.getValue();
     console.log('🔍 Cliente seleccionado:', selectedClient);
@@ -783,36 +783,43 @@ function guardarPresupuesto() {
     const originalText = btnGuardar.html();
     btnGuardar.prop('disabled', true).html('<i class="bi bi-hourglass-split"></i> Guardando...');
 
-    // SOLUCIÓN: Leer directamente los valores actuales de los elementos HTML
+    // LEER VALORES ACTUALES DIRECTAMENTE DE LOS ELEMENTOS HTML
     if ($tableMakePedido && $tableMakePedido.length > 0) {
         var rows = $tableMakePedido.bootstrapTable('getData');
         const productos = [];
 
-        console.log('📊 Filas en tabla:', rows.length);
+        console.log('📊 Procesando productos del carrito...');
         
         for (let i = 0; i < rows.length; i++) {
             if (parseInt(rows[i].cantidad) > 0) {
                 const code = rows[i].code;
                 
-                // LEER VALORES ACTUALES DIRECTAMENTE DE LOS ELEMENTOS HTML
+                // LEER VALORES ACTUALES DE LOS ELEMENTOS HTML
                 const $tiempoSelect = $(`.tiempo-select[data-code="${code}"]`);
+                const $cantidadInput = $(`.cantidad-input[data-code="${code}"]`);
+                const $precioManualInput = $(`.precio-manual-input[data-code="${code}"]`);
+                const $precioRadioSeleccionado = $(`.precio-radio[name="precio_${code}"]:checked`);
                 
-                // DEBUG: Ver qué estamos leyendo
-                console.log(`🔍 Buscando select para ${code}:`, $tiempoSelect.length ? 'ENCONTRADO' : 'NO ENCONTRADO');
-                if ($tiempoSelect.length) {
-                    console.log(`📋 Valor del select para ${code}:`, $tiempoSelect.val());
-                }
-                
+                // Usar valores actuales de los elementos o los de la fila como fallback
+                const cantidadActual = $cantidadInput.length ? parseInt($cantidadInput.val()) || 0 : parseInt(rows[i].cantidad);
                 const tiempoActual = $tiempoSelect.length ? parseInt($tiempoSelect.val()) || 0 : parseInt(rows[i].tiempo_entrega);
                 
-                console.log(`✅ Producto ${code}: Tiempo ORIGINAL=${rows[i].tiempo_entrega}, Tiempo ACTUAL=${tiempoActual}`);
+                // Determinar precio actual
+                let precioActual = parseFloat(rows[i].precio) || 0;
+                if ($precioManualInput.length && $precioManualInput.val()) {
+                    precioActual = parseFloat($precioManualInput.val()) || 0;
+                } else if ($precioRadioSeleccionado.length) {
+                    precioActual = parseFloat($precioRadioSeleccionado.val()) || 0;
+                }
+                
+                console.log(`✅ ${code}: Cantidad=${cantidadActual}, Tiempo=${tiempoActual}, Precio=${precioActual}`);
                 
                 const producto = {
                     code: code,
                     name: rows[i].name,
-                    cantidad: parseInt(rows[i].cantidad),
-                    precio: parseFloat(rows[i].precio) || 0,
-                    tiempo_entrega: tiempoActual, // ← USAR VALOR ACTUAL DEL SELECT
+                    cantidad: cantidadActual,
+                    precio: precioActual,
+                    tiempo_entrega: tiempoActual,
                     unidad: rows[i].unidad,
                     stock: parseInt(rows[i].stock) || 0,
                     llegando: parseInt(rows[i].llegando) || 0,
@@ -861,7 +868,7 @@ function guardarPresupuesto() {
             iva_monto: ivaMonto
         };
 
-        console.log('📤 Presupuesto completo a enviar:', presupuesto);
+        console.log('📤 Enviando presupuesto...');
         
         const paramJSON = JSON.stringify(presupuesto);
         
@@ -876,11 +883,7 @@ function guardarPresupuesto() {
                 
                 if (respuesta.success) {
                     $('#ModalMakePedido').modal('hide');
-                    // TEMPORAL: comentar para ver logs
-                    alert('✅ Presupuesto guardado - Ver consola para tiempos de entrega');
-                    console.log('✅ PRESUPUESTO GUARDADO - Revisa los tiempos de entrega arriba ↑');
-                    // window.location.href = "https://ketelectropartes.com/admin/php/verPresupuesto.php?presupuesto_id=" + respuesta.presupuesto_id;
-                    btnGuardar.prop('disabled', false).html(originalText);
+                    window.location.href = "https://ketelectropartes.com/admin/php/verPresupuesto.php?presupuesto_id=" + respuesta.presupuesto_id;
                 } else {
                     alert('❌ Error al guardar el presupuesto: ' + respuesta.error);
                     btnGuardar.prop('disabled', false).html(originalText);
