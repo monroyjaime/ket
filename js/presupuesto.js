@@ -469,22 +469,7 @@ function tiempoEntregaFormater(value, row) {
         </select>
     `;
 }
-    
-    const tiempoMostrar = tiempoActual > 0 ? tiempoActual : tiempoSugerido;
-    
-    return `
-        <select class="form-control tiempo-select" data-code="${row.code}" onchange="actualizarTiempoEntrega(this)"
-                style="min-width: 110px;">
-            <option value="0" ${tiempoMostrar === 0 ? 'selected' : ''}>Inmediato</option>
-            <option value="7" ${tiempoMostrar === 7 ? 'selected' : ''}>7 días</option>
-            <option value="15" ${tiempoMostrar === 15 ? 'selected' : ''}>15 días</option>
-            <option value="30" ${tiempoMostrar === 30 ? 'selected' : ''}>30 días</option>
-            <option value="45" ${tiempoMostrar === 45 ? 'selected' : ''}>45 días</option>
-            <option value="60" ${tiempoMostrar === 60 ? 'selected' : ''}>60 días</option>
-            <option value="90" ${tiempoMostrar === 90 ? 'selected' : ''}>90 días</option>
-        </select>
-    `;
-}
+
 
 function montoFormater(value, row) {
     const cantidad = parseInt(row.cantidad) || 0;
