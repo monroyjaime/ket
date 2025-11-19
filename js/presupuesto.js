@@ -769,7 +769,19 @@ function inicializarTiemposEntrega() {
 
 // Función para guardar presupuesto
 function guardarPresupuesto() {
-    console.log('🎯 guardarPresupuesto() EJECUTADA');
+
+console.log('🎯 guardarPresupuesto() EJECUTADA');
+    
+    // DEBUG: Ver qué datos tiene la tabla actualmente
+    if ($tableMakePedido && $tableMakePedido.length > 0) {
+        var rows = $tableMakePedido.bootstrapTable('getData');
+        console.log('📊 Datos actuales en tabla carrito:', rows);
+        
+        // Verificar tiempos de entrega específicamente
+        rows.forEach((row, index) => {
+            console.log(`Producto ${index}: ${row.code} - Tiempo: ${row.tiempo_entrega} - Cantidad: ${row.cantidad} - Precio: ${row.precio}`);
+        });
+    }
     
     const selectedClient = ctrlClientSel.getValue();
     console.log('🔍 Cliente seleccionado:', selectedClient);
