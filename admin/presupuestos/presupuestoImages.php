@@ -351,11 +351,14 @@ try {
     console.log('End: Última página');
     console.log('Ctrl+P: Imprimir PDF');
 
-    // Estilos para impresión
+    / Estilos para impresión
     const printStyle = document.createElement('style');
     printStyle.innerHTML = `
         @media print {
-            .btn-print, .bi-arrow-left-circle-fill, .pagination {
+            .btn-print, 
+            .bi-arrow-left-circle-fill, 
+            .pagination,
+            .btn-group {
                 display: none !important;
             }
             body {
