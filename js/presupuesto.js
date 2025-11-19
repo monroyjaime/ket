@@ -453,21 +453,22 @@ function cantidadFormater(value, row) {
 }
 
 function tiempoEntregaFormater(value, row) {
-    const stock = parseInt(row.stock) || 0;
-    const llegando = parseInt(row.llegando) || 0;
-    const cantidad = parseInt(row.cantidad) || 0;
-    const tiempoActual = parseInt(value) || 0;
+    // SIMPLE: Usar siempre el tiempo_entrega del carrito, sin cálculos automáticos
+    const tiempoActual = parseInt(row.tiempo_entrega) || 0;
     
-    let tiempoSugerido = 0;
-    if (cantidad > 0) {
-        if (stock >= cantidad) {
-            tiempoSugerido = 0;
-        } else if (llegando >= cantidad) {
-            tiempoSugerido = 7;
-        } else {
-            tiempoSugerido = 30;
-        }
-    }
+    return `
+        <select class="form-control tiempo-select" data-code="${row.code}" onchange="actualizarTiempoEntrega(this)"
+                style="min-width: 110px;">
+            <option value="0" ${tiempoActual === 0 ? 'selected' : ''}>Inmediato</option>
+            <option value="7" ${tiempoActual === 7 ? 'selected' : ''}>7 días</option>
+            <option value="15" ${tiempoActual === 15 ? 'selected' : ''}>15 días</option>
+            <option value="30" ${tiempoActual === 30 ? 'selected' : ''}>30 días</option>
+            <option value="45" ${tiempoActual === 45 ? 'selected' : ''}>45 días</option>
+            <option value="60" ${tiempoActual === 60 ? 'selected' : ''}>60 días</option>
+            <option value="90" ${tiempoActual === 90 ? 'selected' : ''}>90 días</option>
+        </select>
+    `;
+}
     
     const tiempoMostrar = tiempoActual > 0 ? tiempoActual : tiempoSugerido;
     
@@ -640,7 +641,7 @@ function actualizarTiempoEntrega(select) {
 
 // Funciones de cálculo
 function recalcularTiempoEntrega(code, cantidad) {
-    if ($tableMakePedido && $tableMakePedido.length > 0) {
+/*    if ($tableMakePedido && $tableMakePedido.length > 0) {
         var rows = $tableMakePedido.bootstrapTable('getData');
         const row = rows.find(r => r.code === code);
         
@@ -666,7 +667,10 @@ function recalcularTiempoEntrega(code, cantidad) {
                 });
             }
         }
-    }
+    }*/
+   // Opcional: dejar vacío o eliminar si no quieres cálculos automáticos
+    console.log('Recalcular tiempo entrega para:', code, 'cantidad:', cantidad);
+    // No hacer nada - dejar que el usuario maneje los tiempos manualmente
 }
 
 function updateTotal() {
