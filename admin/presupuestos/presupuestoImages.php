@@ -98,9 +98,9 @@ try {
     // Construir HTML
     $tags .= '<div class="col text-center mb-4">';
     $tags .= '<h2>Imágenes del Presupuesto ' . htmlspecialchars($numValery) . '</h2>';
-    if ($numPages > 1) {
+    /*if ($numPages > 1) {
         $tags .= '<p class="text-muted">Página ' . htmlspecialchars($pageNum) . ' de ' . htmlspecialchars($numPages) . '</p>';
-    }
+    }*/
     $tags .= '</div>';
 
 
@@ -351,14 +351,11 @@ try {
     console.log('End: Última página');
     console.log('Ctrl+P: Imprimir PDF');
 
-    / Estilos para impresión
+    // Estilos para impresión
     const printStyle = document.createElement('style');
     printStyle.innerHTML = `
         @media print {
-            .btn-print, 
-            .bi-arrow-left-circle-fill, 
-            .pagination,
-            .btn-group {
+            .btn-print, .bi-arrow-left-circle-fill, .pagination {
                 display: none !important;
             }
             body {
