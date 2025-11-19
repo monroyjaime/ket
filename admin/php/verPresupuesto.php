@@ -385,7 +385,7 @@ try {
             <button class="btn btn-secondary" onclick="window.history.back()">← Volver</button>
 <!-- NUEVO BOTÓN PARA PRECARGAR EN CARRITO -->
     <button class="btn btn-warning" onclick="precargarEnCarrito(<?php echo $presupuesto->idx; ?>)"><i class="bi bi-cart-plus"></i> Usar para Nuevo Presupuesto</button>
-            <a href="../index.php" class="btn btn-success">🏠 Ir al Inicio</a>
+            <a href="../presupuestos/index.php" class="btn btn-success">🏠 Ir al Inicio</a>
             <a href="../presupuestos/presupuestoImages.php?pres_num=<?php echo $presupuesto->idx; ?>" class="btn btn-info">
                 <i class="bi bi-images"></i> Ver Imágenes
             </a>
