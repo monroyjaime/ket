@@ -13,13 +13,14 @@ if($updateDate!=1)
 $consulta = $db->consultas("SELECT sesion_duration FROM all_ket_values");
 foreach ($consulta as $value)
 	$sesionDuration = intval($value->sesion_duration);
-$consulta = $db->consultas("SELECT num,timer,curr_timer FROM sesion WHERE active = 't' ORDER BY num");
+$consulta = $db->consultas("SELECT num,timer,curr_timer,usuario FROM sesion WHERE active = 't' ORDER BY num");
 foreach ($consulta as $value)
 {
 	$justIncrementTimer = True;
 	$currNum = $value->num;
 	$currMainTimer = $value->timer;
 	$currSesTimer = $value->curr_timer;
+	$currUser = $value_usuario;
 	if(($currMainTimer+1) > $sesionDuration)
 		$justIncrementTimer = false; //time to reset this sesion uncoditionally	(sesion expired normally)
 /*	elseif (($currMainTimer - $currSesTimer) >25 )
@@ -32,7 +33,11 @@ foreach ($consulta as $value)
 	}	
 	else
 	{
-		$resetSesion = $db->querySet("UPDATE sesion SET active = 'f', usuario = 0, id = 0, timer = 0, curr_timer = 0, ip_client='0.0.0.0' WHERE num = ".$currNum);
+		$consulta = $db->consultas("SELECT full_name FROM usuario WHERE num=".$currNum);
+		foreach ($consulta as $value)
+			$currUserName = $value->full_name;
+		echo "Expired sesion Num. ".$currNum." Del usuario ".$currNum.": ".$currUserName;
+		//$resetSesion = $db->querySet("UPDATE sesion SET active = 'f', usuario = 0, id = 0, timer = 0, curr_timer = 0, ip_client='0.0.0.0' WHERE num = ".$currNum);
 	}
 	
 }
