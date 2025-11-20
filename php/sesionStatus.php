@@ -20,7 +20,7 @@ foreach ($consulta as $value)
 	$currNum = $value->num;
 	$currMainTimer = $value->timer;
 	$currSesTimer = $value->curr_timer;
-	$currUser = $value_usuario;
+	$currUser = $value->usuario;
 	if(($currMainTimer+1) > $sesionDuration)
 		$justIncrementTimer = false; //time to reset this sesion uncoditionally	(sesion expired normally)
 /*	elseif (($currMainTimer - $currSesTimer) >25 )
