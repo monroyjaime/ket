@@ -1,0 +1,2 @@
+num;short_name;full_name;email;cel_num;client;admin;salt;psw;rol;direct_login;do_pedido;vendedor;show_all_ped;only_with_stock;do_presupuesto;show_all_pres
+44;stefan;Stefa Berbin;stefanberbin@gmail.com;5.84126E+11;0;f;0;0f0dd5d09ea3f62b7e96d71f9e06f81c;1;1;f;0;f;f;f;f
