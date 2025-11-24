@@ -56,7 +56,12 @@ foreach ($consult1 as $value1)
             if($db->querySet("UPDATE productos SET cost_max = ".$value1->cost_max." WHERE code ='".$value1->code."'") == 1)
             {
                 echo ($count2."::updated cost_max:: \nCODE: ".$value1->code."\nbefore: ".$value2->cost_max."\nafter : ".$value1->cost_max."\n");
-                echo("prec1(Min),".$value1->code.",".$value2->cost_max.",".$value1->cost_max.",".$value2->costo.",".$value1->costo);
+
+                agregarLineaCSV(
+                    [date('Y-m-d H:i:s'), 'prec1(Min)', $value1->code,$value2->cost_max, $value1->cost_max, $value2->costo, $value1->costo],
+                    $filePrecio,
+                );
+
                 $count2++;
             }
             
@@ -119,8 +124,11 @@ foreach ($consult1 as $value1)
             if($db->querySet("UPDATE productos SET cost_mayor = ".$value1->cost_mayor." WHERE code ='".$value1->code."'") == 1)
             {
                 echo ($count8."::updated cost_mayor:: \nCODE: ".$value1->code."\nbefore: ".$value2->cost_mayor."\nafter : ".$value1->cost_mayor."\n");
+                agregarLineaCSV(
+                    [date('Y-m-d H:i:s'), 'prec2(May)', $value1->code,$value2->cost_max, $value1->cost_max, $value2->costo, $value1->costo],
+                    $filePrecio,
+                );
                 $count8++;
-                echo("prec2(May),".$value1->code.",".$value2->cost_max.",".$value1->cost_max.",".$value2->costo.",".$value1->costo);
 
             }
             
@@ -131,6 +139,10 @@ foreach ($consult1 as $value1)
             if($db->querySet("UPDATE productos SET cost_min = ".$value1->cost_min." WHERE code ='".$value1->code."'") == 1)
             {
                 echo ($count9."::updated cost_min:: \nCODE: ".$value1->code."\nbefore: ".$value2->cost_min."\nafter : ".$value1->cost_min."\n");
+                agregarLineaCSV(
+                    [date('Y-m-d H:i:s'), 'prec3', $value1->code,$value2->cost_max, $value1->cost_max, $value2->costo, $value1->costo],
+                    $filePrecio,
+                );
                 $count9++;
             }
             
