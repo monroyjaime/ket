@@ -4,6 +4,13 @@ require_once("dbcat.php");
 
 $db = new DB();
 
+$filePrecio = '/ketcore/log/preciosChanged.csv';
+$headers = ['Fecha', 'tipoPrecio', 'Previo', 'Nuevo', 'costoPrevio', 'costoNuevo'];
+
+if (!file_exists($filePrecio)) {
+    escribirCSV($headers, $filePrecio, $headers);
+}
+
 $query  = "SELECT code,name,cost_max,unit,current_stock,dpto_code,orden,orden,cost_oferta,cost_mayor,cost_min,stock_lleg,relacionado,costo";
 $query .= " FROM prod_name ORDER BY code";
 $consult1=$db->consultas($query);
@@ -43,6 +50,7 @@ foreach ($consult1 as $value1)
             if($db->querySet("UPDATE productos SET cost_max = ".$value1->cost_max." WHERE code ='".$value1->code."'") == 1)
             {
                 echo ($count2."::updated cost_max:: \nCODE: ".$value1->code."\nbefore: ".$value2->cost_max."\nafter : ".$value1->cost_max."\n");
+                echo("prec1(Min),".$value1->code.",".$value2->cost_max.",".$value1->cost_max.",".$value2->costo.",".$value1->costo);
                 $count2++;
             }
             
@@ -106,6 +114,8 @@ foreach ($consult1 as $value1)
             {
                 echo ($count8."::updated cost_mayor:: \nCODE: ".$value1->code."\nbefore: ".$value2->cost_mayor."\nafter : ".$value1->cost_mayor."\n");
                 $count8++;
+                echo("prec2(May),".$value1->code.",".$value2->cost_max.",".$value1->cost_max.",".$value2->costo.",".$value1->costo);
+
             }
             
         }
@@ -208,4 +218,19 @@ if($db->querySet("UPDATE productos SET stock_tot = current_stock+stock_lleg") ==
     echo "exitosa actualizacion de stock_tot global";
 else
     echo "Error actualizando stock_tot global";
+
+
+function log_echo($mensaje, $mostrar_pantalla = false) {
+    $archivo_log = '/ketcore/log/preciosChanged.csv';
+    $timestamp = date('Y-m-d H:i:s');
+    $linea = "[$timestamp] $mensaje\n";
+    
+    // Escribir en el log
+    file_put_contents($archivo_log, $linea, FILE_APPEND | LOCK_EX);
+    
+    // Mostrar en pantalla si se solicita
+    if ($mostrar_pantalla) {
+        echo $mensaje . "\n";
+    }
+}
 ?>    
