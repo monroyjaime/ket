@@ -7,9 +7,15 @@ $db = new DB();
 $filePrecio = '/ketcore/log/preciosChanged.csv';
 $headers = ['Fecha', 'tipoPrecio', 'Previo', 'Nuevo', 'costoPrevio', 'costoNuevo'];
 
-if (!file_exists($filePrecio)) {
-    escribirCSV($headers, $filePrecio, $headers);
+// Primera vez - crea el archivo con headers
+if(!file_exists($filePrecio)){
+    agregarLineaCSV(
+            [date('Y-m-d H:i:s'), 'prueba', 0, 0, 0, 0],
+            $filePrecio,
+            $headers
+        );   
 }
+
 
 $query  = "SELECT code,name,cost_max,unit,current_stock,dpto_code,orden,orden,cost_oferta,cost_mayor,cost_min,stock_lleg,relacionado,costo";
 $query .= " FROM prod_name ORDER BY code";
@@ -218,6 +224,69 @@ if($db->querySet("UPDATE productos SET stock_tot = current_stock+stock_lleg") ==
     echo "exitosa actualizacion de stock_tot global";
 else
     echo "Error actualizando stock_tot global";
+
+
+function escribirCSV($datos, $archivo = 'registro.csv', $headers = null) {
+    // Determinar si el archivo existe para saber si agregar headers
+    $modo = file_exists($archivo) ? 'a' : 'w';
+    
+    // Abrir archivo
+    $handle = fopen($archivo, $modo);
+    
+    if ($handle === false) {
+        throw new Exception("No se pudo abrir el archivo: $archivo");
+    }
+    
+    // Bloqueo para escritura segura
+    flock($handle, LOCK_EX);
+    
+    try {
+        // Agregar headers si es archivo nuevo y se proporcionaron headers
+        if ($modo === 'w' && $headers !== null) {
+            fputcsv($handle, $headers);
+        }
+        
+        // Escribir línea CSV
+        fputcsv($handle, $datos);
+        
+    } finally {
+        // Liberar bloqueo y cerrar archivo
+        flock($handle, LOCK_UN);
+        fclose($handle);
+    }
+    
+    return true;
+}
+
+// FUNCIÓN ESPECÍFICA PARA AGREGAR LÍNEAS (Punto 1 corregida)
+function agregarLineaCSV($datos, $archivo = 'datos.csv', $headers = null) {
+    // Verificar si el archivo existe para determinar si agregar headers
+    $archivoExiste = file_exists($archivo);
+    
+    // Abrir archivo en modo append
+    $handle = fopen($archivo, 'a');
+    
+    if ($handle === false) {
+        error_log("No se pudo abrir el archivo: $archivo");
+        return false;
+    }
+    
+    // Escritura con bloqueo
+    if (flock($handle, LOCK_EX)) {
+        // Si el archivo está vacío Y se proporcionaron headers, agregarlos
+        if (!$archivoExiste && $headers !== null) {
+            fputcsv($handle, $headers);
+        }
+        
+        // Agregar la línea de datos
+        fputcsv($handle, $datos);
+        
+        flock($handle, LOCK_UN);
+    }
+    
+    fclose($handle);
+    return true;
+}
 
 
 function log_echo($mensaje, $mostrar_pantalla = false) {
