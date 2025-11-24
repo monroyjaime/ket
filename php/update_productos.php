@@ -171,6 +171,10 @@ foreach ($consult1 as $value1)
             if($db->querySet("UPDATE productos SET costo = ".$value1->costo." WHERE code ='".$value1->code."'") == 1)
             {
                 echo ($count12."::updated costo:: \nCODE: ".$value1->code."\nbefore: ".$value2->costo."\nafter : ".$value1->costo."\n");
+                agregarLineaCSV(
+                    [date('Y-m-d H:i:s'), 'costo', $value1->code,'---', '---', $value2->costo, $value1->costo],
+                    $filePrecio,
+                );
                 $count12++;
             }
             
