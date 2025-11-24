@@ -41,14 +41,47 @@ jobs:
         
         echo "✅ Deployment completed successfully"
 
+    - name: 🔗 Recreate Symbolic Link for preciosChanged.csv
+      run: |
+        ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no -p 5655 ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} "
+          echo '🔗 Setting up symbolic link for preciosChanged.csv...'
+          
+          # Crear directorio de reports si no existe
+          mkdir -p '/var/www/html/reports/'
+          
+          # Verificar si el archivo original existe
+          if [ -f '/ketcore/log/preciosChanged.csv' ]; then
+            # Recrear link simbólico (usar -f para forzar recreación)
+            ln -sf '/ketcore/log/preciosChanged.csv' '/var/www/html/reports/preciosChanged.csv'
+            echo '✅ Symbolic link created: /ketcore/log/preciosChanged.csv → /var/www/html/reports/preciosChanged.csv'
+          else
+            echo '⚠️  Archivo original no encontrado en /ketcore/log/preciosChanged.csv'
+            echo '🔍 Probando ruta alternativa /home/jaime/ketcore/log/preciosChanged.csv...'
+            if [ -f '/home/jaime/ketcore/log/preciosChanged.csv' ]; then
+              ln -sf '/home/jaime/ketcore/log/preciosChanged.csv' '/var/www/html/reports/preciosChanged.csv'
+              echo '✅ Symbolic link created con ruta alternativa'
+            else
+              echo '❌ Archivo original no encontrado en ninguna ruta conocida'
+            fi
+          fi
+        "
+
     - name: ✅ Verify Deployment
       run: |
         ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no -p 5655 ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} "
           echo '📁 Deployment verification:'
           ls -la /var/www/html/ | head -5
+          echo ''
+          echo '🔗 Symbolic link verification:'
+          ls -la '/var/www/html/reports/preciosChanged.csv'
+          echo ''
+          echo '📊 File type check:'
+          file '/var/www/html/reports/preciosChanged.csv'
+          echo ''
           echo '🖼️ Image files count:'
           find /var/www/html/ -name '*.jpg' -o -name '*.jpeg' -o -name '*.png' -o -name '*.gif' | wc -l
           echo '📊 Total PHP files:'
           find /var/www/html/ -name '*.php' | wc -l
+          echo ''
           echo '✅ Ket Electropartes deployment verified!'
         "
