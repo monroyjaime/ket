@@ -37,7 +37,7 @@ jobs:
           --exclude='*.log' \
           --exclude='.gitkeep' \  # ← AÑADE ESTA LÍNEA
           -e "ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no -p 5655" \
-          ./ \
+          ./\
           ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/var/www/html/
         
         echo "✅ Deployment completed successfully"
