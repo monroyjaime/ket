@@ -26,6 +26,7 @@ jobs:
           --exclude='.git' \
           --exclude='.github' \
           --exclude='node_modules' \
+          
           --exclude='reports/preciosChanged.csv' \
           -e "ssh -i ~/.ssh/deploy_key -p 5655" \
           ./ ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/var/www/html/
