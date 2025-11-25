@@ -1,0 +1,136 @@
+<?php
+require_once("dbcat.php");
+
+class GoogleSheetsImporter {
+    private $db;
+    private $googleSheetsUrl;
+    private $logFile = '/var/www/html/scripts/logs/importacion.log';
+    
+    public function __construct($googleSheetsUrl) {
+        $this->db = new DB();
+        $this->googleSheetsUrl = $googleSheetsUrl;
+    }
+    
+    public function ejecutarProcesoCompleto() {
+        try {
+            $this->log("🚀 INICIANDO PROCESO DE ACTUALIZACIÓN");
+            
+            // 1. Descargar datos de Google Sheets
+            $csvData = $this->descargarDeGoogleSheets();
+            $this->log("✅ Datos descargados (" . strlen($csvData) . " bytes)");
+            
+            // 2. Guardar archivo temporal
+            $tempFile = $this->guardarArchivoTemporal($csvData);
+            $this->log("📁 Archivo temporal guardado: " . $tempFile);
+            
+            // 3. Limpiar tabla prod_name
+            $this->limpiarTablaProdName();
+            $this->log("🗑️  Tabla prod_name limpiada");
+            
+            // 4. Cargar datos a PostgreSQL
+            $registrosCargados = $this->cargarAPostgreSQL($tempFile);
+            $this->log("📊 Datos cargados a PostgreSQL: " . $registrosCargados . " registros");
+            
+            // 5. Limpiar archivo temporal
+            unlink($tempFile);
+            $this->log("🧹 Archivo temporal eliminado");
+            
+            // 6. Ejecutar tu script de actualización (PRESERVADO)
+            $this->ejecutarUpdateProductos();
+            $this->log("🎉 PROCESO COMPLETADO EXITOSAMENTE");
+            
+            return true;
+            
+        } catch (Exception $e) {
+            $this->log("❌ ERROR: " . $e->getMessage());
+            return false;
+        }
+    }
+    
+    private function descargarDeGoogleSheets() {
+        $context = stream_context_create([
+            'ssl' => [
+                'verify_peer' => false,
+                'verify_peer_name' => false,
+            ],
+            'http' => [
+                'timeout' => 30,
+                'user_agent' => 'Mozilla/5.0 (compatible; GoogleSheetsImporter)'
+            ]
+        ]);
+        
+        $csvData = file_get_contents($this->googleSheetsUrl, false, $context);
+        
+        if ($csvData === false) {
+            throw new Exception("No se pudo descargar datos de Google Sheets");
+        }
+        
+        if (empty($csvData) {
+            throw new Exception("Datos vacíos recibidos de Google Sheets");
+        }
+        
+        return $csvData;
+    }
+    
+    private function guardarArchivoTemporal($csvData) {
+        $tempFile = tempnam(sys_get_temp_dir(), 'google_sheets_') . '.csv';
+        file_put_contents($tempFile, $csvData);
+        return $tempFile;
+    }
+    
+    private function limpiarTablaProdName() {
+        $result = $this->db->querySet("TRUNCATE TABLE prod_name");
+        if (!$result) {
+            throw new Exception("Error al limpiar tabla prod_name");
+        }
+    }
+    
+    private function cargarAPostgreSQL($archivoCSV) {
+        // Escapar la ruta del archivo para seguridad
+        $archivoEscapado = pg_escape_string($this->db->getConnection(), $archivoCSV);
+        
+        $query = "COPY prod_name FROM '" . $archivoEscapado . "' WITH (FORMAT CSV, HEADER)";
+        
+        $result = $this->db->querySet($query);
+        if (!$result) {
+            throw new Exception("Error en COPY de PostgreSQL");
+        }
+        
+        // Obtener número de registros insertados
+        $consulta = $this->db->consultas("SELECT COUNT(*) as total FROM prod_name");
+        return $consulta[0]->total;
+    }
+    
+    private function ejecutarUpdateProductos() {
+        // Ejecutar tu script actual - PRESERVADO INTACTO
+        $scriptPath = '/var/www/html/php/update_productos.php';
+        
+        if (!file_exists($scriptPath)) {
+            throw new Exception("Script update_productos.php no encontrado");
+        }
+        
+        // Capturar output para logging
+        ob_start();
+        include $scriptPath;
+        $output = ob_get_clean();
+        
+        $this->log("📝 Output de update_productos.php:\n" . $output);
+    }
+    
+    private function log($mensaje) {
+        $timestamp = date('Y-m-d H:i:s');
+        $linea = "[$timestamp] $mensaje\n";
+        file_put_contents($this->logFile, $linea, FILE_APPEND | LOCK_EX);
+        echo $linea; // También mostrar en pantalla
+    }
+}
+
+// CONFIGURACIÓN
+$googleSheetsUrl = 'https://script.google.com/macros/s/AKfycbyoIqU20qYydm_8bxHF4gyzi2qm7ZkCNB9gwPGEgQ5DcKLjCYQDrllMxnfIxw3rSOnwkQ/exec'; // Tu URL de Google Apps Script
+
+// EJECUCIÓN
+$importer = new GoogleSheetsImporter($googleSheetsUrl);
+$exito = $importer->ejecutarProcesoCompleto();
+
+exit($exito ? 0 : 1);
+?>
