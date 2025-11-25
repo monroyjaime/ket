@@ -1,0 +1,63 @@
+name: 🚀 Production Deploy
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+    - name: 🔄 Checkout code
+      uses: actions/checkout@v4
+
+    - name: 🔑 Setup SSH
+      run: |
+        mkdir -p ~/.ssh
+        echo "${{ secrets.SERVER_SSH_KEY }}" > ~/.ssh/deploy_key
+        chmod 600 ~/.ssh/deploy_key
+        ssh-keyscan -p 5655 -H ${{ secrets.SERVER_HOST }} >> ~/.ssh/known_hosts
+
+    - name: 🧹 Clean Server Reports
+      run: |
+        ssh -i ~/.ssh/deploy_key -p 5655 ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} "
+          sudo rm -rf /var/www/html/reports/
+          sudo mkdir -p /var/www/html/reports/
+          sudo chown www-data:www-data /var/www/html/reports/
+          echo '✅ Reports directory cleaned'
+        "
+
+    - name: 📦 Deploy Application Files
+      run: |
+        echo "Deploying application files..."
+        rsync -avz \
+          --exclude='.env' \
+          --exclude='.git' \
+          --exclude='.github' \
+          --exclude='node_modules' \
+          --exclude='reports/' \
+          --exclude='*.sql' \
+          --exclude='*.log' \
+          --exclude='backup-*' \
+          -e "ssh -i ~/.ssh/deploy_key -p 5655" \
+          ./ ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/var/www/html/
+        echo "✅ Files deployed"
+
+    - name: 📊 Setup Reports File
+      run: |
+        ssh -i ~/.ssh/deploy_key -p 5655 ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} "
+          sudo cp /ketcore/log/preciosChanged.csv /var/www/html/reports/preciosChanged.csv
+          sudo chown www-data:www-data /var/www/html/reports/preciosChanged.csv
+          sudo chmod 644 /var/www/html/reports/preciosChanged.csv
+          echo '✅ CSV file setup completed'
+          ls -la /var/www/html/reports/
+        "
+
+    - name: ✅ Verify Deployment
+      run: |
+        ssh -i ~/.ssh/deploy_key -p 5655 ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} "
+          echo '📁 Final verification:'
+          ls -la /var/www/html/reports/preciosChanged.csv
+          wc -l /var/www/html/reports/preciosChanged.csv
+          echo '✅ Deployment verified'
+        "
