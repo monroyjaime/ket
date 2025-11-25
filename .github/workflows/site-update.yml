@@ -1,0 +1,25 @@
+name: 🚀 Site Update
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+    - name: 🔄 Checkout code
+      uses: actions/checkout@v4
+
+    - name: 🔑 Setup SSH
+      run: |
+        mkdir -p ~/.ssh
+        echo "${{ secrets.SERVER_SSH_KEY }}" > ~/.ssh/deploy_key
+        chmod 600 ~/.ssh/deploy_key
+        ssh-keyscan -p 5655 -H ${{ secrets.SERVER_HOST }} >> ~/.ssh/known_hosts
+
+    - name: 📦 Sync Files
+      run: rsync -avz --exclude='.env' --exclude='.git' --exclude='.github' --exclude='node_modules' --exclude='reports/' --exclude='*.sql' --exclude='*.log' --exclude='backup-*' -e "ssh -i ~/.ssh/deploy_key -p 5655" ./ ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/var/www/html/
+
+    - name: ✅ Verify Sync
+      run: ssh -i ~/.ssh/deploy_key -p 5655 ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} "ls -la /var/www/html/ | head -3 && echo '✅ Sync successful'"
