@@ -4,7 +4,7 @@ require_once("dbcat.php");
 
 $db = new DB();
 
-$filePrecio = '/ketcore/log/preciosChanged.csv';
+$filePrecio = '/var/www/html/reports/preciosChanged.csv';
 $headers = ['Fecha', 'tipoPrecio', 'Previo', 'Nuevo', 'costoPrevio', 'costoNuevo'];
 
 // Primera vez - crea el archivo con headers
