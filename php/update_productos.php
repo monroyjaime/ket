@@ -3,7 +3,7 @@
 require_once("dbcat.php");
 
 $db = new DB();
-
+//para cambiar:
 $filePrecio = '/var/www/html/reports/preciosChanged.csv';
 $headers = ['Fecha', 'tipoPrecio', 'Previo', 'Nuevo', 'costoPrevio', 'costoNuevo'];
 
