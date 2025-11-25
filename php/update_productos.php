@@ -7,7 +7,7 @@ $db = new DB();
 $filePrecio = '/ketcore/log/preciosChanged.csv';
 $headers = ['Fecha', 'tipoPrecio', 'Previo', 'Nuevo', 'costoPrevio', 'costoNuevo'];
 
-// Primera vez - crea el archivo con headers
+// Primera vez - crea el archivo con headers otro coment
 if(!file_exists($filePrecio)){
     agregarLineaCSV(
             [date('Y-m-d H:i:s'), 'prueba', 0, 0, 0, 0],
