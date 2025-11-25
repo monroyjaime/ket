@@ -4,7 +4,7 @@ require_once("dbcat.php");
 class GoogleSheetsImporter {
     private $db;
     private $googleSheetsUrl;
-    private $logFile = '/var/www/html/scripts/logs/importacion.log';
+    private $logFile = '/var/www/html/reports/logs/importacion.log';
     
     public function __construct($googleSheetsUrl) {
         $this->db = new DB();
