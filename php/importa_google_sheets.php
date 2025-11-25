@@ -65,7 +65,7 @@ class GoogleSheetsImporter {
             throw new Exception("No se pudo descargar datos de Google Sheets");
         }
         
-        if (empty($csvData) {
+        if (empty($csvData)) {
             throw new Exception("Datos vacíos recibidos de Google Sheets");
         }
         
