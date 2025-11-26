@@ -92,14 +92,14 @@ class GoogleSheetsImporter {
     }
     
     private function cargarAPostgreSQL($archivoCSV) {
+        // ✅ LIMPIAR CSV ANTES DE CARGAR
+        $this->limpiarCSV($archivoCSV);
+        
         // ✅ SOLUCIÓN CON psql \copy
         $host = 'localhost';
         $dbname = 'ketdb';
         $user = 'ketadmin'; 
-        $password = 'LondonTown';    
-        
-        // PRIMERO: Analizar el CSV para encontrar problemas
-        $this->analizarCSVProblemas($archivoCSV);
+        $password = 'LondonTown'; 
         
         $comando = "PGPASSWORD='" . escapeshellarg($password) . "' psql " .
                 "-h " . escapeshellarg($host) . " " .
@@ -124,6 +124,56 @@ class GoogleSheetsImporter {
         $this->log("📊 Registros en prod_name: " . $total);
         
         return $total;
+    }
+
+    private function limpiarCSV($archivoCSV) {
+        $this->log("🧹 Limpiando CSV de registros problemáticos...");
+        
+        $handle = fopen($archivoCSV, 'r');
+        if (!$handle) {
+            throw new Exception("No se pudo abrir CSV para limpieza");
+        }
+        
+        // Leer headers
+        $headers = fgetcsv($handle);
+        $lineasBuenas = [$headers];
+        $lineasEliminadas = 0;
+        $lineasCorregidas = 0;
+        
+        while (($data = fgetcsv($handle)) !== FALSE) {
+            $lineaOriginal = $data;
+            $eliminarLinea = false;
+            
+            // 1. ELIMINAR líneas con CODE vacío (problema principal)
+            if (empty(trim($data[0] ?? ''))) {
+                $eliminarLinea = true;
+                $lineasEliminadas++;
+            }
+            // 2. CORREGIR #VALUE! en dpto_code (columna 5 - índice 5)
+            else if (isset($data[5]) && strpos($data[5], '#VALUE!') !== false) {
+                $data[5] = '000'; // Valor por defecto para dpto_code
+                $lineasCorregidas++;
+                $lineasBuenas[] = $data;
+            }
+            // 3. MANTENER líneas buenas
+            else {
+                $lineasBuenas[] = $data;
+            }
+        }
+        
+        fclose($handle);
+        
+        // Reescribir CSV solo con líneas buenas
+        $handle = fopen($archivoCSV, 'w');
+        foreach ($lineasBuenas as $linea) {
+            fputcsv($handle, $linea);
+        }
+        fclose($handle);
+        
+        $this->log("✅ CSV limpiado:");
+        $this->log("   - Líneas eliminadas (CODE vacío): " . $lineasEliminadas);
+        $this->log("   - Líneas corregidas (#VALUE!): " . $lineasCorregidas);
+        $this->log("   - Líneas totales después: " . count($lineasBuenas));
     }
 
     private function analizarCSVProblemas($archivoCSV) {
