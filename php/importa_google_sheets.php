@@ -197,7 +197,7 @@ class GoogleSheetsImporter {
 }
 
 // URL CORRECTA - USA LA MISMA QUE FUNCIONA EN TERMINAL
-$googleSheetsUrl = 'https://script.google.com/macros/s/TU_ID_REAL_AQUI/exec'; // ⚠️ CAMBIA ESTO
+$googleSheetsUrl = 'https://script.google.com/macros/s/AKfycbyoIqU20qYydm_8bxHF4gyzi2qm7ZkCNB9gwPGEgQ5DcKLjCYQDrllMxnfIxw3rSOnwkQ/exec'; // ⚠️ CAMBIA ESTO
 
 // EJECUCIÓN
 try {
