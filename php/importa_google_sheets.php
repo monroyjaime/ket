@@ -4,7 +4,7 @@ require_once("dbcat.php");
 class GoogleSheetsImporter {
     private $db;
     private $googleSheetsUrl;
-    private $logFile = '/var/www/html/reports/logs/importacion.log'; // ✅ TU RUTA ORIGINAL
+    private $logFile = '/var/www/html/reports/logs/importacion.log';
     
     public function __construct($googleSheetsUrl) {
         $this->db = new DB();
@@ -92,17 +92,36 @@ class GoogleSheetsImporter {
     }
     
     private function cargarAPostgreSQL($archivoCSV) {
-        // ✅ CORRECCIÓN: Usar COPY directamente
-        $query = "COPY prod_name FROM '" . $archivoCSV . "' WITH (FORMAT CSV, HEADER)";
+        // ✅ SOLUCIÓN CON psql \copy
+        // ⚠️ CAMBIA ESTAS CREDENCIALES CON TUS DATOS REALES:
+        $host = 'localhost';
+        $dbname = 'ketdb';     // CAMBIA ESTO
+        $user = 'ketadmin';         // CAMBIA ESTO  
+        $password = 'LondonTown';    // CAMBIA ESTO
         
-        $result = $this->db->querySet($query);
-        if (!$result) {
-            throw new Exception("Error en COPY de PostgreSQL - verifica permisos y formato del CSV");
+        $comando = "PGPASSWORD='" . escapeshellarg($password) . "' psql " .
+                   "-h " . escapeshellarg($host) . " " .
+                   "-d " . escapeshellarg($dbname) . " " .
+                   "-U " . escapeshellarg($user) . " " .
+                   "-c " . escapeshellarg("\copy prod_name FROM '" . $archivoCSV . "' WITH (FORMAT CSV, HEADER)");
+        
+        $this->log("Ejecutando comando psql \\copy...");
+        
+        exec($comando . " 2>&1", $output, $returnCode);
+        
+        if ($returnCode !== 0) {
+            $errorMsg = implode("\n", $output);
+            throw new Exception("Error en psql \\copy (código: $returnCode): " . $errorMsg);
         }
         
-        // Obtener número de registros insertados
+        $this->log("✅ Comando psql ejecutado exitosamente");
+        
+        // Verificar registros insertados
         $consulta = $this->db->consultas("SELECT COUNT(*) as total FROM prod_name");
-        return $consulta[0]->total;
+        $total = $consulta[0]->total;
+        $this->log("📊 Registros en prod_name: " . $total);
+        
+        return $total;
     }
     
     private function ejecutarUpdateProductos() {
