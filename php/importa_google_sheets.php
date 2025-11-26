@@ -150,8 +150,6 @@ class GoogleSheetsImporter {
     }
     
    private function cargarAPostgreSQL($archivoCSV) {
-        // ✅ SOLUCIÓN PHP PURA - No necesita credenciales externas
-        
         log_message("📥 Cargando datos manualmente desde CSV...");
         
         $handle = fopen($archivoCSV, 'r');
@@ -159,28 +157,40 @@ class GoogleSheetsImporter {
             throw new Exception("No se pudo abrir archivo CSV: " . $archivoCSV);
         }
         
-        // Leer headers (primera línea)
+        // Leer headers (primera línea) 
         $headers = fgetcsv($handle);
+        
+        // ✅ SOLO CORREGIR el campo problemático: stock-lleg → stock_lleg
+        $headers = array_map(function($header) {
+            if ($header === 'stock-lleg') {
+                return 'stock_lleg';
+            }
+            return $header;
+        }, $headers);
+        
         log_message("📋 Columnas detectadas: " . implode(', ', $headers));
         
         $registros = 0;
-        $batchSize = 100; // Insertar en lotes de 100 registros
+        $batchSize = 100;
         $batchValues = [];
         
         // Procesar cada línea del CSV
         while (($data = fgetcsv($handle)) !== FALSE) {
             // Saltar líneas completamente vacías
-            if (empty(array_filter($data))) {
+            if (empty(array_filter($data, function($v) { return $v !== ''; }))) {
                 continue;
             }
             
-            // Limpiar y escapar cada campo
+            // Escapar manualmente sin pg_escape_string
             $cleanedData = array_map(function($value) {
                 if ($value === '' || $value === null || $value === 'NULL') {
                     return 'NULL';
                 }
-                // Escapar comillas simples para PostgreSQL
-                return "'" . pg_escape_string($value) . "'";
+                // Escapar comillas simples manualmente
+                $value = str_replace("'", "''", $value);
+                // Escapar backslashes
+                $value = str_replace('\\', '\\\\', $value);
+                return "'" . $value . "'";
             }, $data);
             
             $batchValues[] = '(' . implode(', ', $cleanedData) . ')';
@@ -190,13 +200,14 @@ class GoogleSheetsImporter {
             if (count($batchValues) >= $batchSize) {
                 $this->insertarBatch($batchValues, $headers);
                 $batchValues = [];
-                log_message("✅ Lote insertado...");
+                log_message("✅ Lote de $batchSize registros insertado...");
             }
         }
         
         // Insertar lote final (si queda algo)
         if (!empty($batchValues)) {
             $this->insertarBatch($batchValues, $headers);
+            log_message("✅ Lote final de " . count($batchValues) . " registros insertado");
         }
         
         fclose($handle);
