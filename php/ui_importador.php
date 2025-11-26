@@ -1,101 +1,113 @@
 <?php
-require_once("dbcat.php");
+// EVITAR CUALQUIER OUTPUT ANTES DEL JSON
+ob_start();
 
-class ImportadorUI {
-    private $db;
-    private $logFile = '/var/www/html/reports/logs/importacion.log';
+// Solo procesar AJAX primero
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion'])) {
     
-    public function __construct() {
-        $this->db = new DB();
-    }
+    require_once("dbcat.php");
     
-    public function ejecutarImportacion() {
-        $startTime = microtime(true);
+    class ImportadorUI {
+        private $db;
         
-        try {
-            // Ejecutar el script directamente
-            $scriptPath = '/var/www/html/php/importa_google_sheets.php';
-            $command = "php " . escapeshellarg($scriptPath) . " 2>&1";
-            
-            $output = [];
-            $returnCode = 0;
-            exec($command, $output, $returnCode);
-            
-            // Filtrar y limpiar el output
-            $filteredOutput = [];
-            foreach ($output as $line) {
-                $cleanLine = trim($line);
-                if (!empty($cleanLine)) {
-                    $filteredOutput[] = $cleanLine;
-                }
-            }
-            
-            // Si no hay output pero fue exitoso
-            if (empty($filteredOutput) && $returnCode === 0) {
-                $filteredOutput[] = "✅ Proceso completado exitosamente";
-            }
-            
-            $success = ($returnCode === 0);
-            
-        } catch (Exception $e) {
-            $filteredOutput = ["❌ ERROR: " . $e->getMessage()];
-            $success = false;
+        public function __construct() {
+            $this->db = new DB();
         }
         
-        $executionTime = round(microtime(true) - $startTime, 2);
+        public function ejecutarImportacion() {
+            $startTime = microtime(true);
+            
+            try {
+                // Ejecutar el script en background y capturar output
+                $scriptPath = '/var/www/html/php/importa_google_sheets.php';
+                $outputFile = '/var/www/html/reports/logs/ui_output_' . date('Ymd_His') . '.log';
+                $command = "php " . escapeshellarg($scriptPath) . " > " . escapeshellarg($outputFile) . " 2>&1 & echo $!";
+                
+                // Ejecutar en background
+                $pid = exec($command);
+                
+                // Esperar un poco y leer el output
+                sleep(2);
+                $output = [];
+                if (file_exists($outputFile)) {
+                    $output = file($outputFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+                    // Mantener solo las últimas 20 líneas para no saturar
+                    $output = array_slice($output, -20);
+                }
+                
+                // Verificar si el proceso todavía está corriendo
+                $isRunning = false;
+                if ($pid) {
+                    exec("ps -p " . escapeshellarg($pid), $processState);
+                    $isRunning = (count($processState) > 1);
+                }
+                
+                $success = !$isRunning; // Si ya terminó, fue exitoso
+                
+                if (empty($output)) {
+                    $output = ["✅ Proceso iniciado en background (PID: $pid)"];
+                }
+                
+            } catch (Exception $e) {
+                $output = ["❌ ERROR: " . $e->getMessage()];
+                $success = false;
+            }
+            
+            $executionTime = round(microtime(true) - $startTime, 2);
+            
+            return [
+                'success' => $success,
+                'output' => $output,
+                'execution_time' => $executionTime,
+                'timestamp' => date('Y-m-d H:i:s')
+            ];
+        }
         
-        return [
-            'success' => $success,
-            'output' => $filteredOutput,
-            'execution_time' => $executionTime,
-            'timestamp' => date('Y-m-d H:i:s')
-        ];
+        public function getEstadisticas() {
+            $stats = [];
+            
+            try {
+                $result = $this->db->consultas("SELECT COUNT(*) as total FROM productos");
+                $stats['total_productos'] = $result[0]->total;
+                
+                $result = $this->db->consultas("SELECT COUNT(*) as con_stock FROM productos WHERE current_stock > 0");
+                $stats['con_stock'] = $result[0]->con_stock;
+                
+                $result = $this->db->consultas("SELECT MAX(updated_at) as ultima_actualizacion FROM productos");
+                $stats['ultima_actualizacion'] = $result[0]->ultima_actualizacion ?? 'Nunca';
+                
+            } catch (Exception $e) {
+                $stats['error'] = $e->getMessage();
+            }
+            
+            return $stats;
+        }
     }
-    
-    public function getUltimaEjecucion() {
-        $query = "SELECT MAX(updated_at) as ultima_actualizacion FROM productos";
-        $result = $this->db->consultas($query);
-        return $result[0]->ultima_actualizacion ?? 'Nunca';
-    }
-    
-    public function getEstadisticas() {
-        $stats = [];
-        
-        // Total productos
-        $result = $this->db->consultas("SELECT COUNT(*) as total FROM productos");
-        $stats['total_productos'] = $result[0]->total;
-        
-        // Productos con stock
-        $result = $this->db->consultas("SELECT COUNT(*) as con_stock FROM productos WHERE current_stock > 0");
-        $stats['con_stock'] = $result[0]->con_stock;
-        
-        // Última actualización
-        $stats['ultima_actualizacion'] = $this->getUltimaEjecucion();
-        
-        return $stats;
-    }
-}
 
-// Procesar solicitud AJAX
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion'])) {
-    header('Content-Type: application/json');
-    
     $importador = new ImportadorUI();
     
     if ($_POST['accion'] === 'ejecutar') {
+        // Limpiar cualquier output previo
+        ob_clean();
+        header('Content-Type: application/json');
+        
         $resultado = $importador->ejecutarImportacion();
-        echo json_encode($resultado);
+        echo json_encode($resultado, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP);
         exit;
     }
     
     if ($_POST['accion'] === 'estadisticas') {
+        ob_clean();
+        header('Content-Type: application/json');
+        
         $estadisticas = $importador->getEstadisticas();
-        echo json_encode($estadisticas);
+        echo json_encode($estadisticas, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP);
         exit;
     }
 }
 
-// Si no es AJAX, mostrar la página HTML
+// Si llegamos aquí, mostrar HTML normal
+ob_clean();
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -155,11 +167,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion'])) {
         </div>
         
         <div id="resultado"></div>
+        
+        <!-- Área de debug -->
+        <div class="card" style="display: none;" id="debugArea">
+            <h3>🔧 Debug Info</h3>
+            <pre id="debugInfo"></pre>
+        </div>
     </div>
 
     <script>
-        // Cargar estadísticas al iniciar
-        document.addEventListener('DOMContentLoaded', cargarEstadisticas);
+        // Función de debug
+        function debug(msg) {
+            console.log(msg);
+            document.getElementById('debugInfo').innerHTML += msg + '\n';
+            document.getElementById('debugArea').style.display = 'block';
+        }
         
         function cargarEstadisticas() {
             const formData = new FormData();
@@ -169,25 +191,37 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion'])) {
                 method: 'POST',
                 body: formData
             })
-            .then(response => response.json())
+            .then(response => {
+                debug('Response status: ' + response.status);
+                return response.text();
+            })
+            .then(text => {
+                debug('Raw response: ' + text.substring(0, 200));
+                try {
+                    return JSON.parse(text);
+                } catch (e) {
+                    debug('JSON parse error: ' + e.message);
+                    throw new Error('Respuesta no válida del servidor');
+                }
+            })
             .then(data => {
                 document.getElementById('estadisticas').innerHTML = `
                     <div class="stat-card">
-                        <div class="stat-value">${data.total_productos}</div>
+                        <div class="stat-value">${data.total_productos || '--'}</div>
                         <div>Productos Totales</div>
                     </div>
                     <div class="stat-card">
-                        <div class="stat-value">${data.con_stock}</div>
+                        <div class="stat-value">${data.con_stock || '--'}</div>
                         <div>Con Stock</div>
                     </div>
                     <div class="stat-card">
-                        <div class="stat-value">${data.ultima_actualizacion.split(' ')[0]}</div>
+                        <div class="stat-value">${(data.ultima_actualizacion || '--').split(' ')[0]}</div>
                         <div>Última Actualización</div>
                     </div>
                 `;
             })
             .catch(error => {
-                console.error('Error cargando estadísticas:', error);
+                debug('Error cargando estadísticas: ' + error.message);
             });
         }
         
@@ -208,10 +242,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion'])) {
                 body: formData
             })
             .then(response => {
-                if (!response.ok) {
-                    throw new Error('Error en la respuesta del servidor');
+                debug('Import Response status: ' + response.status);
+                return response.text();
+            })
+            .then(text => {
+                debug('Import Raw response: ' + text.substring(0, 500));
+                try {
+                    return JSON.parse(text);
+                } catch (e) {
+                    debug('Import JSON parse error: ' + e.message);
+                    throw new Error('El servidor devolvió una respuesta no válida: ' + text.substring(0, 100));
                 }
-                return response.json();
             })
             .then(data => {
                 loading.style.display = 'none';
@@ -229,22 +270,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion'])) {
                     </div>
                 `;
                 
-                // Actualizar estadísticas después de la importación
                 if (data.success) {
-                    setTimeout(cargarEstadisticas, 1000);
+                    setTimeout(cargarEstadisticas, 2000);
                 }
             })
             .catch(error => {
                 loading.style.display = 'none';
                 btn.disabled = false;
                 resultado.innerHTML = `<div class="card error">❌ Error: ${error.message}</div>`;
-                console.error('Error ejecutando importación:', error);
+                debug('Error ejecutando importación: ' + error.message);
             });
         }
         
         function verLogs() {
             window.open('/reports/logs/importacion.log', '_blank');
         }
+        
+        // Cargar estadísticas al iniciar
+        document.addEventListener('DOMContentLoaded', cargarEstadisticas);
     </script>
 </body>
 </html>
