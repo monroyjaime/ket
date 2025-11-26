@@ -160,48 +160,51 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion'])) {
             });
         }
         
-        function ejecutarImportacion() {
-            const btn = document.getElementById('btnEjecutar');
-            const loading = document.getElementById('loading');
-            const resultado = document.getElementById('resultado');
+        public function ejecutarImportacion() {
+        $startTime = microtime(true);
+        
+        try {
+            // ✅ EJECUTAR DIRECTAMENTE Y CAPTURAR OUTPUT
+            $scriptPath = '/var/www/html/php/importa_google_sheets.php';
+            $command = "php " . escapeshellarg($scriptPath) . " 2>&1";
             
-            btn.disabled = true;
-            loading.style.display = 'block';
-            resultado.innerHTML = '';
+            $output = [];
+            $returnCode = 0;
+            exec($command, $output, $returnCode);
             
-            fetch('ui_importador.php', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                body: 'accion=ejecutar'
-            })
-            .then(response => response.json())
-            .then(data => {
-                loading.style.display = 'none';
-                btn.disabled = false;
-                
-                const cardClass = data.success ? 'success' : 'error';
-                const icon = data.success ? '✅' : '❌';
-                
-                resultado.innerHTML = `
-                    <div class="card ${cardClass}">
-                        <h3>${icon} Resultado de la Importación</h3>
-                        <p><strong>Tiempo de ejecución:</strong> ${data.execution_time} segundos</p>
-                        <p><strong>Fecha y hora:</strong> ${data.timestamp}</p>
-                        <div class="output">${Array.isArray(data.output) ? data.output.join('\n') : data.output}</div>
-                    </div>
-                `;
-                
-                // Actualizar estadísticas después de la importación
-                if (data.success) {
-                    setTimeout(cargarEstadisticas, 1000);
+            // Filtrar solo líneas relevantes
+            $filteredOutput = [];
+            foreach ($output as $line) {
+                $cleanLine = trim($line);
+                if (!empty($cleanLine) && 
+                    !str_contains($cleanLine, 'PHP Warning') && 
+                    !str_contains($cleanLine, 'PHP Notice') &&
+                    !str_contains($cleanLine, 'PHP Fatal error')) {
+                    $filteredOutput[] = $cleanLine;
                 }
-            })
-            .catch(error => {
-                loading.style.display = 'none';
-                btn.disabled = false;
-                resultado.innerHTML = `<div class="card error">❌ Error: ${error.message}</div>`;
-            });
+            }
+            
+            // Si no hay output pero fue exitoso
+            if (empty($filteredOutput) && $returnCode === 0) {
+                $filteredOutput[] = "✅ Proceso completado exitosamente";
+            }
+            
+            $success = ($returnCode === 0);
+            
+        } catch (Exception $e) {
+            $filteredOutput = ["❌ ERROR: " . $e->getMessage()];
+            $success = false;
         }
+        
+        $executionTime = round(microtime(true) - $startTime, 2);
+        
+        return [
+            'success' => $success,
+            'output' => $filteredOutput,
+            'execution_time' => $executionTime,
+            'timestamp' => date('Y-m-d H:i:s')
+        ];
+    }
         
         function verLogs() {
             window.open('/reports/logs/importacion.log', '_blank');
