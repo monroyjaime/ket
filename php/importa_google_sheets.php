@@ -1,78 +1,132 @@
 <?php
-require_once("dbcat.php");
+// importa_google_sheets.php - VERSIÓN MEJORADA PARA WEB
 
+// CONFIGURACIÓN PARA CONTEXTO WEB
+if (php_sapi_name() !== 'cli') {
+    set_time_limit(120);
+    ini_set('max_execution_time', 120);
+    ini_set('memory_limit', '256M');
+}
+
+// LOGGING MEJORADO
+function log_message($message, $isError = false) {
+    $timestamp = date('Y-m-d H:i:s');
+    $prefix = $isError ? '❌ ERROR: ' : '📝 INFO: ';
+    $logEntry = "[$timestamp] $prefix$message\n";
+    
+    file_put_contents('/var/www/html/reports/logs/importacion_detalle.log', 
+        $logEntry, FILE_APPEND | LOCK_EX);
+    
+    if (php_sapi_name() === 'cli') {
+        echo $logEntry;
+    }
+}
+
+// MANEJADOR DE ERRORES
+set_error_handler(function($errno, $errstr, $errfile, $errline) {
+    log_message("PHP Error: $errstr en $errfile:$errline", true);
+    return true;
+});
+
+set_exception_handler(function($exception) {
+    log_message("Excepción: " . $exception->getMessage(), true);
+    log_message("Trace: " . $exception->getTraceAsString(), true);
+    exit(1);
+});
+
+// CLASE MEJORADA CON MANEJO DE ERRORES
 class GoogleSheetsImporter {
     private $db;
     private $googleSheetsUrl;
     private $logFile = '/var/www/html/reports/logs/importacion.log';
     
     public function __construct($googleSheetsUrl) {
-        $this->db = new DB();
+        log_message("Inicializando Importador...");
         $this->googleSheetsUrl = $googleSheetsUrl;
         
-        // Crear directorio de logs si no existe
-        $logDir = dirname($this->logFile);
-        if (!is_dir($logDir)) {
-            mkdir($logDir, 0755, true);
+        try {
+            require_once("dbcat.php");
+            $this->db = new DB();
+            log_message("✅ Conexión a BD establecida");
+        } catch (Exception $e) {
+            log_message("❌ Error conectando a BD: " . $e->getMessage(), true);
+            throw $e;
         }
     }
     
     public function ejecutarProcesoCompleto() {
+        log_message("🚀 INICIANDO PROCESO DE ACTUALIZACIÓN");
+        
         try {
-            $this->log("🚀 INICIANDO PROCESO DE ACTUALIZACIÓN");
-            
             // 1. Descargar datos de Google Sheets
+            log_message("📥 Descargando datos de Google Sheets...");
             $csvData = $this->descargarDeGoogleSheets();
-            $this->log("✅ Datos descargados (" . strlen($csvData) . " bytes)");
+            log_message("✅ Datos descargados (" . strlen($csvData) . " bytes)");
             
             // 2. Guardar archivo temporal
             $tempFile = $this->guardarArchivoTemporal($csvData);
-            $this->log("📁 Archivo temporal guardado: " . $tempFile);
+            log_message("📁 Archivo temporal: " . $tempFile);
             
             // 3. Limpiar tabla prod_name
+            log_message("🗑️ Limpiando tabla prod_name...");
             $this->limpiarTablaProdName();
-            $this->log("🗑️  Tabla prod_name limpiada");
             
             // 4. Cargar datos a PostgreSQL
+            log_message("📊 Cargando datos a PostgreSQL...");
             $registrosCargados = $this->cargarAPostgreSQL($tempFile);
-            $this->log("📊 Datos cargados a PostgreSQL: " . $registrosCargados . " registros");
+            log_message("✅ Datos cargados: " . $registrosCargados . " registros");
             
             // 5. Limpiar archivo temporal
             unlink($tempFile);
-            $this->log("🧹 Archivo temporal eliminado");
+            log_message("🧹 Archivo temporal eliminado");
             
-            // 6. Ejecutar tu script de actualización (PRESERVADO)
+            // 6. Ejecutar script de actualización
+            log_message("🔄 Ejecutando update_productos.php...");
             $this->ejecutarUpdateProductos();
-            $this->log("🎉 PROCESO COMPLETADO EXITOSAMENTE");
             
+            log_message("🎉 PROCESO COMPLETADO EXITOSAMENTE");
             return true;
             
         } catch (Exception $e) {
-            $this->log("❌ ERROR: " . $e->getMessage());
+            log_message("❌ ERROR en proceso: " . $e->getMessage(), true);
             return false;
         }
     }
     
     private function descargarDeGoogleSheets() {
-        $context = stream_context_create([
+        log_message("🔗 Conectando a: " . $this->googleSheetsUrl);
+        
+        // Configuración más robusta para contexto web
+        $contextOptions = [
             'ssl' => [
                 'verify_peer' => false,
                 'verify_peer_name' => false,
+                'allow_self_signed' => true
             ],
             'http' => [
-                'timeout' => 30,
-                'user_agent' => 'Mozilla/5.0 (compatible; GoogleSheetsImporter)'
+                'timeout' => 45,
+                'user_agent' => 'Mozilla/5.0 (compatible; GoogleSheetsImporter/1.0)',
+                'header' => "Accept: text/csv,text/plain,*/*\r\n"
             ]
-        ]);
+        ];
         
-        $csvData = file_get_contents($this->googleSheetsUrl, false, $context);
+        $context = stream_context_create($contextOptions);
+        
+        // Intentar descarga con manejo de errores
+        $csvData = @file_get_contents($this->googleSheetsUrl, false, $context);
         
         if ($csvData === false) {
-            throw new Exception("No se pudo descargar datos de Google Sheets");
+            $error = error_get_last();
+            throw new Exception("Error descargando de Google Sheets: " . ($error['message'] ?? 'Error desconocido'));
         }
         
         if (empty($csvData)) {
             throw new Exception("Datos vacíos recibidos de Google Sheets");
+        }
+        
+        // Verificar que sean datos CSV válidos
+        if (strlen($csvData) < 10 || strpos($csvData, ',') === false) {
+            throw new Exception("Datos recibidos no parecen ser CSV válido");
         }
         
         return $csvData;
@@ -80,7 +134,11 @@ class GoogleSheetsImporter {
     
     private function guardarArchivoTemporal($csvData) {
         $tempFile = tempnam(sys_get_temp_dir(), 'google_sheets_') . '.csv';
-        file_put_contents($tempFile, $csvData);
+        
+        if (file_put_contents($tempFile, $csvData) === false) {
+            throw new Exception("No se pudo guardar archivo temporal: " . $tempFile);
+        }
+        
         return $tempFile;
     }
     
@@ -92,22 +150,18 @@ class GoogleSheetsImporter {
     }
     
     private function cargarAPostgreSQL($archivoCSV) {
-        // ✅ LIMPIAR CSV ANTES DE CARGAR
-        $this->limpiarCSV($archivoCSV);
-        
-        // ✅ SOLUCIÓN CON psql \copy
         $host = 'localhost';
-        $dbname = 'ketdb';
-        $user = 'ketadmin'; 
-        $password = 'LondonTown'; 
+        $dbname = 'tu_basedatos';     // CAMBIA
+        $user = 'tu_usuario';         // CAMBIA  
+        $password = 'tu_password';    // CAMBIA
         
         $comando = "PGPASSWORD='" . escapeshellarg($password) . "' psql " .
-                "-h " . escapeshellarg($host) . " " .
-                "-d " . escapeshellarg($dbname) . " " .
-                "-U " . escapeshellarg($user) . " " .
-                "-c " . escapeshellarg("\copy prod_name FROM '" . $archivoCSV . "' WITH (FORMAT CSV, HEADER)");
+                   "-h " . escapeshellarg($host) . " " .
+                   "-d " . escapeshellarg($dbname) . " " .
+                   "-U " . escapeshellarg($user) . " " .
+                   "-c " . escapeshellarg("\copy prod_name FROM '" . $archivoCSV . "' WITH (FORMAT CSV, HEADER)");
         
-        $this->log("Ejecutando comando psql \\copy...");
+        log_message("Ejecutando: psql \\copy...");
         
         exec($comando . " 2>&1", $output, $returnCode);
         
@@ -116,147 +170,42 @@ class GoogleSheetsImporter {
             throw new Exception("Error en psql \\copy (código: $returnCode): " . $errorMsg);
         }
         
-        $this->log("✅ Comando psql ejecutado exitosamente");
-        
-        // Verificar registros insertados
+        // Verificar registros
         $consulta = $this->db->consultas("SELECT COUNT(*) as total FROM prod_name");
-        $total = $consulta[0]->total;
-        $this->log("📊 Registros en prod_name: " . $total);
-        
-        return $total;
-    }
-
-    private function limpiarCSV($archivoCSV) {
-        $this->log("🧹 Limpiando CSV de registros problemáticos...");
-        
-        $handle = fopen($archivoCSV, 'r');
-        if (!$handle) {
-            throw new Exception("No se pudo abrir CSV para limpieza");
-        }
-        
-        // Leer headers
-        $headers = fgetcsv($handle);
-        $lineasBuenas = [$headers];
-        $lineasEliminadas = 0;
-        $lineasCorregidas = 0;
-        
-        while (($data = fgetcsv($handle)) !== FALSE) {
-            $lineaOriginal = $data;
-            $eliminarLinea = false;
-            
-            // 1. ELIMINAR líneas con CODE vacío (problema principal)
-            if (empty(trim($data[0] ?? ''))) {
-                $eliminarLinea = true;
-                $lineasEliminadas++;
-            }
-            // 2. CORREGIR #VALUE! en dpto_code (columna 5 - índice 5)
-            else if (isset($data[5]) && strpos($data[5], '#VALUE!') !== false) {
-                $data[5] = '000'; // Valor por defecto para dpto_code
-                $lineasCorregidas++;
-                $lineasBuenas[] = $data;
-            }
-            // 3. MANTENER líneas buenas
-            else {
-                $lineasBuenas[] = $data;
-            }
-        }
-        
-        fclose($handle);
-        
-        // Reescribir CSV solo con líneas buenas
-        $handle = fopen($archivoCSV, 'w');
-        foreach ($lineasBuenas as $linea) {
-            fputcsv($handle, $linea);
-        }
-        fclose($handle);
-        
-        $this->log("✅ CSV limpiado:");
-        $this->log("   - Líneas eliminadas (CODE vacío): " . $lineasEliminadas);
-        $this->log("   - Líneas corregidas (#VALUE!): " . $lineasCorregidas);
-        $this->log("   - Líneas totales después: " . count($lineasBuenas));
-    }
-
-    private function analizarCSVProblemas($archivoCSV) {
-        $this->log("🔍 Analizando CSV para problemas...");
-        
-        $handle = fopen($archivoCSV, 'r');
-        if (!$handle) {
-            $this->log("❌ No se pudo abrir CSV para análisis");
-            return;
-        }
-        
-        // Leer headers
-        $headers = fgetcsv($handle);
-        $this->log("📋 Headers: " . implode(', ', $headers));
-        
-        $lineaNum = 1;
-        $problemas = [];
-        
-        while (($data = fgetcsv($handle)) !== FALSE) {
-            $lineaNum++;
-            
-            // Buscar #VALUE! en cualquier campo
-            foreach ($data as $index => $valor) {
-                if (strpos($valor, '#VALUE!') !== false) {
-                    $problemas[] = "Línea $lineaNum - Columna " . ($index + 1) . " (" . $headers[$index] . "): '$valor'";
-                }
-            }
-            
-            // Buscar campos vacíos problemáticos
-            if (empty($data[0])) { // code vacío
-                $problemas[] = "Línea $lineaNum - CODE VACÍO: " . implode(' | ', $data);
-            }
-            
-            // Solo revisar primeras líneas para no saturar el log
-            if ($lineaNum <= 10) {
-                $this->log("Línea $lineaNum: " . implode(' | ', array_slice($data, 0, 3)) . "...");
-            }
-        }
-        
-        fclose($handle);
-        
-        if (!empty($problemas)) {
-            $this->log("❌ PROBLEMAS ENCONTRADOS:");
-            foreach ($problemas as $problema) {
-                $this->log("   - " . $problema);
-            }
-        } else {
-            $this->log("✅ CSV parece estar limpio");
-        }
-        
-        $this->log("📄 Total líneas en CSV: " . $lineaNum);
+        return $consulta[0]->total;
     }
     
     private function ejecutarUpdateProductos() {
-        // Ejecutar tu script actual - PRESERVADO INTACTO
         $scriptPath = '/var/www/html/php/update_productos.php';
         
         if (!file_exists($scriptPath)) {
-            throw new Exception("Script update_productos.php no encontrado en: " . $scriptPath);
+            throw new Exception("Script no encontrado: " . $scriptPath);
         }
         
-        // Capturar output para logging
-        ob_start();
-        include $scriptPath;
-        $output = ob_get_clean();
+        // Ejecutar y capturar output
+        $output = [];
+        $returnCode = 0;
+        exec("php " . escapeshellarg($scriptPath) . " 2>&1", $output, $returnCode);
         
-        $this->log("📝 Output de update_productos.php:\n" . $output);
-    }
-    
-    private function log($mensaje) {
-        $timestamp = date('Y-m-d H:i:s');
-        $linea = "[$timestamp] $mensaje\n";
-        file_put_contents($this->logFile, $linea, FILE_APPEND | LOCK_EX);
-        echo $linea; // También mostrar en pantalla
+        if ($returnCode !== 0) {
+            log_message("❌ update_productos.php falló (código: $returnCode)", true);
+            log_message("Output: " . implode("\n", $output), true);
+        } else {
+            log_message("✅ update_productos.php ejecutado exitosamente");
+        }
     }
 }
 
-// CONFIGURACIÓN
-$googleSheetsUrl = 'https://script.google.com/macros/s/AKfycbyoIqU20qYydm_8bxHF4gyzi2qm7ZkCNB9gwPGEgQ5DcKLjCYQDrllMxnfIxw3rSOnwkQ/exec'; // Tu URL de Google Apps Script
+// URL CORRECTA - USA LA MISMA QUE FUNCIONA EN TERMINAL
+$googleSheetsUrl = 'https://script.google.com/macros/s/TU_ID_REAL_AQUI/exec'; // ⚠️ CAMBIA ESTO
 
 // EJECUCIÓN
-$importer = new GoogleSheetsImporter($googleSheetsUrl);
-$exito = $importer->ejecutarProcesoCompleto();
-
-exit($exito ? 0 : 1);
+try {
+    $importer = new GoogleSheetsImporter($googleSheetsUrl);
+    $exito = $importer->ejecutarProcesoCompleto();
+    exit($exito ? 0 : 1);
+} catch (Exception $e) {
+    log_message("❌ ERROR FATAL: " . $e->getMessage(), true);
+    exit(1);
+}
 ?>
