@@ -93,17 +93,19 @@ class GoogleSheetsImporter {
     
     private function cargarAPostgreSQL($archivoCSV) {
         // ✅ SOLUCIÓN CON psql \copy
-        // ⚠️ CAMBIA ESTAS CREDENCIALES CON TUS DATOS REALES:
         $host = 'localhost';
-        $dbname = 'ketdb';     // CAMBIA ESTO
-        $user = 'ketadmin';         // CAMBIA ESTO  
-        $password = 'LondonTown';    // CAMBIA ESTO
+        $dbname = 'ketdb';
+        $user = 'ketadmin'; 
+        $password = 'LondonTown';    
+        
+        // PRIMERO: Analizar el CSV para encontrar problemas
+        $this->analizarCSVProblemas($archivoCSV);
         
         $comando = "PGPASSWORD='" . escapeshellarg($password) . "' psql " .
-                   "-h " . escapeshellarg($host) . " " .
-                   "-d " . escapeshellarg($dbname) . " " .
-                   "-U " . escapeshellarg($user) . " " .
-                   "-c " . escapeshellarg("\copy prod_name FROM '" . $archivoCSV . "' WITH (FORMAT CSV, HEADER)");
+                "-h " . escapeshellarg($host) . " " .
+                "-d " . escapeshellarg($dbname) . " " .
+                "-U " . escapeshellarg($user) . " " .
+                "-c " . escapeshellarg("\copy prod_name FROM '" . $archivoCSV . "' WITH (FORMAT CSV, HEADER)");
         
         $this->log("Ejecutando comando psql \\copy...");
         
@@ -122,6 +124,57 @@ class GoogleSheetsImporter {
         $this->log("📊 Registros en prod_name: " . $total);
         
         return $total;
+    }
+
+    private function analizarCSVProblemas($archivoCSV) {
+        $this->log("🔍 Analizando CSV para problemas...");
+        
+        $handle = fopen($archivoCSV, 'r');
+        if (!$handle) {
+            $this->log("❌ No se pudo abrir CSV para análisis");
+            return;
+        }
+        
+        // Leer headers
+        $headers = fgetcsv($handle);
+        $this->log("📋 Headers: " . implode(', ', $headers));
+        
+        $lineaNum = 1;
+        $problemas = [];
+        
+        while (($data = fgetcsv($handle)) !== FALSE) {
+            $lineaNum++;
+            
+            // Buscar #VALUE! en cualquier campo
+            foreach ($data as $index => $valor) {
+                if (strpos($valor, '#VALUE!') !== false) {
+                    $problemas[] = "Línea $lineaNum - Columna " . ($index + 1) . " (" . $headers[$index] . "): '$valor'";
+                }
+            }
+            
+            // Buscar campos vacíos problemáticos
+            if (empty($data[0])) { // code vacío
+                $problemas[] = "Línea $lineaNum - CODE VACÍO: " . implode(' | ', $data);
+            }
+            
+            // Solo revisar primeras líneas para no saturar el log
+            if ($lineaNum <= 10) {
+                $this->log("Línea $lineaNum: " . implode(' | ', array_slice($data, 0, 3)) . "...");
+            }
+        }
+        
+        fclose($handle);
+        
+        if (!empty($problemas)) {
+            $this->log("❌ PROBLEMAS ENCONTRADOS:");
+            foreach ($problemas as $problema) {
+                $this->log("   - " . $problema);
+            }
+        } else {
+            $this->log("✅ CSV parece estar limpio");
+        }
+        
+        $this->log("📄 Total líneas en CSV: " . $lineaNum);
     }
     
     private function ejecutarUpdateProductos() {
