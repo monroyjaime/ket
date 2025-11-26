@@ -24,7 +24,12 @@ class DB{
     }
     
     public function __destruct() {
-        pg_close($this->link);
+         // ✅ VERIFICAR si la conexión todavía está activa antes de cerrar
+        if ($this->link && pg_connection_status($this->link) === PGSQL_CONNECTION_OK) {
+            pg_close($this->link);
+        }
+        // Si ya está cerrada, no hacer nada (evita el error)
+        //pg_close($this->link);
     }
 
     public function consultas($consulta)
