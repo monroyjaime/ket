@@ -1,7 +1,7 @@
 <?php
-// ui_simple.php - Versión mejorada
+// ui_simple.php - Versión con timeout
 
-// 1. PRIMERO: Probar solo las estadísticas (lo más simple)
+// 1. PRIMERO: Probar solo las estadísticas
 if (isset($_GET['test'])) {
     header('Content-Type: application/json');
     
@@ -27,32 +27,7 @@ if (isset($_GET['test'])) {
     exit;
 }
 
-// 2. SEGUNDO: Probar ejecución simple
-if (isset($_GET['run_simple'])) {
-    header('Content-Type: application/json');
-    
-    try {
-        // Ejecutar comando simple primero
-        $output = [];
-        exec("php -v 2>&1", $output, $returnCode);
-        
-        echo json_encode([
-            'success' => true,
-            'output' => $output,
-            'return_code' => $returnCode,
-            'message' => 'Comando ejecutado'
-        ]);
-        
-    } catch (Exception $e) {
-        echo json_encode([
-            'success' => false,
-            'error' => $e->getMessage()
-        ]);
-    }
-    exit;
-}
-
-// 3. TEST IMPORTACIÓN CON CAPTURA DE ERRORES
+// 2. TEST IMPORTACIÓN CON TIMEOUT
 if (isset($_GET['run_import'])) {
     header('Content-Type: application/json');
     
@@ -64,52 +39,103 @@ if (isset($_GET['run_import'])) {
             throw new Exception("Archivo no encontrado: " . $scriptPath);
         }
         
-        // Ejecutar con captura completa de output
+        // Configurar timeout de 30 segundos
+        $timeout = 30;
+        $outputFile = '/tmp/import_output_' . time() . '.log';
+        $pidFile = '/tmp/import_pid_' . time() . '.pid';
+        
+        // Comando con timeout
+        $command = "timeout {$timeout}s php " . escapeshellarg($scriptPath) . " > " . escapeshellarg($outputFile) . " 2>&1 & echo $!";
+        
+        // Ejecutar en background y capturar PID
+        $pid = shell_exec($command);
+        $pid = trim($pid);
+        
+        // Guardar PID para referencia
+        file_put_contents($pidFile, $pid);
+        
+        // Esperar un poco y verificar resultado
+        sleep(5);
+        
+        // Verificar si el proceso sigue corriendo
+        $isRunning = false;
+        if ($pid && file_exists("/proc/{$pid}")) {
+            $isRunning = true;
+        }
+        
+        // Leer output del archivo
         $output = [];
-        $returnCode = 0;
-        
-        // Usar shell_exec para capturar TODO el output
-        $fullOutput = shell_exec("php " . escapeshellarg($scriptPath) . " 2>&1");
-        
-        // Si shell_exec devuelve null, hubo un error
-        if ($fullOutput === null) {
-            throw new Exception("Error ejecutando el script (shell_exec devolvió null)");
+        if (file_exists($outputFile)) {
+            $output = file($outputFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+            // Tomar solo las últimas 15 líneas
+            $output = array_slice($output, -15);
         }
         
-        // Dividir en líneas y filtrar
-        $outputLines = explode("\n", $fullOutput);
-        $cleanOutput = [];
+        // Limpiar archivos temporales
+        if (file_exists($outputFile)) unlink($outputFile);
+        if (file_exists($pidFile)) unlink($pidFile);
         
-        foreach ($outputLines as $line) {
-            $trimmed = trim($line);
-            if (!empty($trimmed)) {
-                $cleanOutput[] = $trimmed;
-            }
+        if ($isRunning) {
+            // Si todavía está corriendo después de 5 segundos, probablemente se colgó
+            exec("kill -9 " . escapeshellarg($pid)); // Forzar terminación
+            throw new Exception("El script se colgó y tuvo que ser terminado forzosamente (timeout)");
         }
         
-        // Tomar solo las últimas 10 líneas para no saturar
-        $cleanOutput = array_slice($cleanOutput, -10);
+        if (empty($output)) {
+            $output = ["⚠️ El script ejecutó pero no generó output visible"];
+        }
         
         echo json_encode([
             'success' => true,
-            'output' => $cleanOutput,
-            'total_lines' => count($outputLines),
-            'message' => 'Importación ejecutada'
+            'output' => $output,
+            'pid' => $pid,
+            'was_running' => $isRunning,
+            'message' => 'Importación completada'
         ]);
         
     } catch (Exception $e) {
         echo json_encode([
             'success' => false,
             'error' => $e->getMessage(),
-            'script_path' => $scriptPath ?? 'No definido',
-            'file_exists' => file_exists($scriptPath ?? '') ? 'Sí' : 'No'
+            'script_path' => $scriptPath ?? 'No definido'
         ]);
     }
     exit;
 }
 
-// HTML SIMPLE
+// 3. TEST DIRECTO DEL SCRIPT (sin ejecutarlo)
+if (isset($_GET['check_script'])) {
+    header('Content-Type: application/json');
+    
+    $scriptPath = '/var/www/html/php/importa_google_sheets.php';
+    
+    $checks = [
+        'file_exists' => file_exists($scriptPath),
+        'is_readable' => is_readable($scriptPath),
+        'file_size' => file_exists($scriptPath) ? filesize($scriptPath) : 0,
+        'syntax_check' => null
+    ];
+    
+    // Verificar sintaxis PHP
+    if ($checks['file_exists']) {
+        $syntaxOutput = [];
+        exec("php -l " . escapeshellarg($scriptPath) . " 2>&1", $syntaxOutput, $syntaxCode);
+        $checks['syntax_check'] = [
+            'output' => $syntaxOutput,
+            'code' => $syntaxCode,
+            'valid' => ($syntaxCode === 0)
+        ];
+    }
+    
+    echo json_encode([
+        'success' => true,
+        'checks' => $checks,
+        'script_path' => $scriptPath
+    ]);
+    exit;
+}
 ?>
+
 <!DOCTYPE html>
 <html>
 <head>
@@ -121,6 +147,7 @@ if (isset($_GET['run_import'])) {
         .result { margin: 10px 0; padding: 10px; border: 1px solid #ccc; white-space: pre-wrap; font-family: monospace; }
         .success { border-color: green; background: #f0fff0; }
         .error { border-color: red; background: #fff0f0; }
+        .loading { display: none; color: blue; }
     </style>
 </head>
 <body>
@@ -128,10 +155,11 @@ if (isset($_GET['run_import'])) {
     
     <div>
         <button class="btn" onclick="testBD()">1. Test Base de Datos</button>
-        <button class="btn" onclick="testComando()">2. Test Comando PHP</button>
+        <button class="btn" onclick="checkScript()">2. Verificar Script</button>
         <button class="btn" onclick="testImportacion()">3. Test Importación Completa</button>
     </div>
     
+    <div id="loading" class="loading">⏳ Ejecutando, por favor espere (puede tomar hasta 30 segundos)...</div>
     <div id="result"></div>
 
     <script>
@@ -141,28 +169,38 @@ if (isset($_GET['run_import'])) {
             resultDiv.innerHTML = `<div class="${className}">${JSON.stringify(data, null, 2)}</div>`;
         }
         
+        function showLoading(show) {
+            document.getElementById('loading').style.display = show ? 'block' : 'none';
+        }
+        
         function testBD() {
+            showLoading(true);
             fetch('ui_simple.php?test=1')
                 .then(r => r.json())
                 .then(data => showResult(data))
-                .catch(err => showResult({error: err.message}, true));
+                .catch(err => showResult({error: err.message}, true))
+                .finally(() => showLoading(false));
         }
         
-        function testComando() {
-            fetch('ui_simple.php?run_simple=1')
+        function checkScript() {
+            showLoading(true);
+            fetch('ui_simple.php?check_script=1')
                 .then(r => r.json())
                 .then(data => showResult(data))
-                .catch(err => showResult({error: err.message}, true));
+                .catch(err => showResult({error: err.message}, true))
+                .finally(() => showLoading(false));
         }
         
         function testImportacion() {
+            showLoading(true);
             fetch('ui_simple.php?run_import=1')
                 .then(r => {
                     if (!r.ok) throw new Error('HTTP ' + r.status);
                     return r.json();
                 })
                 .then(data => showResult(data))
-                .catch(err => showResult({error: err.message}, true));
+                .catch(err => showResult({error: err.message}, true))
+                .finally(() => showLoading(false));
         }
     </script>
 </body>
