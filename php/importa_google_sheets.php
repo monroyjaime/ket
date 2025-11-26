@@ -4,11 +4,17 @@ require_once("dbcat.php");
 class GoogleSheetsImporter {
     private $db;
     private $googleSheetsUrl;
-    private $logFile = '/var/www/html/reports/logs/importacion.log';
+    private $logFile = '/var/www/html/reports/logs/importacion.log'; // ✅ TU RUTA ORIGINAL
     
     public function __construct($googleSheetsUrl) {
         $this->db = new DB();
         $this->googleSheetsUrl = $googleSheetsUrl;
+        
+        // Crear directorio de logs si no existe
+        $logDir = dirname($this->logFile);
+        if (!is_dir($logDir)) {
+            mkdir($logDir, 0755, true);
+        }
     }
     
     public function ejecutarProcesoCompleto() {
@@ -86,14 +92,12 @@ class GoogleSheetsImporter {
     }
     
     private function cargarAPostgreSQL($archivoCSV) {
-        // Escapar la ruta del archivo para seguridad
-        $archivoEscapado = pg_escape_string($this->db->getConnection(), $archivoCSV);
-        
-        $query = "COPY prod_name FROM '" . $archivoEscapado . "' WITH (FORMAT CSV, HEADER)";
+        // ✅ CORRECCIÓN: Usar COPY directamente
+        $query = "COPY prod_name FROM '" . $archivoCSV . "' WITH (FORMAT CSV, HEADER)";
         
         $result = $this->db->querySet($query);
         if (!$result) {
-            throw new Exception("Error en COPY de PostgreSQL");
+            throw new Exception("Error en COPY de PostgreSQL - verifica permisos y formato del CSV");
         }
         
         // Obtener número de registros insertados
@@ -106,7 +110,7 @@ class GoogleSheetsImporter {
         $scriptPath = '/var/www/html/php/update_productos.php';
         
         if (!file_exists($scriptPath)) {
-            throw new Exception("Script update_productos.php no encontrado");
+            throw new Exception("Script update_productos.php no encontrado en: " . $scriptPath);
         }
         
         // Capturar output para logging
