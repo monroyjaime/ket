@@ -149,30 +149,74 @@ class GoogleSheetsImporter {
         }
     }
     
-    private function cargarAPostgreSQL($archivoCSV) {
-        $host = 'localhost';
-        $dbname = 'tu_basedatos';     // CAMBIA
-        $user = 'tu_usuario';         // CAMBIA  
-        $password = 'tu_password';    // CAMBIA
+   private function cargarAPostgreSQL($archivoCSV) {
+        // ✅ SOLUCIÓN PHP PURA - No necesita credenciales externas
         
-        $comando = "PGPASSWORD='" . escapeshellarg($password) . "' psql " .
-                   "-h " . escapeshellarg($host) . " " .
-                   "-d " . escapeshellarg($dbname) . " " .
-                   "-U " . escapeshellarg($user) . " " .
-                   "-c " . escapeshellarg("\copy prod_name FROM '" . $archivoCSV . "' WITH (FORMAT CSV, HEADER)");
+        log_message("📥 Cargando datos manualmente desde CSV...");
         
-        log_message("Ejecutando: psql \\copy...");
-        
-        exec($comando . " 2>&1", $output, $returnCode);
-        
-        if ($returnCode !== 0) {
-            $errorMsg = implode("\n", $output);
-            throw new Exception("Error en psql \\copy (código: $returnCode): " . $errorMsg);
+        $handle = fopen($archivoCSV, 'r');
+        if (!$handle) {
+            throw new Exception("No se pudo abrir archivo CSV: " . $archivoCSV);
         }
         
-        // Verificar registros
-        $consulta = $this->db->consultas("SELECT COUNT(*) as total FROM prod_name");
-        return $consulta[0]->total;
+        // Leer headers (primera línea)
+        $headers = fgetcsv($handle);
+        log_message("📋 Columnas detectadas: " . implode(', ', $headers));
+        
+        $registros = 0;
+        $batchSize = 100; // Insertar en lotes de 100 registros
+        $batchValues = [];
+        
+        // Procesar cada línea del CSV
+        while (($data = fgetcsv($handle)) !== FALSE) {
+            // Saltar líneas completamente vacías
+            if (empty(array_filter($data))) {
+                continue;
+            }
+            
+            // Limpiar y escapar cada campo
+            $cleanedData = array_map(function($value) {
+                if ($value === '' || $value === null || $value === 'NULL') {
+                    return 'NULL';
+                }
+                // Escapar comillas simples para PostgreSQL
+                return "'" . pg_escape_string($value) . "'";
+            }, $data);
+            
+            $batchValues[] = '(' . implode(', ', $cleanedData) . ')';
+            $registros++;
+            
+            // Insertar en lotes para mejor performance
+            if (count($batchValues) >= $batchSize) {
+                $this->insertarBatch($batchValues, $headers);
+                $batchValues = [];
+                log_message("✅ Lote insertado...");
+            }
+        }
+        
+        // Insertar lote final (si queda algo)
+        if (!empty($batchValues)) {
+            $this->insertarBatch($batchValues, $headers);
+        }
+        
+        fclose($handle);
+        
+        log_message("🎉 Carga completada: " . $registros . " registros insertados");
+        return $registros;
+    }
+
+    private function insertarBatch($batchValues, $headers) {
+        if (empty($batchValues)) return;
+        
+        $columns = implode(', ', $headers);
+        $values = implode(', ', $batchValues);
+        
+        $query = "INSERT INTO prod_name ($columns) VALUES $values";
+        
+        $result = $this->db->querySet($query);
+        if (!$result) {
+            throw new Exception("Error insertando lote de datos en PostgreSQL");
+        }
     }
     
     private function ejecutarUpdateProductos() {
