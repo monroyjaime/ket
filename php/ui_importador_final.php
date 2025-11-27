@@ -363,72 +363,94 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion'])) {
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>🔄 Sistema de Importación</h1>
-            <p>Sincronización automatizada Google Sheets → PostgreSQL</p>
+    <div class="w-100 p-0" style="background-color: #CCC;">
+        <div class="row align-items-start" style="max-height: 50px;">
+        <div class="col text-start" style="max-height: 40px; padding-left: 20px;  " > 
+            <a href="#" onClick="backHome()" title="Pag. Prev."><i class="bi bi-arrow-left-circle-fill icon-dark-blue icon-large"></i></a>
+        </div>  
+    
+        <div class="col text-end" style="max-height: 40px;" >
+            <img src="../catalogo/images/logoMini.png" class="img-fluid" alt="logo" />
+        </div>       
+
         </div>
-        
-        <div class="content">
-            <!-- Estadísticas -->
-            <div class="card">
-                <h3>📊 Dashboard de Productos</h3>
-                <div class="stats-grid" id="estadisticas">
-                    <div class="stat-card">
-                        <div class="stat-value">--</div>
-                        <div>Productos Totales</div>
+        <div class="col text-center" >
+            <div class="col text-center" style="background-color: #DDD;">
+                <h2 style="background-color: #037C79; padding-botton: 14px; color: #FFF;">Sistema de Importación</h2>   
+            </div>
+        </div> 
+
+        <div class="container">
+            <div class="header">
+                <h1>🔄 Sistema de Importación</h1>
+                <p>Sincronización automatizada Google Sheets → PostgreSQL</p>
+            </div>
+            
+            <div class="content">
+                <!-- Estadísticas -->
+                <div class="card">
+                    <h3>📊 Dashboard de Productos</h3>
+                    <div class="stats-grid" id="estadisticas">
+                        <div class="stat-card">
+                            <div class="stat-value">--</div>
+                            <div>Productos Totales</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">--</div>
+                            <div>Con Stock</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">--</div>
+                            <div>Última Sincronización</div>
+                        </div>
                     </div>
-                    <div class="stat-card">
-                        <div class="stat-value">--</div>
-                        <div>Con Stock</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-value">--</div>
-                        <div>Última Sincronización</div>
+                    <button class="btn" onclick="cargarEstadisticas()">
+                        🔄 Actualizar Estadísticas
+                    </button>
+                </div>
+                
+                <!-- Control de Importación -->
+                <div class="card">
+                    <h3>⚡ Control de Sincronización</h3>
+                    <p>Ejecuta manualmente el proceso de importación desde Google Sheets</p>
+                    
+                    <div class="alert" id="infoAlert" style="display: none;"></div>
+                    
+                    <button class="btn btn-success" id="btnEjecutar" onclick="ejecutarImportacion()">
+                        🚀 Ejecutar Importación Manual
+                    </button>
+                    <button class="btn btn-warning" onclick="verLogsCompletos()">
+                        📋 Ver Logs Completos
+                    </button>
+                    <button class="btn" onclick="limpiarResultados()">
+                        🧹 Limpiar Resultados
+                    </button>
+                    
+                    <div class="progress-bar" id="progressBar">
+                        <div class="progress" id="progress"></div>
                     </div>
                 </div>
-                <button class="btn" onclick="cargarEstadisticas()">
-                    🔄 Actualizar Estadísticas
-                </button>
-            </div>
-            
-            <!-- Control de Importación -->
-            <div class="card">
-                <h3>⚡ Control de Sincronización</h3>
-                <p>Ejecuta manualmente el proceso de importación desde Google Sheets</p>
                 
-                <div class="alert" id="infoAlert" style="display: none;"></div>
-                
-                <button class="btn btn-success" id="btnEjecutar" onclick="ejecutarImportacion()">
-                    🚀 Ejecutar Importación Manual
-                </button>
-                <button class="btn btn-warning" onclick="verLogsCompletos()">
-                    📋 Ver Logs Completos
-                </button>
-                <button class="btn" onclick="limpiarResultados()">
-                    🧹 Limpiar Resultados
-                </button>
-                
-                <div class="progress-bar" id="progressBar">
-                    <div class="progress" id="progress"></div>
+                <!-- Loading -->
+                <div class="loading" id="loading">
+                    <div class="spinner"></div>
+                    <p>⏳ Ejecutando importación, por favor espere...</p>
+                    <p><small>Este proceso puede tomar hasta 2 minutos</small></p>
                 </div>
+                
+                <!-- Resultados -->
+                <div id="resultado"></div>
             </div>
             
-            <!-- Loading -->
-            <div class="loading" id="loading">
-                <div class="spinner"></div>
-                <p>⏳ Ejecutando importación, por favor espere...</p>
-                <p><small>Este proceso puede tomar hasta 2 minutos</small></p>
+            <div class="footer">
+                <p>Sistema de Importación Automatizado | Última actualización: <?php echo date('Y-m-d H:i:s'); ?></p>
             </div>
-            
-            <!-- Resultados -->
-            <div id="resultado"></div>
-        </div>
-        
-        <div class="footer">
-            <p>Sistema de Importación Automatizado | Última actualización: <?php echo date('Y-m-d H:i:s'); ?></p>
         </div>
     </div>
+
+
+
+
 
     <script>
         // Estado de la aplicación
