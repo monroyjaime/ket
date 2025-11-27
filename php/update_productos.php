@@ -1,5 +1,5 @@
 <?php
-// ui_importador_final.php - VERSIÓN MEJORADA Y FUNCIONAL
+// ui_importador_final.php - VERSIÓN SIMPLIFICADA
 header('Content-Type: text/html; charset=utf-8');
 
 // CONFIGURACIÓN PARA WEB
@@ -13,7 +13,6 @@ function web_log($message) {
     $timestamp = date('Y-m-d H:i:s');
     $log_entry = "[$timestamp] $message\n";
     
-    // Crear directorio si no existe
     $log_dir = dirname($log_file);
     if (!is_dir($log_dir)) {
         mkdir($log_dir, 0755, true);
@@ -26,7 +25,6 @@ function web_log($message) {
 // MANEJAR SOLICITUDES AJAX
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion'])) {
     
-    // LIMPIAR BUFFER
     if (ob_get_level()) ob_clean();
     
     if ($_POST['accion'] === 'estadisticas') {
@@ -34,14 +32,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion'])) {
             require_once("dbcat.php");
             $db = new DB();
             
-            // Estadísticas básicas
             $result = $db->consultas("SELECT COUNT(*) as total FROM productos");
             $total_productos = $result[0]->total ?? 0;
             
             $result = $db->consultas("SELECT COUNT(*) as con_stock FROM productos WHERE current_stock > 0");
             $con_stock = $result[0]->con_stock ?? 0;
             
-            // Última actualización desde logs
             $log_file = '/var/www/html/reports/logs/importacion_detalle.log';
             $ultima_actualizacion = 'Nunca';
             if (file_exists($log_file)) {
@@ -73,28 +69,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion'])) {
         web_log("🚀 EJECUCIÓN MANUAL INICIADA DESDE UI");
         
         try {
-            // EJECUCIÓN DIRECTA - NO EN BACKGROUND
             $script_path = '/var/www/html/php/importa_google_sheets.php';
             
             if (!file_exists($script_path)) {
                 throw new Exception("Script no encontrado: $script_path");
             }
             
-            // Ejecutar y capturar output
             $output = [];
             $return_code = 0;
             
-            // Cambiar al directorio correcto
             chdir('/var/www/html/php/');
-            
-            // Ejecutar con timeout
             $command = "timeout 120 php " . escapeshellarg($script_path) . " 2>&1";
             exec($command, $output, $return_code);
             
             web_log("📋 Output recibido: " . count($output) . " líneas");
             web_log("🔚 Código de retorno: " . $return_code);
             
-            // Filtrar líneas relevantes
             $filtered_output = [];
             foreach ($output as $line) {
                 if (strpos($line, '✅') !== false || 
@@ -106,7 +96,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion'])) {
                 }
             }
             
-            // Si no hay output relevante, mostrar las últimas líneas
             if (empty($filtered_output)) {
                 $filtered_output = array_slice($output, -10);
             }
@@ -138,62 +127,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion'])) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Importador de Productos - Sistema de Sincronización</title>
-    
-    <!-- BOOTSTRAP CSS -->
+    <title>Importador de Productos</title>
+    <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Bootstrap Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
-    
     <style>
-        :root {
-            --primary: #007bff;
-            --success: #28a745;
-            --danger: #dc3545;
-            --warning: #ffc107;
-            --dark: #343a40;
-            --light: #f8f9fa;
-            --verde-header: #037C79;
-        }
-        
         body {
+            background-color: #CCC;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #CCC !important;
-            min-height: 100vh;
-            padding: 0px;
         }
-        
-        /* HEADER SUPERIOR */
-        .header-superior {
+        .header-top {
             background-color: #CCC;
             padding: 10px 0;
-            border-bottom: 1px solid #999;
         }
-        
-        .icon-dark-blue {
-            color: #037C79;
-        }
-        
-        .icon-large {
-            font-size: 2rem;
-        }
-        
-        /* HEADER PRINCIPAL */
-        .header-principal {
-            background-color: var(--verde-header);
+        .header-main {
+            background-color: #037C79;
             color: white;
             padding: 15px 0;
             text-align: center;
         }
-        
-        .header-principal h2 {
-            margin: 0;
-            font-size: 1.8rem;
-            font-weight: 600;
-        }
-        
-        /* CONTENEDOR PRINCIPAL */
-        .container-principal {
+        .main-container {
             max-width: 1200px;
             margin: 20px auto;
             background: white;
@@ -201,123 +155,42 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion'])) {
             box-shadow: 0 10px 30px rgba(0,0,0,0.2);
             overflow: hidden;
         }
-        
-        .content {
+        .content-area {
             padding: 30px;
         }
-        
-        .card {
-            background: var(--light);
+        .card-custom {
+            background: #f8f9fa;
             border-radius: 10px;
             padding: 25px;
             margin-bottom: 25px;
-            border-left: 5px solid var(--primary);
+            border-left: 5px solid #007bff;
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
         }
-        
-        .card.success {
-            border-left-color: var(--success);
+        .card-custom.success {
+            border-left-color: #28a745;
         }
-        
-        .card.error {
-            border-left-color: var(--danger);
+        .card-custom.error {
+            border-left-color: #dc3545;
         }
-        
-        .card h3 {
-            color: var(--dark);
-            margin-bottom: 15px;
-            font-size: 1.4em;
-        }
-        
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             gap: 20px;
             margin: 20px 0;
         }
-        
         .stat-card {
             background: white;
             padding: 20px;
             border-radius: 8px;
             text-align: center;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            transition: transform 0.2s;
         }
-        
-        .stat-card:hover {
-            transform: translateY(-2px);
-        }
-        
         .stat-value {
             font-size: 2.5em;
             font-weight: bold;
-            color: var(--primary);
+            color: #007bff;
             margin-bottom: 5px;
         }
-        
-        .btn {
-            background: var(--primary);
-            color: white;
-            border: none;
-            padding: 12px 25px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 1em;
-            font-weight: 600;
-            margin: 5px;
-            transition: all 0.3s;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-        }
-        
-        .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-        }
-        
-        .btn:disabled {
-            background: #6c757d;
-            cursor: not-allowed;
-            transform: none;
-            box-shadow: none;
-        }
-        
-        .btn-success {
-            background: var(--success);
-        }
-        
-        .btn-warning {
-            background: var(--warning);
-            color: var(--dark);
-        }
-        
-        .btn-danger {
-            background: var(--danger);
-        }
-        
-        .loading {
-            text-align: center;
-            padding: 30px;
-            display: none;
-        }
-        
-        .spinner {
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid var(--primary);
-            border-radius: 50%;
-            width: 50px;
-            height: 50px;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 20px;
-        }
-        
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        
         .output {
             background: #1e1e1e;
             color: #00ff00;
@@ -330,35 +203,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion'])) {
             margin: 15px 0;
             font-size: 0.9em;
         }
-        
-        .alert {
-            padding: 15px;
-            border-radius: 6px;
-            margin: 15px 0;
-            font-weight: 500;
+        .btn-custom {
+            margin: 5px;
         }
-        
-        .alert-success {
-            background: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
-        }
-        
-        .alert-error {
-            background: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
-        }
-        
-        .footer {
+        .loading {
             text-align: center;
-            padding: 20px;
-            background: var(--light);
-            color: var(--dark);
-            font-size: 0.9em;
+            padding: 30px;
+            display: none;
         }
-        
-        .progress-bar {
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #007bff;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .progress-bar-custom {
             width: 100%;
             height: 6px;
             background: #e9ecef;
@@ -367,73 +233,50 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion'])) {
             margin: 15px 0;
             display: none;
         }
-        
-        .progress {
+        .progress-custom {
             height: 100%;
-            background: var(--primary);
+            background: #007bff;
             width: 0%;
             transition: width 0.3s;
         }
-        
-        /* RESPONSIVE */
-        @media (max-width: 768px) {
-            .content {
-                padding: 20px;
-            }
-            
-            .stats-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .header-principal h2 {
-                font-size: 1.5rem;
-            }
-        }
     </style>
 </head>
-<body class="bg-light">
-
-    <!-- HEADER SUPERIOR CON NAVEGACIÓN -->
-    <div class="header-superior">
+<body>
+    <!-- Header Superior -->
+    <div class="header-top">
         <div class="container-fluid">
             <div class="row align-items-center">
-                <!-- Ícono de volver a la izquierda -->
                 <div class="col-auto">
-                    <a href="#" onclick="backHome()" title="Página anterior">
-                        <i class="bi bi-arrow-left-circle-fill icon-dark-blue icon-large"></i>
+                    <a href="#" onclick="history.back()" title="Volver">
+                        <i class="bi bi-arrow-left-circle-fill" style="color: #037C79; font-size: 2rem;"></i>
                     </a>
                 </div>
-                
-                <!-- Logo centrado -->
                 <div class="col text-center">
                     <img src="../catalogo/images/logoMini.png" class="img-fluid" alt="logo" style="max-height: 40px;">
                 </div>
-                
-                <!-- Espacio vacío para balancear el layout -->
                 <div class="col-auto" style="visibility: hidden;">
-                    <i class="bi bi-arrow-left-circle-fill icon-large"></i>
+                    <i class="bi bi-arrow-left-circle-fill" style="font-size: 2rem;"></i>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- HEADER PRINCIPAL CON TÍTULO -->
-    <div class="header-principal">
+    <!-- Header Principal -->
+    <div class="header-main">
         <div class="container-fluid">
-            <h2>🔄 Sistema de Importación</h2>
+            <h2 class="mb-0">🔄 Sistema de Importación</h2>
         </div>
     </div>
 
-    <!-- CONTENIDO PRINCIPAL -->
-    <div class="container-principal mt-4">
-        <div class="content">
-            <!-- Subtítulo -->
+    <!-- Contenido Principal -->
+    <div class="main-container">
+        <div class="content-area">
             <div class="text-center mb-4">
                 <h4 class="text-muted">Sincronización automatizada Google Sheets → PostgreSQL</h4>
             </div>
             
             <!-- Estadísticas -->
-            <div class="card">
+            <div class="card-custom">
                 <h3>📊 Dashboard de Productos</h3>
                 <div class="stats-grid" id="estadisticas">
                     <div class="stat-card">
@@ -449,32 +292,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion'])) {
                         <div>Última Sincronización</div>
                     </div>
                 </div>
-                <button class="btn" onclick="cargarEstadisticas()">
+                <button class="btn btn-primary btn-custom" onclick="cargarEstadisticas()">
                     🔄 Actualizar Estadísticas
                 </button>
             </div>
             
             <!-- Control de Importación -->
-            <div class="card">
+            <div class="card-custom">
                 <h3>⚡ Control de Sincronización</h3>
-                <p>Ejecuta manualmente el proceso de importación desde Google Sheets</p>
+                <p class="mb-3">Ejecuta manualmente el proceso de importación desde Google Sheets</p>
                 
-                <div class="alert" id="infoAlert" style="display: none;"></div>
+                <div class="alert alert-info" id="infoAlert" style="display: none;"></div>
                 
-                <div class="d-flex flex-wrap gap-2">
-                    <button class="btn btn-success" id="btnEjecutar" onclick="ejecutarImportacion()">
+                <div class="mb-3">
+                    <button class="btn btn-success btn-custom" id="btnEjecutar" onclick="ejecutarImportacion()">
                         🚀 Ejecutar Importación Manual
                     </button>
-                    <button class="btn btn-warning" onclick="verLogsCompletos()">
+                    <button class="btn btn-warning btn-custom" onclick="verLogsCompletos()">
                         📋 Ver Logs Completos
                     </button>
-                    <button class="btn btn-secondary" onclick="limpiarResultados()">
+                    <button class="btn btn-secondary btn-custom" onclick="limpiarResultados()">
                         🧹 Limpiar Resultados
                     </button>
                 </div>
                 
-                <div class="progress-bar" id="progressBar">
-                    <div class="progress" id="progress"></div>
+                <div class="progress-bar-custom" id="progressBar">
+                    <div class="progress-custom" id="progress"></div>
                 </div>
             </div>
             
@@ -489,22 +332,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion'])) {
             <div id="resultado"></div>
         </div>
         
-        <div class="footer">
-            <p>Sistema de Importación Automatizado | Última actualización: <?php echo date('Y-m-d H:i:s'); ?></p>
+        <div class="text-center py-3 bg-light">
+            <p class="mb-0 text-muted">Sistema de Importación Automatizado | <?php echo date('Y-m-d H:i:s'); ?></p>
         </div>
     </div>
 
-    <!-- BOOTSTRAP JS -->
+    <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
     <script>
-        // Estado de la aplicación
         let importacionEnCurso = false;
-        
-        // Función para volver atrás
-        function backHome() {
-            window.history.back();
-        }
         
         function cargarEstadisticas() {
             const formData = new FormData();
@@ -531,21 +368,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion'])) {
                             <div>Última Sincronización</div>
                         </div>
                     `;
-                    
                     mostrarAlerta('✅ Estadísticas actualizadas correctamente', 'success');
                 } else {
-                    mostrarAlerta('❌ Error: ' + data.error, 'error');
+                    mostrarAlerta('❌ Error: ' + data.error, 'danger');
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                mostrarAlerta('❌ Error cargando estadísticas', 'error');
+                mostrarAlerta('❌ Error cargando estadísticas', 'danger');
             });
         }
         
         function ejecutarImportacion() {
             if (importacionEnCurso) {
-                mostrarAlerta('⏳ Ya hay una importación en curso', 'error');
+                mostrarAlerta('⏳ Ya hay una importación en curso', 'warning');
                 return;
             }
             
@@ -555,7 +391,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion'])) {
             const progress = document.getElementById('progress');
             const resultado = document.getElementById('resultado');
             
-            // Configurar UI
             btn.disabled = true;
             btn.innerHTML = '⏳ Ejecutando...';
             loading.style.display = 'block';
@@ -563,7 +398,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion'])) {
             resultado.innerHTML = '';
             importacionEnCurso = true;
             
-            // Animación de progreso
             let progressValue = 0;
             const progressInterval = setInterval(() => {
                 progressValue += 0.5;
@@ -593,7 +427,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion'])) {
                     const icon = data.success ? '✅' : '❌';
                     
                     resultado.innerHTML = `
-                        <div class="card ${cardClass}">
+                        <div class="card-custom ${cardClass}">
                             <h3>${icon} ${data.message}</h3>
                             <div class="output">${Array.isArray(data.output) ? data.output.join('\n') : data.output}</div>
                             <p><strong>Código de retorno:</strong> ${data.return_code || 'N/A'}</p>
@@ -602,10 +436,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion'])) {
                     
                     if (data.success) {
                         mostrarAlerta('🎉 Importación completada exitosamente', 'success');
-                        // Actualizar estadísticas automáticamente
                         setTimeout(cargarEstadisticas, 1000);
                     } else {
-                        mostrarAlerta('❌ Error en la importación', 'error');
+                        mostrarAlerta('❌ Error en la importación', 'danger');
                     }
                 }, 1000);
             })
@@ -618,13 +451,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion'])) {
                 importacionEnCurso = false;
                 
                 resultado.innerHTML = `
-                    <div class="card error">
+                    <div class="card-custom error">
                         <h3>❌ Error de Conexión</h3>
                         <div class="output">No se pudo conectar con el servidor: ${error.message}</div>
                     </div>
                 `;
-                
-                mostrarAlerta('❌ Error de conexión con el servidor', 'error');
+                mostrarAlerta('❌ Error de conexión con el servidor', 'danger');
             });
         }
         
