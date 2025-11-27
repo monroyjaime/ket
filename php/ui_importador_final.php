@@ -378,14 +378,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion'])) {
         </div>
         <div class="col text-center" >
             <div class="col text-center" style="background-color: #DDD;">
-                <h2 style="background-color: #037C79; padding-botton: 14px; color: #FFF;">Sistema de Importación</h2>   
+                <h2 style="background-color: #037C79; padding-botton: 14px; color: #FFF;">🔄 Sistema de Importación</h2>   
             </div>
         </div> 
 
         <div class="container">
             <div class="header">
-                <h1>🔄 Sistema de Importación</h1>
-                <p>Sincronización automatizada Google Sheets → PostgreSQL</p>
+                <h3> Sincronización automatizada Google Sheets → PostgreSQL</h3>
             </div>
             
             <div class="content">
