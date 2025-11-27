@@ -200,7 +200,7 @@ foreach ($consult1 as $index => $value1) {
     // INSERTAR NUEVO PRODUCTO (si no se encontró)
     if($found == 0) {
         // ✅ VALIDACIÓN EXTREMA DE DATOS ANTES DE INSERTAR
-        if (empty(trim($value1->code)) {
+        if (empty(trim($value1->code))) {
             log_update("❌ SKIP: Code vacío, no se puede insertar");
             continue;
         }
