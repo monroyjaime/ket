@@ -164,7 +164,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion'])) {
         
         .container {
             max-width: 1000px;
-            margin: 10 auto;
+            margin: 0 auto;
 
             background: white;
             border-radius: 15px;
