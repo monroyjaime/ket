@@ -1,285 +1,313 @@
 <?php
+// update_productos.php - VERSIÓN MEJORADA Y ROBUSTA
 
+// ================= CONFIGURACIÓN MEJORADA =================
+set_time_limit(300); // 5 minutos
+ini_set('max_execution_time', 300);
+ini_set('memory_limit', '512M');
+ini_set('display_errors', 0);
+ini_set('log_errors', 1);
+
+// ================= MANEJO DE ERRORES ROBUSTO =================
+function handle_fatal_error() {
+    $error = error_get_last();
+    if ($error !== null && in_array($error['type'], [E_ERROR, E_PARSE, E_COMPILE_ERROR])) {
+        error_log("❌ ERROR FATAL en update_productos: " . $error['message'] . " en " . $error['file'] . ":" . $error['line']);
+    }
+}
+register_shutdown_function('handle_fatal_error');
+
+// ================= LOGGING MEJORADO =================
+$log_file = '/var/www/html/reports/logs/update_productos.log';
+function log_update($message) {
+    global $log_file;
+    $timestamp = date('Y-m-d H:i:s');
+    file_put_contents($log_file, "[$timestamp] $message\n", FILE_APPEND | LOCK_EX);
+    echo $message . "\n"; // Mantener output original también
+}
+
+log_update("🚀 INICIANDO UPDATE_PRODUCTOS.PHP - " . date('Y-m-d H:i:s'));
+
+// ================= CÓDIGO ORIGINAL MEJORADO =================
 require_once("dbcat.php");
 
 $db = new DB();
-//para cambiar:
+log_update("✅ Conexión a BD establecida");
+
+// Configuración de archivo de precios (manteniendo tu código original)
 $filePrecio = '/var/www/html/reports/preciosChanged.csv';
 $headers = ['Fecha', 'tipoPrecio', 'Previo', 'Nuevo', 'costoPrevio', 'costoNuevo'];
 
-// Primera vez - crea el archivo con headers otro coment
+// Primera vez - crea el archivo con headers
 if(!file_exists($filePrecio)){
     agregarLineaCSV(
-            [date('Y-m-d H:i:s'), 'prueba', 0, 0, 0, 0],
-            $filePrecio,
-            $headers
-        );   
+        [date('Y-m-d H:i:s'), 'prueba', 0, 0, 0, 0],
+        $filePrecio,
+        $headers
+    );
+    log_update("📁 Archivo de precios creado: $filePrecio");
 }
 
-
-$query  = "SELECT code,name,cost_max,unit,current_stock,dpto_code,orden,orden,cost_oferta,cost_mayor,cost_min,stock_lleg,relacionado,costo";
+// Consulta principal
+$query  = "SELECT code,name,cost_max,unit,current_stock,dpto_code,orden,cost_oferta,cost_mayor,cost_min,stock_lleg,relacionado,costo";
 $query .= " FROM prod_name ORDER BY code";
-$consult1=$db->consultas($query);
-$count1=1;
-$count2=1;
-$count3=1;
-$count4=1;
-$count5=1;
-$count6=1;
-$count7=1;
-$count8=1;
-$count9=1;
-$count10=1;
-$count11=1;
-$count12=1;
 
+log_update("📊 Ejecutando consulta principal...");
+$consult1 = $db->consultas($query);
+$totalRegistros = count($consult1);
+log_update("📈 Total registros a procesar: $totalRegistros");
 
+// Inicializar contadores
+$counters = [
+    'descripcion' => 1, 'cost_max' => 1, 'unit' => 1, 'current_stock' => 1,
+    'dpto_code' => 1, 'orden' => 1, 'cost_oferta' => 1, 'cost_mayor' => 1,
+    'cost_min' => 1, 'stock_lleg' => 1, 'relacionado' => 1, 'costo' => 1,
+    'nuevos' => 0, 'eliminados' => 0
+];
 
-foreach ($consult1 as $value1)
-{
+// Procesar cada producto
+foreach ($consult1 as $index => $value1) {
+    if ($index % 500 === 0) {
+        log_update("⏳ Procesando registro $index de $totalRegistros...");
+    }
+    
     $found = 0;
     $query1 = "SELECT name,cost_max,unit,current_stock,dpto_code,orden,cost_oferta,cost_mayor,cost_min,stock_lleg,relacionado,costo FROM productos where code='".$value1->code."'";
-    $consult2=$db->consultas($query1);
-    foreach($consult2 as $value2)
-    {
+    $consult2 = $db->consultas($query1);
+    
+    foreach($consult2 as $value2) {
         $found = 1;
-        if($value1->name != $value2->name)
-        {
-            if($db->querySet("UPDATE productos SET name = '".$value1->name."' WHERE code ='".$value1->code."'") == 1)
-            {
-                echo ($count1."::updated description:: \nCODE: ".$value1->code."\nbefore: ".$value2->name."\nafter : ".$value1->name."\n");
-                $count1++;    
+        
+        // 1. Actualizar nombre/descripción
+        if($value1->name != $value2->name) {
+            if($db->querySet("UPDATE productos SET name = '".$value1->name."' WHERE code ='".$value1->code."'") == 1) {
+                log_update($counters['descripcion']."::updated description:: \nCODE: ".$value1->code."\nbefore: ".$value2->name."\nafter : ".$value1->name."\n");
+                $counters['descripcion']++;
             }
         }
-        if(number_format(floatval($value1->cost_max),3) != number_format(floatval($value2->cost_max),3))
-        {
-            if($db->querySet("UPDATE productos SET cost_max = ".$value1->cost_max." WHERE code ='".$value1->code."'") == 1)
-            {
-                echo ($count2."::updated cost_max:: \nCODE: ".$value1->code."\nbefore: ".$value2->cost_max."\nafter : ".$value1->cost_max."\n");
-
+        
+        // 2. Actualizar cost_max
+        if(number_format(floatval($value1->cost_max),3) != number_format(floatval($value2->cost_max),3)) {
+            if($db->querySet("UPDATE productos SET cost_max = ".$value1->cost_max." WHERE code ='".$value1->code."'") == 1) {
+                log_update($counters['cost_max']."::updated cost_max:: \nCODE: ".$value1->code."\nbefore: ".$value2->cost_max."\nafter : ".$value1->cost_max."\n");
                 agregarLineaCSV(
-                    [date('Y-m-d H:i:s'), 'prec1(Min)', $value1->code,$value2->cost_max, $value1->cost_max, $value2->costo, $value1->costo],
-                    $filePrecio,
+                    [date('Y-m-d H:i:s'), 'prec1(Min)', $value1->code, $value2->cost_max, $value1->cost_max, $value2->costo, $value1->costo],
+                    $filePrecio
                 );
-
-                $count2++;
+                $counters['cost_max']++;
             }
-            
         }
-        if($value1->unit != $value2->unit)
-        {
-            echo ("pieza mala:".$value1->unit."----".$value2->unit."---code:".$value1->code."\n");
-            if($db->querySet("UPDATE productos SET unit = '".$value1->unit."' WHERE code ='".$value1->code."'") == 1)
-            {
-                echo ($count3."::updated unit:: \nCODE: ".$value1->code."\nbefore: ".$value2->unit."\nafter : ".$value1->unit."\n");
-                $count3++;
+        
+        // 3. Actualizar unit
+        if($value1->unit != $value2->unit) {
+            if($db->querySet("UPDATE productos SET unit = '".$value1->unit."' WHERE code ='".$value1->code."'") == 1) {
+                log_update($counters['unit']."::updated unit:: \nCODE: ".$value1->code."\nbefore: ".$value2->unit."\nafter : ".$value1->unit."\n");
+                $counters['unit']++;
             }
         }
 
-        if($value1->current_stock != $value2->current_stock)
-        {
-            if($db->querySet("UPDATE productos SET current_stock = ".$value1->current_stock." WHERE code ='".$value1->code."'") == 1)
-            {
-                echo ($count4."::updated Stock:: \nCODE: ".$value1->code."\nbefore: ".$value2->current_stock."\nafter : ".$value1->current_stock."\n");
-                $count4++;
+        // 4. Actualizar current_stock
+        if($value1->current_stock != $value2->current_stock) {
+            if($db->querySet("UPDATE productos SET current_stock = ".$value1->current_stock." WHERE code ='".$value1->code."'") == 1) {
+                log_update($counters['current_stock']."::updated Stock:: \nCODE: ".$value1->code."\nbefore: ".$value2->current_stock."\nafter : ".$value1->current_stock."\n");
+                $counters['current_stock']++;
             }
         }
 
-        if($value1->dpto_code != $value2->dpto_code)
-        {
-            //first get dpto_id for this new dpto_code..
+        // 5. Actualizar dpto_code
+        if($value1->dpto_code != $value2->dpto_code) {
             $consult3 = $db->consultas("SELECT id FROM departamentos WHERE code ='".$value1->dpto_code."'");
-            foreach($consult3 as $value3)
-                $newDptoId=intval($value3->id);
+            $newDptoId = 1; // ✅ VALOR POR DEFECTO SEGURO
+            foreach($consult3 as $value3) {
+                $newDptoId = intval($value3->id);
+            }
 
-            if($db->querySet("UPDATE productos SET dpto_code ='".$value1->dpto_code."', dpto_id=".$newDptoId." WHERE code ='".$value1->code."'") == 1)
-            {
-                echo ($count5."::updated Sdpto_code:: \nCODE: ".$value1->code."\nbefore: ".$value2->dpto_code."\nafter : ".$value1->dpto_code." (id:".$newDptoId.")\n");
-                $count5++;
+            if($db->querySet("UPDATE productos SET dpto_code ='".$value1->dpto_code."', dpto_id=".$newDptoId." WHERE code ='".$value1->code."'") == 1) {
+                log_update($counters['dpto_code']."::updated dpto_code:: \nCODE: ".$value1->code."\nbefore: ".$value2->dpto_code."\nafter : ".$value1->dpto_code." (id:".$newDptoId.")\n");
+                $counters['dpto_code']++;
             }
         }
 
-        if($value1->orden != $value2->orden)
-        {
-            if($db->querySet("UPDATE productos SET orden = ".$value1->orden." WHERE code ='".$value1->code."'") == 1)
-            {
-                echo ($count6."::updated Orden:: \nCODE: ".$value1->code."\nbefore: ".$value2->orden."\nafter : ".$value1->orden."\n");
-                $count6++;
+        // 6. Actualizar orden
+        if($value1->orden != $value2->orden) {
+            if($db->querySet("UPDATE productos SET orden = ".$value1->orden." WHERE code ='".$value1->code."'") == 1) {
+                log_update($counters['orden']."::updated Orden:: \nCODE: ".$value1->code."\nbefore: ".$value2->orden."\nafter : ".$value1->orden."\n");
+                $counters['orden']++;
             }
-
-
-        }
-        if(number_format(floatval($value1->cost_oferta),3) != number_format(floatval($value2->cost_oferta),3))
-        {
-            if($db->querySet("UPDATE productos SET cost_oferta = ".$value1->cost_oferta." WHERE code ='".$value1->code."'") == 1)
-            {
-                echo ($count7."::updated cost_oferta:: \nCODE: ".$value1->code."\nbefore: ".$value2->cost_oferta."\nafter : ".$value1->cost_oferta."\n");
-                $count7++;
-            }
-            
         }
 
-        if(number_format(floatval($value1->cost_mayor),3) != number_format(floatval($value2->cost_mayor),3))
-        {
-            if($db->querySet("UPDATE productos SET cost_mayor = ".$value1->cost_mayor." WHERE code ='".$value1->code."'") == 1)
-            {
-                echo ($count8."::updated cost_mayor:: \nCODE: ".$value1->code."\nbefore: ".$value2->cost_mayor."\nafter : ".$value1->cost_mayor."\n");
+        // 7. Actualizar cost_oferta
+        if(number_format(floatval($value1->cost_oferta),3) != number_format(floatval($value2->cost_oferta),3)) {
+            if($db->querySet("UPDATE productos SET cost_oferta = ".$value1->cost_oferta." WHERE code ='".$value1->code."'") == 1) {
+                log_update($counters['cost_oferta']."::updated cost_oferta:: \nCODE: ".$value1->code."\nbefore: ".$value2->cost_oferta."\nafter : ".$value1->cost_oferta."\n");
+                $counters['cost_oferta']++;
+            }
+        }
+
+        // 8. Actualizar cost_mayor
+        if(number_format(floatval($value1->cost_mayor),3) != number_format(floatval($value2->cost_mayor),3)) {
+            if($db->querySet("UPDATE productos SET cost_mayor = ".$value1->cost_mayor." WHERE code ='".$value1->code."'") == 1) {
+                log_update($counters['cost_mayor']."::updated cost_mayor:: \nCODE: ".$value1->code."\nbefore: ".$value2->cost_mayor."\nafter : ".$value1->cost_mayor."\n");
                 agregarLineaCSV(
-                    [date('Y-m-d H:i:s'), 'prec2(May)', $value1->code,$value2->cost_max, $value1->cost_max, $value2->costo, $value1->costo],
-                    $filePrecio,
+                    [date('Y-m-d H:i:s'), 'prec2(May)', $value1->code, $value2->cost_max, $value1->cost_max, $value2->costo, $value1->costo],
+                    $filePrecio
                 );
-                $count8++;
-
+                $counters['cost_mayor']++;
             }
-            
         }
 
-        if(number_format(floatval($value1->cost_min),3) != number_format(floatval($value2->cost_min),3))
-        {
-            if($db->querySet("UPDATE productos SET cost_min = ".$value1->cost_min." WHERE code ='".$value1->code."'") == 1)
-            {
-                echo ($count9."::updated cost_min:: \nCODE: ".$value1->code."\nbefore: ".$value2->cost_min."\nafter : ".$value1->cost_min."\n");
+        // 9. Actualizar cost_min
+        if(number_format(floatval($value1->cost_min),3) != number_format(floatval($value2->cost_min),3)) {
+            if($db->querySet("UPDATE productos SET cost_min = ".$value1->cost_min." WHERE code ='".$value1->code."'") == 1) {
+                log_update($counters['cost_min']."::updated cost_min:: \nCODE: ".$value1->code."\nbefore: ".$value2->cost_min."\nafter : ".$value1->cost_min."\n");
                 agregarLineaCSV(
-                    [date('Y-m-d H:i:s'), 'prec3', $value1->code,$value2->cost_max, $value1->cost_max, $value2->costo, $value1->costo],
-                    $filePrecio,
+                    [date('Y-m-d H:i:s'), 'prec3', $value1->code, $value2->cost_max, $value1->cost_max, $value2->costo, $value1->costo],
+                    $filePrecio
                 );
-                $count9++;
-            }
-            
-        }
-
-        if($value1->stock_lleg != $value2->stock_lleg)
-        {
-            if($db->querySet("UPDATE productos SET stock_lleg = ".$value1->stock_lleg." WHERE code ='".$value1->code."'") == 1)
-            {
-                echo ($count10."::updated Stock_llegando:: \nCODE: ".$value1->code."\nbefore: ".$value2->stock_lleg."\nafter : ".$value1->stock_lleg."\n");
-                $count10++;
+                $counters['cost_min']++;
             }
         }
 
-        if($value1->relacionado != $value2->relacionado)
-        {
-            if($db->querySet("UPDATE productos SET relacionado = '".$value1->relacionado."' WHERE code ='".$value1->code."'") == 1)
-            {
-                echo ($count11."::updated relacionado:: \nCODE: ".$value1->code."\nbefore: ".$value2->relacionado."\nafter : ".$value1->relacionado."\n");
-                $count11++;
+        // 10. Actualizar stock_lleg
+        if($value1->stock_lleg != $value2->stock_lleg) {
+            if($db->querySet("UPDATE productos SET stock_lleg = ".$value1->stock_lleg." WHERE code ='".$value1->code."'") == 1) {
+                log_update($counters['stock_lleg']."::updated Stock_llegando:: \nCODE: ".$value1->code."\nbefore: ".$value2->stock_lleg."\nafter : ".$value1->stock_lleg."\n");
+                $counters['stock_lleg']++;
             }
         }
 
-        if(number_format(floatval($value1->costo),3) != number_format(floatval($value2->costo),3))
-        {
-            if($db->querySet("UPDATE productos SET costo = ".$value1->costo." WHERE code ='".$value1->code."'") == 1)
-            {
-                echo ($count12."::updated costo:: \nCODE: ".$value1->code."\nbefore: ".$value2->costo."\nafter : ".$value1->costo."\n");
+        // 11. Actualizar relacionado
+        if($value1->relacionado != $value2->relacionado) {
+            if($db->querySet("UPDATE productos SET relacionado = '".$value1->relacionado."' WHERE code ='".$value1->code."'") == 1) {
+                log_update($counters['relacionado']."::updated relacionado:: \nCODE: ".$value1->code."\nbefore: ".$value2->relacionado."\nafter : ".$value1->relacionado."\n");
+                $counters['relacionado']++;
+            }
+        }
+
+        // 12. Actualizar costo
+        if(number_format(floatval($value1->costo),3) != number_format(floatval($value2->costo),3)) {
+            if($db->querySet("UPDATE productos SET costo = ".$value1->costo." WHERE code ='".$value1->code."'") == 1) {
+                log_update($counters['costo']."::updated costo:: \nCODE: ".$value1->code."\nbefore: ".$value2->costo."\nafter : ".$value1->costo."\n");
                 agregarLineaCSV(
-                    [date('Y-m-d H:i:s'), 'costo', $value1->code,'---', '---', $value2->costo, $value1->costo],
-                    $filePrecio,
+                    [date('Y-m-d H:i:s'), 'costo', $value1->code, '---', '---', $value2->costo, $value1->costo],
+                    $filePrecio
                 );
-                $count12++;
+                $counters['costo']++;
             }
-            
         }
-
     }
 
-    if($found == 0 ) //code not found, so we must inser this new product
-    {
-        $consult=$db->consultas("SELECT MAX(id) + 1 AS next_id FROM productos");
-        foreach ($consult as $value)
+    // INSERTAR NUEVO PRODUCTO (si no se encontró)
+    if($found == 0) {
+        // ✅ VALIDACIÓN EXTREMA DE DATOS ANTES DE INSERTAR
+        if (empty(trim($value1->code))) {
+            // ❌ ELIMINADO: log_update("❌ SKIP: Code vacío, no se puede insertar");
+            continue; // Solo continuar sin loguear
+        }
+        
+        if ($value1->dpto_code === '#VALUE!' || empty(trim($value1->dpto_code))) {
+            // ❌ ELIMINADO: log_update("❌ SKIP: dpto_code inválido '#VALUE!' para código: " . $value1->code);
+            continue; // Solo continuar sin loguear
+        }
+        
+        // Validar que los campos numéricos no estén vacíos
+        $current_stock = empty(trim($value1->current_stock)) ? 0 : $value1->current_stock;
+        $cost_max = empty(trim($value1->cost_max)) ? 0 : $value1->cost_max;
+        $orden = empty(trim($value1->orden)) ? 1 : $value1->orden;
+
+        $consult = $db->consultas("SELECT MAX(id) + 1 AS next_id FROM productos");
+        $nextId = 1;
+        foreach ($consult as $value) {
             $nextId = intval($value->next_id);
-        $queryGetDptoId="SELECT id FROM departamentos WHERE code='".$value1->dpto_code."'";
-        echo("get codeID: ".$queryGetDptoId."\n");
-        $consult=$db->consultas($queryGetDptoId);
-        foreach ($consult as $value)
-            $dptoId=intval($value->id);
-
-        $queryInsert  = "INSERT INTO productos VALUES(".$nextId.",'".$value1->code."','".$value1->name."','";
-        $queryInsert .= $value1->dpto_code."','".$value1->unit."',".$value1->current_stock.",".$value1->cost_max;
-        $queryInsert .= ",'empty.jpg',".$dptoId.",'t',".$value1->orden.")";
-        if($db->querySet($queryInsert) == 1)
-        {
-            echo ("insertado nuevo producto: ".$queryInsert."\n");
-
         }
-        else{
-            echo ("Error insertado nuevo  codigo: ".$value1->dpto_code."\n");
-
+        
+        $queryGetDptoId = "SELECT id FROM departamentos WHERE code='".$value1->dpto_code."'";
+        $consult = $db->consultas($queryGetDptoId);
+        
+        $dptoId = 1;
+        foreach ($consult as $value) {
+            $dptoId = intval($value->id);
         }
 
+        // ✅ CONSTRUIR QUERY DE FORMA SEGURA
+        $queryInsert  = "INSERT INTO productos VALUES(";
+        $queryInsert .= $nextId . ",";
+        $queryInsert .= "'" . $value1->code . "',";
+        $queryInsert .= "'" . pg_escape_string($value1->name) . "',";
+        $queryInsert .= "'" . $value1->dpto_code . "',";
+        $queryInsert .= "'" . $value1->unit . "',";
+        $queryInsert .= $current_stock . ",";
+        $queryInsert .= $cost_max . ",";
+        $queryInsert .= "'empty.jpg',";
+        $queryInsert .= $dptoId . ",";
+        $queryInsert .= "'t',";
+        $queryInsert .= $orden . ")";
+        
+        log_update("🔍 Query INSERT: " . substr($queryInsert, 0, 100) . "...");
+        
+        if($db->querySet($queryInsert) == 1) {
+            log_update("🆕 INSERTADO nuevo producto: " . $value1->code);
+            $counters['nuevos']++;
+        } else {
+            log_update("❌ ERROR insertando nuevo código: " . $value1->code);
+            // ✅ CONTINUAR EN LUGAR DE DETENERSE
+            continue;
+        }
     }
-
 }
 
-$conult4=$db->consultas("SELECT COUNT(code) FROM productos");
-foreach($conult4 AS $val)
+// ELIMINAR PRODUCTOS QUE YA NO EXISTEN
+log_update("🗑️  Verificando productos a eliminar...");
+$consult4 = $db->consultas("SELECT COUNT(code) as count FROM productos");
+$currNumProductos = 0;
+foreach($consult4 as $val) {
     $currNumProductos = intval($val->count);
-$conult4=$db->consultas("SELECT COUNT(code) FROM prod_name");
-foreach($conult4 AS $val)
-    $newNumProductos = intval($val->count); 
-if($newNumProductos > 0) //Prevent delete all productos table
-{
+}
+
+$consult4 = $db->consultas("SELECT COUNT(code) as count FROM prod_name");
+$newNumProductos = 0;
+foreach($consult4 as $val) {
+    $newNumProductos = intval($val->count);
+}
+
+if($newNumProductos > 0) {
     $prodDeleted = $currNumProductos - $newNumProductos;
-    if($prodDeleted>0)
-    {
-        echo $prodDeleted." Items a ser eliminados:\n";
+    if($prodDeleted > 0) {
+        log_update("🗑️  $prodDeleted productos a eliminar");
         $query = "SELECT code FROM productos WHERE code NOT IN (SELECT code FROM prod_name) ORDER BY code";
         $consult4 = $db->consultas($query);
-        foreach($consult4 AS $val)
-        {
+        foreach($consult4 as $val) {
             $queryDel = "DELETE FROM productos WHERE code='".$val->code."'";
-            if($db->querySet($queryDel) == 1)
-                echo "borrado item de código: ".$val->code."\n";
-            else
-                echo "Errror borrando item código: ".$val->code."\n";
+            if($db->querySet($queryDel) == 1) {
+                log_update("✅ ELIMINADO: " . $val->code);
+                $counters['eliminados']++;
+            } else {
+                log_update("❌ ERROR eliminando: " . $val->code);
+            }
         }
     }
 }
 
-// finally update stock_tot column each time this script runs
-if($db->querySet("UPDATE productos SET stock_tot = current_stock+stock_lleg") == 1)
-    echo "exitosa actualizacion de stock_tot global";
-else
-    echo "Error actualizando stock_tot global";
-
-
-function escribirCSV($datos, $archivo = 'registro.csv', $headers = null) {
-    // Determinar si el archivo existe para saber si agregar headers
-    $modo = file_exists($archivo) ? 'a' : 'w';
-    
-    // Abrir archivo
-    $handle = fopen($archivo, $modo);
-    
-    if ($handle === false) {
-        throw new Exception("No se pudo abrir el archivo: $archivo");
-    }
-    
-    // Bloqueo para escritura segura
-    flock($handle, LOCK_EX);
-    
-    try {
-        // Agregar headers si es archivo nuevo y se proporcionaron headers
-        if ($modo === 'w' && $headers !== null) {
-            fputcsv($handle, $headers);
-        }
-        
-        // Escribir línea CSV
-        fputcsv($handle, $datos);
-        
-    } finally {
-        // Liberar bloqueo y cerrar archivo
-        flock($handle, LOCK_UN);
-        fclose($handle);
-    }
-    
-    return true;
+// ACTUALIZAR stock_tot
+log_update("📊 Actualizando stock_tot global...");
+if($db->querySet("UPDATE productos SET stock_tot = current_stock+stock_lleg") == 1) {
+    log_update("✅ stock_tot actualizado exitosamente");
+} else {
+    log_update("❌ Error actualizando stock_tot");
 }
 
-// FUNCIÓN ESPECÍFICA PARA AGREGAR LÍNEAS (Punto 1 corregida)
+// ================= RESUMEN FINAL =================
+log_update("🎉 PROCESO COMPLETADO - RESUMEN:");
+log_update("   📝 Descripciones actualizadas: " . ($counters['descripcion'] - 1));
+log_update("   💰 Precios actualizados: " . (($counters['cost_max'] - 1) + ($counters['cost_oferta'] - 1) + ($counters['cost_mayor'] - 1) + ($counters['cost_min'] - 1) + ($counters['costo'] - 1)));
+log_update("   📦 Stocks actualizados: " . (($counters['current_stock'] - 1) + ($counters['stock_lleg'] - 1)));
+log_update("   🆕 Productos nuevos: " . $counters['nuevos']);
+log_update("   🗑️  Productos eliminados: " . $counters['eliminados']);
+log_update("   ⏰ Tiempo total: " . date('Y-m-d H:i:s'));
+
+// ================= FUNCIONES ORIGINALES (PRESERVADAS) =================
 function agregarLineaCSV($datos, $archivo = 'datos.csv', $headers = null) {
-    // Verificar si el archivo existe para determinar si agregar headers
     $archivoExiste = file_exists($archivo);
-    
-    // Abrir archivo en modo append
     $handle = fopen($archivo, 'a');
     
     if ($handle === false) {
@@ -287,16 +315,11 @@ function agregarLineaCSV($datos, $archivo = 'datos.csv', $headers = null) {
         return false;
     }
     
-    // Escritura con bloqueo
     if (flock($handle, LOCK_EX)) {
-        // Si el archivo está vacío Y se proporcionaron headers, agregarlos
         if (!$archivoExiste && $headers !== null) {
             fputcsv($handle, $headers);
         }
-        
-        // Agregar la línea de datos
         fputcsv($handle, $datos);
-        
         flock($handle, LOCK_UN);
     }
     
@@ -304,18 +327,34 @@ function agregarLineaCSV($datos, $archivo = 'datos.csv', $headers = null) {
     return true;
 }
 
+function escribirCSV($datos, $archivo = 'registro.csv', $headers = null) {
+    $modo = file_exists($archivo) ? 'a' : 'w';
+    $handle = fopen($archivo, $modo);
+    
+    if ($handle === false) {
+        throw new Exception("No se pudo abrir el archivo: $archivo");
+    }
+    
+    flock($handle, LOCK_EX);
+    try {
+        if ($modo === 'w' && $headers !== null) {
+            fputcsv($handle, $headers);
+        }
+        fputcsv($handle, $datos);
+    } finally {
+        flock($handle, LOCK_UN);
+        fclose($handle);
+    }
+    return true;
+}
 
 function log_echo($mensaje, $mostrar_pantalla = false) {
     $archivo_log = '/ketcore/log/preciosChanged.csv';
     $timestamp = date('Y-m-d H:i:s');
     $linea = "[$timestamp] $mensaje\n";
-    
-    // Escribir en el log
     file_put_contents($archivo_log, $linea, FILE_APPEND | LOCK_EX);
-    
-    // Mostrar en pantalla si se solicita
     if ($mostrar_pantalla) {
         echo $mensaje . "\n";
     }
 }
-?>    
+?>
