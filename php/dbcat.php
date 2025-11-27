@@ -64,11 +64,11 @@ class DB{
         $error = pg_last_error($this->link);
         error_log("❌ Error en query: " . $error);
         error_log("❌ Query problemática: " . $query);
-        return false;
+        return -1;
     }
     
     // ✅ NO usar pg_result_status que puede fallar
-    return true;
+    return 1;
 }
 
     

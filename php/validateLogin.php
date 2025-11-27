@@ -64,7 +64,7 @@ if(count($consulta)!=0)
     $querySetSesion = "UPDATE sesion SET active = 't', timer = 0, id = ".$sesionID.", usuario =".$numUsr.", ip_client = '".$ip."' WHERE num = ".$numCurrSesion;
      //echo "Query set session: ".$querySetSesion."\n";
      $sesionQuery = $db->querySet($querySetSesion);  
-     if(!$sesionQuery)
+     if($sesionQuery == -1)
      {
        echo "error creando sesion";
        exit -1;

@@ -201,13 +201,13 @@ foreach ($consult1 as $index => $value1) {
     if($found == 0) {
         // ✅ VALIDACIÓN EXTREMA DE DATOS ANTES DE INSERTAR
         if (empty(trim($value1->code))) {
-            log_update("❌ SKIP: Code vacío, no se puede insertar");
-            continue;
+            // ❌ ELIMINADO: log_update("❌ SKIP: Code vacío, no se puede insertar");
+            continue; // Solo continuar sin loguear
         }
         
         if ($value1->dpto_code === '#VALUE!' || empty(trim($value1->dpto_code))) {
-            log_update("❌ SKIP: dpto_code inválido '#VALUE!' para código: " . $value1->code);
-            continue;
+            // ❌ ELIMINADO: log_update("❌ SKIP: dpto_code inválido '#VALUE!' para código: " . $value1->code);
+            continue; // Solo continuar sin loguear
         }
         
         // Validar que los campos numéricos no estén vacíos
