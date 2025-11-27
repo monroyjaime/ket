@@ -41,7 +41,7 @@ class DB{
         return $return;
     }
 
-    public function querySet($consulta)
+ /*   public function querySet($consulta)
     {
         $return = -1;
         $Qu=pg_query($this->link,$consulta);
@@ -54,6 +54,22 @@ class DB{
             
         return $return;
     }
+*/
+
+    public function querySet($query) {
+    $result = pg_query($this->link, $query);
+    
+    // ✅ MEJOR MANEJO DE ERRORES
+    if (!$result) {
+        $error = pg_last_error($this->link);
+        error_log("❌ Error en query: " . $error);
+        error_log("❌ Query problemática: " . $query);
+        return false;
+    }
+    
+    // ✅ NO usar pg_result_status que puede fallar
+    return true;
+}
 
     
 

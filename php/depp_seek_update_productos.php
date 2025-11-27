@@ -199,8 +199,24 @@ foreach ($consult1 as $index => $value1) {
 
     // INSERTAR NUEVO PRODUCTO (si no se encontró)
     if($found == 0) {
+        // ✅ VALIDACIÓN EXTREMA DE DATOS ANTES DE INSERTAR
+        if (empty(trim($value1->code)) {
+            log_update("❌ SKIP: Code vacío, no se puede insertar");
+            continue;
+        }
+        
+        if ($value1->dpto_code === '#VALUE!' || empty(trim($value1->dpto_code))) {
+            log_update("❌ SKIP: dpto_code inválido '#VALUE!' para código: " . $value1->code);
+            continue;
+        }
+        
+        // Validar que los campos numéricos no estén vacíos
+        $current_stock = empty(trim($value1->current_stock)) ? 0 : $value1->current_stock;
+        $cost_max = empty(trim($value1->cost_max)) ? 0 : $value1->cost_max;
+        $orden = empty(trim($value1->orden)) ? 1 : $value1->orden;
+
         $consult = $db->consultas("SELECT MAX(id) + 1 AS next_id FROM productos");
-        $nextId = 1; // ✅ VALOR POR DEFECTO
+        $nextId = 1;
         foreach ($consult as $value) {
             $nextId = intval($value->next_id);
         }
@@ -208,20 +224,34 @@ foreach ($consult1 as $index => $value1) {
         $queryGetDptoId = "SELECT id FROM departamentos WHERE code='".$value1->dpto_code."'";
         $consult = $db->consultas($queryGetDptoId);
         
-        $dptoId = 1; // ✅ VALOR POR DEFECTO SEGURO
+        $dptoId = 1;
         foreach ($consult as $value) {
             $dptoId = intval($value->id);
         }
 
-        $queryInsert  = "INSERT INTO productos VALUES(".$nextId.",'".$value1->code."','".$value1->name."','";
-        $queryInsert .= $value1->dpto_code."','".$value1->unit."',".$value1->current_stock.",".$value1->cost_max;
-        $queryInsert .= ",'empty.jpg',".$dptoId.",'t',".$value1->orden.")";
+        // ✅ CONSTRUIR QUERY DE FORMA SEGURA
+        $queryInsert  = "INSERT INTO productos VALUES(";
+        $queryInsert .= $nextId . ",";
+        $queryInsert .= "'" . $value1->code . "',";
+        $queryInsert .= "'" . pg_escape_string($value1->name) . "',";
+        $queryInsert .= "'" . $value1->dpto_code . "',";
+        $queryInsert .= "'" . $value1->unit . "',";
+        $queryInsert .= $current_stock . ",";
+        $queryInsert .= $cost_max . ",";
+        $queryInsert .= "'empty.jpg',";
+        $queryInsert .= $dptoId . ",";
+        $queryInsert .= "'t',";
+        $queryInsert .= $orden . ")";
+        
+        log_update("🔍 Query INSERT: " . substr($queryInsert, 0, 100) . "...");
         
         if($db->querySet($queryInsert) == 1) {
             log_update("🆕 INSERTADO nuevo producto: " . $value1->code);
             $counters['nuevos']++;
         } else {
             log_update("❌ ERROR insertando nuevo código: " . $value1->code);
+            // ✅ CONTINUAR EN LUGAR DE DETENERSE
+            continue;
         }
     }
 }
