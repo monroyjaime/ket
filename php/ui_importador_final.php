@@ -244,7 +244,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion'])) {
         }
         /* ESTILOS PARA EL ÍCONO DE FLECHA */
         .icon-dark-blue {
-            color: #037C79 !important;
+            color: #003272 !important;
         }
         .icon-large {
             font-size: 2rem !important;
@@ -271,7 +271,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion'])) {
                 </div>
                 
                 <!-- Logo centrado -->
-                <div class="col text-center">
+                <div class="col text-end">
                     <img src="../catalogo/images/logoMini.png" class="img-fluid" alt="logo" style="max-height: 40px;">
                 </div>
                 
