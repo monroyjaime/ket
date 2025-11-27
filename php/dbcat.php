@@ -1,9 +1,12 @@
 <?php
 require_once("config.php"); /* Configuration File */
 
-// SOLO iniciar session si no está activa
+// ✅ CORRECCIÓN: Session start condicional mejorado
 if (session_status() === PHP_SESSION_NONE) {
+    // Solo iniciar session si no estamos en CLI y no hay headers enviados
+    if (php_sapi_name() !== 'cli' && !headers_sent()) {
     session_start();
+    }
 }
 
 class DB{
@@ -40,21 +43,6 @@ class DB{
         pg_free_result($Qu);
         return $return;
     }
-
- /*   public function querySet($consulta)
-    {
-        $return = -1;
-        $Qu=pg_query($this->link,$consulta);
-        $status = pg_result_status($Qu);
-        if($status == PGSQL_COMMAND_OK)
-            $return = 1;
-        pg_free_result($Qu);	
-            
-        
-            
-        return $return;
-    }
-*/
 
     public function querySet($query) {
     $result = pg_query($this->link, $query);
