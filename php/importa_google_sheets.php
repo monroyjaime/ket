@@ -76,9 +76,10 @@ class GoogleSheetsImporter {
             $registrosCargados = $this->cargarAPostgreSQL($tempFile);
             log_message("✅ Datos cargados: " . $registrosCargados . " registros");
             
-            // 5. Limpiar archivo temporal
-            unlink($tempFile);
-            log_message("🧹 Archivo temporal eliminado");
+            // 5. Limpiar archivo temporal - COMENTADO PARA CONSERVAR
+            // unlink($tempFile);
+            // log_message("🧹 Archivo temporal eliminado");
+            log_message("💾 Archivo CSV conservado en: " . $tempFile);
             
             // 6. Ejecutar script de actualización
             log_message("🔄 Ejecutando update_productos.php...");
@@ -133,8 +134,12 @@ class GoogleSheetsImporter {
     }
     
     private function guardarArchivoTemporal($csvData) {
-        $tempFile = tempnam(sys_get_temp_dir(), 'google_sheets_') . '.csv';
+    // Guardar en un archivo fijo en lugar de temporal
+        $tempDir = sys_get_temp_dir();
+        $tempFile = $tempDir . '/google_sheets_ultimo.csv';
         
+        log_message("💾 Guardando CSV en: " . $tempFile);    
+
         if (file_put_contents($tempFile, $csvData) === false) {
             throw new Exception("No se pudo guardar archivo temporal: " . $tempFile);
         }
