@@ -134,17 +134,25 @@ class GoogleSheetsImporter {
     }
     
     private function guardarArchivoTemporal($csvData) {
-    // Guardar en un archivo fijo en lugar de temporal
-        $tempDir = sys_get_temp_dir();
-        $tempFile = $tempDir . '/google_sheets_ultimo.csv';
+        // Guardar en un archivo fijo
+        $logDir = '/var/www/html/reports/logs/';;
+        $csvFile  = $logDir . '/google_sheets_ultimo.csv';
         
-        log_message("💾 Guardando CSV en: " . $tempFile);    
-
-        if (file_put_contents($tempFile, $csvData) === false) {
-            throw new Exception("No se pudo guardar archivo temporal: " . $tempFile);
+        log_message("💾 Guardando CSV en: " . $csvFile );
+        
+        // Forzar la escritura del archivo
+        if (file_put_contents($csvFile, $csvData) === false) {
+            throw new Exception("No se pudo guardar archivo: " . $csvFile);
         }
         
-        return $tempFile;
+        // Verificar que el archivo se creó
+        if (!file_exists($csvFile )) {
+            throw new Exception("Archivo no se creó: " . $csvFile);
+        }
+        
+        log_message("✅ Archivo CSV guardado: " . $csvFile  . " (" . filesize($csvFile ) . " bytes)");
+        
+        return $csvFile;
     }
     
     private function limpiarTablaProdName() {
