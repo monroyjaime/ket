@@ -201,10 +201,12 @@ foreach ($consult1 as $index => $value1) {
     if($found == 0) {
         // ✅ VALIDACIÓN EXTREMA DE DATOS ANTES DE INSERTAR
         if (empty(trim($value1->code))) {
+            // ❌ ELIMINADO: log_update("❌ SKIP: Code vacío, no se puede insertar");
             continue; // Solo continuar sin loguear
         }
         
         if ($value1->dpto_code === '#VALUE!' || empty(trim($value1->dpto_code))) {
+            // ❌ ELIMINADO: log_update("❌ SKIP: dpto_code inválido '#VALUE!' para código: " . $value1->code);
             continue; // Solo continuar sin loguear
         }
         
@@ -248,6 +250,7 @@ foreach ($consult1 as $index => $value1) {
             $counters['nuevos']++;
         } else {
             log_update("❌ ERROR insertando nuevo código: " . $value1->code);
+            // ✅ CONTINUAR EN LUGAR DE DETENERSE
             continue;
         }
     }
@@ -294,41 +297,28 @@ if($db->querySet("UPDATE productos SET stock_tot = current_stock+stock_lleg") ==
 }
 
 // ================= RESUMEN FINAL MEJORADO =================
-// CALCULAR ESTADÍSTICAS
-$descripciones = $counters['descripcion'] - 1;
-$precios = ($counters['cost_max'] - 1) + ($counters['cost_oferta'] - 1) + ($counters['cost_mayor'] - 1) + ($counters['cost_min'] - 1) + ($counters['costo'] - 1);
-$stocks = ($counters['current_stock'] - 1) + ($counters['stock_lleg'] - 1);
-$nuevos = $counters['nuevos'];
-$eliminados = $counters['eliminados'];
+$resumen = [
+    "🎉 PROCESO COMPLETADO - RESUMEN:",
+    "📝 Descripciones actualizadas: " . ($counters['descripcion'] - 1),
+    "💰 Precios actualizados: " . (($counters['cost_max'] - 1) + ($counters['cost_oferta'] - 1) + ($counters['cost_mayor'] - 1) + ($counters['cost_min'] - 1) + ($counters['costo'] - 1)),
+    "📦 Stocks actualizados: " . (($counters['current_stock'] - 1) + ($counters['stock_lleg'] - 1)),
+    "🆕 Productos nuevos: " . $counters['nuevos'],
+    "🗑️ Productos eliminados: " . $counters['eliminados'],
+    "⏰ Tiempo total: " . date('Y-m-d H:i:s')
+];
 
 // Log normal (para el archivo)
-log_update("🎉 PROCESO COMPLETADO - RESUMEN:");
-log_update("📝 Descripciones actualizadas: " . $descripciones);
-log_update("💰 Precios actualizados: " . $precios);
-log_update("📦 Stocks actualizados: " . $stocks);
-log_update("🆕 Productos nuevos: " . $nuevos);
-log_update("🗑️ Productos eliminados: " . $eliminados);
-log_update("⏰ Tiempo total: " . date('Y-m-d H:i:s'));
-
-// ✅ OUTPUT OBLIGATORIO PARA LA UI - SIEMPRE SE MUESTRA
-echo "========================================\n";
-echo "🎉 RESUMEN FINAL - UPDATE_PRODUCTOS.PHP\n"; 
-echo "========================================\n";
-echo "📊 Estadísticas de actualización:\n";
-echo "📝 Descripciones actualizadas: " . $descripciones . "\n";
-echo "💰 Precios actualizados: " . $precios . "\n";
-echo "📦 Stocks actualizados: " . $stocks . "\n";
-echo "🆕 Productos nuevos: " . $nuevos . "\n";
-echo "🗑️ Productos eliminados: " . $eliminados . "\n";
-echo "⏰ Tiempo de proceso: " . date('Y-m-d H:i:s') . "\n";
-
-// Mensaje contextual
-if ($descripciones == 0 && $precios == 0 && $stocks == 0 && $nuevos == 0 && $eliminados == 0) {
-    echo "💤 No se detectaron cambios necesarios\n";
-} else {
-    echo "✅ Actualización completada exitosamente\n";
+foreach ($resumen as $linea) {
+    log_update($linea);
 }
 
+// Output especial para la UI - más visible
+echo "========================================\n";
+echo "🎉 RESUMEN FINAL - UPDATE_PRODUCTOS.PHP\n";
+echo "========================================\n";
+foreach ($resumen as $linea) {
+    echo $linea . "\n";
+}
 echo "========================================\n";
 
 // ================= FUNCIONES ORIGINALES (PRESERVADAS) =================
