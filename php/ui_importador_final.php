@@ -85,27 +85,73 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion'])) {
             web_log("📋 Output recibido: " . count($output) . " líneas");
             web_log("🔚 Código de retorno: " . $return_code);
             
-            // FILTRAR LÍNEAS RELEVANTES - VERSIÓN MEJORADA CON RESUMEN
+            // FILTRAR LÍNEAS RELEVANTES - VERSIÓN FINAL LIMPIA
             $filtered_output = [];
+            $capture_resumen = false;
+            
             foreach ($output as $line) {
-            // Incluir casi todo excepto líneas muy repetitivas
-            if (strpos($line, '================================') !== false ||
-                strpos($line, 'RESUMEN FINAL') !== false ||
-                strpos($line, 'PROCESO COMPLETADO') !== false ||
-                strpos($line, 'Descripciones actualizadas') !== false ||
-                strpos($line, 'Precios actualizados') !== false ||
-                strpos($line, 'Stocks actualizados') !== false ||
-                strpos($line, 'Productos nuevos') !== false ||
-                strpos($line, 'Productos eliminados') !== false ||
-                strpos($line, 'Tiempo total') !== false ||
-                strpos($line, '✅') !== false || 
-                strpos($line, '❌') !== false || 
-                strpos($line, '🚀') !== false ||
-                strpos($line, '🎉') !== false ||
-                strpos($line, '💾') !== false) {
-                $filtered_output[] = $line;
+                // Iniciar captura cuando encontramos el resumen formateado
+                if (strpos($line, 'UPDATE_OUTPUT: ========================================') !== false && 
+                    strpos($line, 'UPDATE_OUTPUT: 🎉 RESUMEN FINAL - UPDATE_PRODUCTOS.PHP') === false) {
+                    $capture_resumen = true;
+                }
+                
+                // Capturar el resumen formateado completo
+                if ($capture_resumen) {
+                    $filtered_output[] = $line;
+                    // Detener captura al final del resumen
+                    if (strpos($line, 'UPDATE_OUTPUT: ========================================') !== false && 
+                        count($filtered_output) > 5) {
+                        $capture_resumen = false;
+                    }
+                }
+                // Capturar otras líneas importantes
+                elseif (strpos($line, '💾 Archivo CSV conservado') !== false ||
+                        strpos($line, '🔄 Ejecutando update_productos.php') !== false ||
+                        strpos($line, '✅ update_productos.php ejecutado exitosamente') !== false ||
+                        strpos($line, '🎉 PROCESO COMPLETADO EXITOSAMENTE') !== false ||
+                        strpos($line, '✅ Lote final') !== false ||
+                        strpos($line, '🎉 Carga completada:') !== false ||
+                        strpos($line, '✅ Datos cargados:') !== false) {
+                    $filtered_output[] = $line;
+                }
             }
-        }
+            
+            // Si no se capturó el resumen, incluir líneas clave del UPDATE_OUTPUT
+            $has_resumen = false;
+            foreach ($filtered_output as $line) {
+                if (strpos($line, 'RESUMEN FINAL') !== false) {
+                    $has_resumen = true;
+                    break;
+                }
+            }
+            
+            if (!$has_resumen) {
+                // Buscar y agregar el resumen si no se capturó
+                $temp_output = [];
+                foreach ($output as $line) {
+                    if (strpos($line, 'UPDATE_OUTPUT: 🎉 RESUMEN FINAL') !== false ||
+                        strpos($line, 'UPDATE_OUTPUT: 📊 Estadísticas de actualización') !== false ||
+                        strpos($line, 'UPDATE_OUTPUT: 📝 Descripciones actualizadas:') !== false ||
+                        strpos($line, 'UPDATE_OUTPUT: 💰 Precios actualizados:') !== false ||
+                        strpos($line, 'UPDATE_OUTPUT: 📦 Stocks actualizados:') !== false ||
+                        strpos($line, 'UPDATE_OUTPUT: 🆕 Productos nuevos:') !== false ||
+                        strpos($line, 'UPDATE_OUTPUT: 🗑️ Productos eliminados:') !== false ||
+                        strpos($line, 'UPDATE_OUTPUT: ⏰ Tiempo de proceso:') !== false ||
+                        strpos($line, 'UPDATE_OUTPUT: 💤 No se detectaron cambios') !== false ||
+                        strpos($line, 'UPDATE_OUTPUT: ✅ Actualización completada') !== false) {
+                        $temp_output[] = $line;
+                    }
+                }
+                // Agregar al inicio si encontramos líneas del resumen
+                if (!empty($temp_output)) {
+                    array_unshift($filtered_output, "========================================");
+                    array_unshift($filtered_output, "🎉 RESUMEN DE ACTUALIZACIÓN");
+                    array_unshift($filtered_output, "========================================");
+                    $filtered_output = array_merge($filtered_output, $temp_output);
+                    $filtered_output[] = "========================================";
+                }
+            }
             
             // Si no hay output relevante, mostrar las últimas líneas
             if (empty($filtered_output)) {
@@ -283,7 +329,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion'])) {
                 </div>
                 
                 <!-- Logo centrado -->
-                <div class="col text-end">
+                <div class="col text-center">
                     <img src="../catalogo/images/logoMini.png" class="img-fluid" alt="logo" style="max-height: 40px;">
                 </div>
                 
@@ -404,7 +450,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion'])) {
                     `;
                     mostrarAlerta('✅ Estadísticas actualizadas correctamente', 'success');
                 } else {
-                    mostrarAlerta('❌ Error: ' + data.error, 'danger');
+                    mostrarAlerta('❌ Error: ' . data.error, 'danger');
                 }
             })
             .catch(error => {
