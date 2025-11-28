@@ -85,70 +85,90 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion'])) {
             web_log("📋 Output recibido: " . count($output) . " líneas");
             web_log("🔚 Código de retorno: " . $return_code);
             
-            // FILTRAR LÍNEAS RELEVANTES - VERSIÓN FINAL LIMPIA
+            // FILTRAR LÍNEAS RELEVANTES - VERSIÓN SIMPLIFICADA
             $filtered_output = [];
-            $capture_resumen = false;
+
+            // 1. Agregar líneas principales del proceso
+            foreach ($output as $line) {
+                if (strpos($line, '✅ Lote final') !== false ||
+                    strpos($line, '🎉 Carga completada:') !== false ||
+                    strpos($line, '✅ Datos cargados:') !== false ||
+                    strpos($line, '💾 Archivo CSV conservado') !== false ||
+                    strpos($line, '🔄 Ejecutando update_productos.php') !== false ||
+                    strpos($line, '✅ update_productos.php ejecutado exitosamente') !== false ||
+                    strpos($line, '🎉 PROCESO COMPLETADO EXITOSAMENTE') !== false) {
+                    $filtered_output[] = $line;
+                }
+            }
+
+            // 2. Buscar y agregar el resumen formateado
+            $found_resumen = false;
+            $resumen_count = 0;
             
             foreach ($output as $line) {
-                // Iniciar captura cuando encontramos el resumen formateado
-                if (strpos($line, 'UPDATE_OUTPUT: ========================================') !== false && 
-                    strpos($line, 'UPDATE_OUTPUT: 🎉 RESUMEN FINAL - UPDATE_PRODUCTOS.PHP') === false) {
-                    $capture_resumen = true;
-                }
-                
-                // Capturar el resumen formateado completo
-                if ($capture_resumen) {
-                    $filtered_output[] = $line;
-                    // Detener captura al final del resumen
-                    if (strpos($line, 'UPDATE_OUTPUT: ========================================') !== false && 
-                        count($filtered_output) > 5) {
-                        $capture_resumen = false;
+                // Buscar líneas del resumen formateado
+                if (strpos($line, 'UPDATE_OUTPUT: 🎉 RESUMEN FINAL - UPDATE_PRODUCTOS.PHP') !== false) {
+                    $found_resumen = true;
+                    $resumen_count = 0;
+                    // Agregar separador antes del resumen
+                    if (!in_array("========================================", $filtered_output)) {
+                        $filtered_output[] = "========================================";
+                        $filtered_output[] = "🎉 RESUMEN DE ACTUALIZACIÓN";
+                        $filtered_output[] = "========================================";
                     }
                 }
-                // Capturar otras líneas importantes
-                elseif (strpos($line, '💾 Archivo CSV conservado') !== false ||
-                        strpos($line, '🔄 Ejecutando update_productos.php') !== false ||
-                        strpos($line, '✅ update_productos.php ejecutado exitosamente') !== false ||
-                        strpos($line, '🎉 PROCESO COMPLETADO EXITOSAMENTE') !== false ||
-                        strpos($line, '✅ Lote final') !== false ||
-                        strpos($line, '🎉 Carga completada:') !== false ||
-                        strpos($line, '✅ Datos cargados:') !== false) {
-                    $filtered_output[] = $line;
+                
+                // Si encontramos el resumen, capturar las siguientes líneas relevantes
+                if ($found_resumen && $resumen_count < 15) {
+                    $clean_line = str_replace('UPDATE_OUTPUT: ', '', $line);
+                    
+                    // Solo agregar líneas que contengan información del resumen
+                    if (strpos($clean_line, '================================') !== false ||
+                        strpos($clean_line, 'RESUMEN FINAL') !== false ||
+                        strpos($clean_line, 'Estadísticas de actualización') !== false ||
+                        strpos($clean_line, 'Descripciones actualizadas') !== false ||
+                        strpos($clean_line, 'Precios actualizados') !== false ||
+                        strpos($clean_line, 'Stocks actualizados') !== false ||
+                        strpos($clean_line, 'Productos nuevos') !== false ||
+                        strpos($clean_line, 'Productos eliminados') !== false ||
+                        strpos($clean_line, 'Tiempo de proceso') !== false ||
+                        strpos($clean_line, 'No se detectaron cambios') !== false ||
+                        strpos($clean_line, 'Actualización completada') !== false) {
+                        $filtered_output[] = $clean_line;
+                    }
+                    
+                    $resumen_count++;
+                    
+                    // Si encontramos el final del resumen, detener
+                    if (strpos($clean_line, '================================') !== false && $resumen_count > 8) {
+                        $found_resumen = false;
+                    }
                 }
             }
-            
-            // Si no se capturó el resumen, incluir líneas clave del UPDATE_OUTPUT
-            $has_resumen = false;
-            foreach ($filtered_output as $line) {
-                if (strpos($line, 'RESUMEN FINAL') !== false) {
-                    $has_resumen = true;
-                    break;
-                }
-            }
-            
-            if (!$has_resumen) {
-                // Buscar y agregar el resumen si no se capturó
-                $temp_output = [];
+
+            // 3. Si no se encontró resumen, buscar líneas individuales
+            if (!in_array("🎉 RESUMEN DE ACTUALIZACIÓN", $filtered_output)) {
+                $has_resumen_data = false;
+                $temp_resumen = [];
+                
                 foreach ($output as $line) {
-                    if (strpos($line, 'UPDATE_OUTPUT: 🎉 RESUMEN FINAL') !== false ||
-                        strpos($line, 'UPDATE_OUTPUT: 📊 Estadísticas de actualización') !== false ||
-                        strpos($line, 'UPDATE_OUTPUT: 📝 Descripciones actualizadas:') !== false ||
+                    if (strpos($line, 'UPDATE_OUTPUT: 📝 Descripciones actualizadas:') !== false ||
                         strpos($line, 'UPDATE_OUTPUT: 💰 Precios actualizados:') !== false ||
                         strpos($line, 'UPDATE_OUTPUT: 📦 Stocks actualizados:') !== false ||
                         strpos($line, 'UPDATE_OUTPUT: 🆕 Productos nuevos:') !== false ||
-                        strpos($line, 'UPDATE_OUTPUT: 🗑️ Productos eliminados:') !== false ||
-                        strpos($line, 'UPDATE_OUTPUT: ⏰ Tiempo de proceso:') !== false ||
-                        strpos($line, 'UPDATE_OUTPUT: 💤 No se detectaron cambios') !== false ||
-                        strpos($line, 'UPDATE_OUTPUT: ✅ Actualización completada') !== false) {
-                        $temp_output[] = $line;
+                        strpos($line, 'UPDATE_OUTPUT: 🗑️ Productos eliminados:') !== false) {
+                        
+                        $clean_line = str_replace('UPDATE_OUTPUT: ', '', $line);
+                        $temp_resumen[] = $clean_line;
+                        $has_resumen_data = true;
                     }
                 }
-                // Agregar al inicio si encontramos líneas del resumen
-                if (!empty($temp_output)) {
-                    array_unshift($filtered_output, "========================================");
-                    array_unshift($filtered_output, "🎉 RESUMEN DE ACTUALIZACIÓN");
-                    array_unshift($filtered_output, "========================================");
-                    $filtered_output = array_merge($filtered_output, $temp_output);
+                
+                if ($has_resumen_data) {
+                    $filtered_output[] = "========================================";
+                    $filtered_output[] = "🎉 RESUMEN DE ACTUALIZACIÓN";
+                    $filtered_output[] = "========================================";
+                    $filtered_output = array_merge($filtered_output, $temp_resumen);
                     $filtered_output[] = "========================================";
                 }
             }
