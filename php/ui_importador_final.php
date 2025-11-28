@@ -1,5 +1,5 @@
 <?php
-// ui_importador_final.php - VERSIÓN SIMPLIFICADA
+// ui_importador_final.php - VERSIÓN MEJORADA Y FUNCIONAL
 header('Content-Type: text/html; charset=utf-8');
 
 // CONFIGURACIÓN PARA WEB
@@ -85,12 +85,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion'])) {
             web_log("📋 Output recibido: " . count($output) . " líneas");
             web_log("🔚 Código de retorno: " . $return_code);
             
-            // Filtrar líneas relevantes - VERSIÓN MEJORADA CON RESUMEN
+            // FILTRAR LÍNEAS RELEVANTES - VERSIÓN MEJORADA CON RESUMEN
             $filtered_output = [];
             foreach ($output as $line) {
                 // Incluir TODAS las líneas del resumen especial de update_productos
                 if (strpos($line, '========================================') !== false ||
-                    strpos($line, 'RESUMEN FINAL - UPDATE_PRODUCTOS.PHP') !== false ||
+                    strpos($line, 'RESUMEN FINAL') !== false ||
                     strpos($line, 'PROCESO COMPLETADO - RESUMEN:') !== false ||
                     strpos($line, '📝 Descripciones actualizadas:') !== false ||
                     strpos($line, '💰 Precios actualizados:') !== false ||
@@ -108,6 +108,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion'])) {
                 }
             }
             
+            // Si no hay output relevante, mostrar las últimas líneas
             if (empty($filtered_output)) {
                 $filtered_output = array_slice($output, -10);
             }
@@ -256,7 +257,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion'])) {
         }
         /* ESTILOS PARA EL ÍCONO DE FLECHA */
         .icon-dark-blue {
-            color: #003272 !important;
+            color: #037C79 !important;
         }
         .icon-large {
             font-size: 2rem !important;
