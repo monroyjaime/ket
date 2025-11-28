@@ -86,24 +86,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion'])) {
             web_log("🔚 Código de retorno: " . $return_code);
             
             // FILTRAR LÍNEAS RELEVANTES - VERSIÓN MEJORADA CON RESUMEN
+            // FILTRAR LÍNEAS RELEVANTES - VERSIÓN TEMPORAL PARA DEBUG
             $filtered_output = [];
             foreach ($output as $line) {
-            // Incluir casi todo excepto líneas muy repetitivas
-            if (strpos($line, '================================') !== false ||
-                strpos($line, 'RESUMEN FINAL') !== false ||
-                strpos($line, 'PROCESO COMPLETADO') !== false ||
-                strpos($line, 'Descripciones actualizadas') !== false ||
-                strpos($line, 'Precios actualizados') !== false ||
-                strpos($line, 'Stocks actualizados') !== false ||
-                strpos($line, 'Productos nuevos') !== false ||
-                strpos($line, 'Productos eliminados') !== false ||
-                strpos($line, 'Tiempo total') !== false ||
-                strpos($line, '✅') !== false || 
-                strpos($line, '❌') !== false || 
-                strpos($line, '🚀') !== false ||
-                strpos($line, '🎉') !== false ||
-                strpos($line, '💾') !== false) {
-                $filtered_output[] = $line;
+                // TEMPORAL: Incluir CASI TODO para debug
+                if (strpos($line, 'UPDATE_OUTPUT:') !== false ||
+                    strpos($line, 'OUTPUT COMPLETO') !== false ||
+                    strpos($line, 'RESUMEN FINAL') !== false ||
+                    strpos($line, 'Estadísticas de actualización') !== false ||
+                    strpos($line, 'Descripciones actualizadas') !== false ||
+                    strpos($line, 'Precios actualizados') !== false ||
+                    strpos($line, 'Stocks actualizados') !== false ||
+                    strpos($line, 'Productos nuevos') !== false ||
+                    strpos($line, 'Productos eliminados') !== false ||
+                    strpos($line, 'Tiempo de proceso') !== false ||
+                    strpos($line, 'No se detectaron cambios') !== false ||
+                    strpos($line, 'Actualización completada') !== false ||
+                    strpos($line, '================================') !== false ||
+                    strpos($line, '✅') !== false || 
+                    strpos($line, '❌') !== false || 
+                    strpos($line, '🚀') !== false ||
+                    strpos($line, '🎉') !== false ||
+                    strpos($line, '📝') !== false ||
+                    strpos($line, '💾') !== false ||
+                    strpos($line, '🔄') !== false) {
+                    $filtered_output[] = $line;
+                }
             }
         }
             

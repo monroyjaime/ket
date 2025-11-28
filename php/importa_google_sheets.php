@@ -250,16 +250,33 @@ class GoogleSheetsImporter {
             throw new Exception("Script no encontrado: " . $scriptPath);
         }
         
-        // Ejecutar y capturar output
-        $output = [];
-        $returnCode = 0;
-        exec("php " . escapeshellarg($scriptPath) . " 2>&1", $output, $returnCode);
+        // EJECUCIÓN ALTERNATIVA - CAPTURAR TODO EL OUTPUT
+        log_message("🔄 EJECUTANDO UPDATE_PRODUCTOS.PHP...");
         
-        if ($returnCode !== 0) {
-            log_message("❌ update_productos.php falló (código: $returnCode)", true);
-            log_message("Output: " . implode("\n", $output), true);
+        // Opción 1: Usar shell_exec para capturar TODO el output
+        $output = shell_exec("php " . escapeshellarg($scriptPath) . " 2>&1");
+        
+        // Logear TODO el output recibido
+        log_message("📋 OUTPUT COMPLETO DE UPDATE_PRODUCTOS:");
+        log_message("========================================");
+        if ($output) {
+            // Dividir por líneas y logear cada una
+            $lines = explode("\n", $output);
+            foreach ($lines as $line) {
+                if (!empty(trim($line))) {
+                    log_message("UPDATE_OUTPUT: " . $line);
+                }
+            }
         } else {
+            log_message("❌ NO HAY OUTPUT CAPTURADO");
+        }
+        log_message("========================================");
+        
+        // Verificar éxito basado en si hay output
+        if ($output && strpos($output, 'RESUMEN FINAL') !== false) {
             log_message("✅ update_productos.php ejecutado exitosamente");
+        } else {
+            log_message("⚠️ update_productos.php completado pero sin output esperado");
         }
     }
 }
