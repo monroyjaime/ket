@@ -85,13 +85,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion'])) {
             web_log("📋 Output recibido: " . count($output) . " líneas");
             web_log("🔚 Código de retorno: " . $return_code);
             
+            // Filtrar líneas relevantes - VERSIÓN MEJORADA CON RESUMEN
             $filtered_output = [];
             foreach ($output as $line) {
-                if (strpos($line, '✅') !== false || 
+                // Incluir TODAS las líneas del resumen especial de update_productos
+                if (strpos($line, '========================================') !== false ||
+                    strpos($line, 'RESUMEN FINAL - UPDATE_PRODUCTOS.PHP') !== false ||
+                    strpos($line, 'PROCESO COMPLETADO - RESUMEN:') !== false ||
+                    strpos($line, '📝 Descripciones actualizadas:') !== false ||
+                    strpos($line, '💰 Precios actualizados:') !== false ||
+                    strpos($line, '📦 Stocks actualizados:') !== false ||
+                    strpos($line, '🆕 Productos nuevos:') !== false ||
+                    strpos($line, '🗑️ Productos eliminados:') !== false ||
+                    strpos($line, '⏰ Tiempo total:') !== false ||
+                    strpos($line, '✅') !== false || 
                     strpos($line, '❌') !== false || 
                     strpos($line, '🚀') !== false ||
                     strpos($line, '🎉') !== false ||
-                    strpos($line, '📝') !== false) {
+                    strpos($line, '📝') !== false ||
+                    strpos($line, '💾') !== false) {
                     $filtered_output[] = $line;
                 }
             }
