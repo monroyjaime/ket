@@ -298,28 +298,32 @@ if($db->querySet("UPDATE productos SET stock_tot = current_stock+stock_lleg") ==
 
 // ================= RESUMEN FINAL MEJORADO =================
 $resumen = [
+    "========================================",
+    "🎉 RESUMEN FINAL - UPDATE_PRODUCTOS.PHP", 
+    "========================================",
     "🎉 PROCESO COMPLETADO - RESUMEN:",
     "📝 Descripciones actualizadas: " . ($counters['descripcion'] - 1),
     "💰 Precios actualizados: " . (($counters['cost_max'] - 1) + ($counters['cost_oferta'] - 1) + ($counters['cost_mayor'] - 1) + ($counters['cost_min'] - 1) + ($counters['costo'] - 1)),
     "📦 Stocks actualizados: " . (($counters['current_stock'] - 1) + ($counters['stock_lleg'] - 1)),
     "🆕 Productos nuevos: " . $counters['nuevos'],
     "🗑️ Productos eliminados: " . $counters['eliminados'],
-    "⏰ Tiempo total: " . date('Y-m-d H:i:s')
+    "⏰ Tiempo total: " . date('Y-m-d H:i:s'),
+    "========================================"
 ];
 
-// Log normal (para el archivo)
-foreach ($resumen as $linea) {
-    log_update($linea);
-}
+// Log normal (para el archivo) - versión simple
+log_update("🎉 PROCESO COMPLETADO - RESUMEN:");
+log_update("📝 Descripciones actualizadas: " . ($counters['descripcion'] - 1));
+log_update("💰 Precios actualizados: " . (($counters['cost_max'] - 1) + ($counters['cost_oferta'] - 1) + ($counters['cost_mayor'] - 1) + ($counters['cost_min'] - 1) + ($counters['costo'] - 1)));
+log_update("📦 Stocks actualizados: " . (($counters['current_stock'] - 1) + ($counters['stock_lleg'] - 1)));
+log_update("🆕 Productos nuevos: " . $counters['nuevos']);
+log_update("🗑️ Productos eliminados: " . $counters['eliminados']);
+log_update("⏰ Tiempo total: " . date('Y-m-d H:i:s'));
 
-// Output especial para la UI - más visible
-echo "========================================\n";
-echo "🎉 RESUMEN FINAL - UPDATE_PRODUCTOS.PHP\n";
-echo "========================================\n";
+// Output ESPECIAL para la UI - TODO en stdout
 foreach ($resumen as $linea) {
     echo $linea . "\n";
 }
-echo "========================================\n";
 
 // ================= FUNCIONES ORIGINALES (PRESERVADAS) =================
 function agregarLineaCSV($datos, $archivo = 'datos.csv', $headers = null) {

@@ -88,25 +88,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion'])) {
             // FILTRAR LÍNEAS RELEVANTES - VERSIÓN MEJORADA CON RESUMEN
             $filtered_output = [];
             foreach ($output as $line) {
-                // Incluir TODAS las líneas del resumen especial de update_productos
-                if (strpos($line, '========================================') !== false ||
-                    strpos($line, 'RESUMEN FINAL') !== false ||
-                    strpos($line, 'PROCESO COMPLETADO - RESUMEN:') !== false ||
-                    strpos($line, '📝 Descripciones actualizadas:') !== false ||
-                    strpos($line, '💰 Precios actualizados:') !== false ||
-                    strpos($line, '📦 Stocks actualizados:') !== false ||
-                    strpos($line, '🆕 Productos nuevos:') !== false ||
-                    strpos($line, '🗑️ Productos eliminados:') !== false ||
-                    strpos($line, '⏰ Tiempo total:') !== false ||
-                    strpos($line, '✅') !== false || 
-                    strpos($line, '❌') !== false || 
-                    strpos($line, '🚀') !== false ||
-                    strpos($line, '🎉') !== false ||
-                    strpos($line, '📝') !== false ||
-                    strpos($line, '💾') !== false) {
-                    $filtered_output[] = $line;
-                }
+            // Incluir casi todo excepto líneas muy repetitivas
+            if (strpos($line, '================================') !== false ||
+                strpos($line, 'RESUMEN FINAL') !== false ||
+                strpos($line, 'PROCESO COMPLETADO') !== false ||
+                strpos($line, 'Descripciones actualizadas') !== false ||
+                strpos($line, 'Precios actualizados') !== false ||
+                strpos($line, 'Stocks actualizados') !== false ||
+                strpos($line, 'Productos nuevos') !== false ||
+                strpos($line, 'Productos eliminados') !== false ||
+                strpos($line, 'Tiempo total') !== false ||
+                strpos($line, '✅') !== false || 
+                strpos($line, '❌') !== false || 
+                strpos($line, '🚀') !== false ||
+                strpos($line, '🎉') !== false ||
+                strpos($line, '💾') !== false) {
+                $filtered_output[] = $line;
             }
+        }
             
             // Si no hay output relevante, mostrar las últimas líneas
             if (empty($filtered_output)) {
