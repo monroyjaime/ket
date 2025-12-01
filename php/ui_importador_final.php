@@ -322,7 +322,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion'])) {
         }
         /* ESTILOS PARA EL ÍCONO DE FLECHA */
         .icon-dark-blue {
-            color: #037C79 !important;
+            color: #003272 !important;
         }
         .icon-large {
             font-size: 2rem !important;
@@ -343,13 +343,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion'])) {
             <div class="row align-items-center">
                 <!-- Ícono de flecha izquierda -->
                 <div class="col-auto">
-                    <a href="#" onclick="history.back()" title="Página anterior">
+                    <a href="https://ketelectropartes.com/" title="Página anterior">
                         <i class="bi bi-arrow-left-circle-fill icon-dark-blue icon-large"></i>
                     </a>
                 </div>
                 
-                <!-- Logo centrado -->
-                <div class="col text-center">
+                <!-- Logo al final -->
+                <div class="col text-end">
                     <img src="../catalogo/images/logoMini.png" class="img-fluid" alt="logo" style="max-height: 40px;">
                 </div>
                 
