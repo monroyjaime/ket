@@ -348,8 +348,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion'])) {
                 </div>
                 
                 <!-- Logo al final -->
-                <div class="col text-end">
-                    <img src="../catalogo/images/logoMini.png" class="img-fluid" alt="logo" style="max-height: 40px;">
+                <div class="col text-end" style="max-height: 40px;">
+                    <img src="../catalogo/images/logoMini.png" class="img-fluid" alt="logo">
                 </div>
                 
                 <!-- Espacio balanceado (invisible) -->
