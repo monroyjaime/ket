@@ -352,10 +352,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion'])) {
                     <img src="../catalogo/images/logoMini.png" class="img-fluid" alt="logo">
                 </div>
                 
-                <!-- Espacio balanceado (invisible) -->
-                <div class="col-auto" style="visibility: hidden;">
-                    <i class="bi bi-arrow-left-circle-fill icon-large"></i>
-                </div>
+                
             </div>
         </div>
     </div>
