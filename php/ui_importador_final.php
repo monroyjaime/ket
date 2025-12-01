@@ -219,7 +219,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion'])) {
         }
         .header-top {
             background-color: #CCC;
-            padding: 10px 0;
             border-bottom: 1px solid #999;
         }
         .header-main {
