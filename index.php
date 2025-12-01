@@ -43,7 +43,7 @@ foreach ($consult as $value)
 
 
 
-    $consult = $db->consultas("SELECT short_name, full_name, client, email, rol, admin, only_with_stock	 FROM usuario WHERE num=".$numUsr);
+    $consult = $db->consultas("SELECT short_name, full_name, client, email, rol, admin, only_with_stock, do_pedido, do_presupuesto, do_update_db	 FROM usuario WHERE num=".$numUsr);
     foreach ($consult as $value)
     {
       $shortName= $value->short_name;
@@ -53,6 +53,10 @@ foreach ($consult as $value)
       $usrMail = $value->email;
       $admin = ($value->admin == 't')? 1 : 0;
       $onlyStock = ($value->only_with_stock == 'f')? 0 : 1;
+      $doPedidos = ($value->do_pedido == 'f')? 0 : 1;
+      $doPresupuestos = ($value->do_presupuesto == 'f')? 0 : 1;
+      $doUpdDb = ($value->do_update_db == 'f')? 0 : 1;
+
     }
     $_SESSION["role"] = $role;
     $_SESSION["usr_short_name"] = $shortName;
@@ -139,6 +143,7 @@ foreach ($consult as $value)
               $icon_admin  .=                '</a>';
              // $icon_admin  .=            '</div>';
               $icon_admin  .=        '</li>';
+              
               $icon_admin  .=    '</ul>';
               $icon_admin  .='</li>';
                 /*
