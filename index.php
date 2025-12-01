@@ -92,7 +92,7 @@ foreach ($consult as $value)
         {
           $icon_admin  .=        '<li>';
           $icon_admin  .=                '<a href="https://ketelectropartes.com/php/ui_importador_final.php" class="btn-link text-decoration-none text-dark p-2 rounded hover-bg-light d-block" id="btnsMenu">';
-          $icon_admin  .=                    '<h5 class="d-inline ms-2">Presupuestos</h5>';
+          $icon_admin  .=                    '<h5 class="d-inline ms-2">Actualizar DB.</h5>';
           $icon_admin  .=                '</a>';
           $icon_admin  .=        '</li>';
         }
