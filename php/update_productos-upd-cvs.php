@@ -76,7 +76,7 @@ $query .= " FROM prod_name ORDER BY code";
 
 log_update("📊 Ejecutando consulta principal...");
 $consult1 = $db->consultas($query);
-totalRegistros = count($consult1);
+$totalRegistros = count($consult1);
 log_update("📥 Total registros a procesar: $totalRegistros");
 
 // Inicializar contadores
