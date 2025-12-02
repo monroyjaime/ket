@@ -10,6 +10,7 @@ if(!$sesionAlreadyActive || $numUsr==-1)
 }
 
 // validate if current user is able to do Data base updete
+/*
 try {
     require_once("php/dbcat_async.php");
     $db = new DBAsync();
@@ -27,7 +28,7 @@ try {
 } catch (Exception $e) {
     error_log("Error en consultas: " . $e->getMessage());
 }
-
+*/
 
 
 // ui_importador_final.php - VERSIÓN MEJORADA Y FUNCIONAL
