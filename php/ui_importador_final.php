@@ -2,12 +2,33 @@
 session_start();
 
 $sesionAlreadyActive = (isset($_SESSION['ses_num']))? true : false;
-
-if(!$sesionAlreadyActive)
+$numUsr = isset($_SESSION['usr_num']) ? intval($_SESSION['usr_num']) : -1;
+if(!$sesionAlreadyActive || $numUsr==-1)
 {
     header('Location: https://ketelectropartes.com');
     exit(); // Importante: siempre usar exit después de header
 }
+
+// validate if current user is able to do Data base updete
+try {
+    require_once("php/dbcat_async.php");
+    $db = new DBAsync();
+    
+    // Consultar si usuario actual puede actualiza BD.
+    $consult = $db->consultaSegura("SELECT do_update_db FROM usuario WHERE num = $1", [$numUsr]);
+    
+    if (!empty($consult)) {
+        if ($consult[0]->do_update_db == 'f')
+        {
+            header('Location: https://ketelectropartes.com');
+            exit(); // Importante: siempre usar exit después de header
+        }
+    }
+} catch (Exception $e) {
+    error_log("Error en consultas: " . $e->getMessage());
+}
+
+
 
 // ui_importador_final.php - VERSIÓN MEJORADA Y FUNCIONAL
 header('Content-Type: text/html; charset=utf-8');
