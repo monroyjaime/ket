@@ -10,9 +10,9 @@ if(!$sesionAlreadyActive || $numUsr==-1)
 }
 
 // validate if current user is able to do Data base updete
-/*
+
 try {
-    require_once("php/dbcat_async.php");
+    require_once("dbcat_async.php");
     $db = new DBAsync();
     
     // Consultar si usuario actual puede actualiza BD.
@@ -28,7 +28,7 @@ try {
 } catch (Exception $e) {
     error_log("Error en consultas: " . $e->getMessage());
 }
-*/
+
 
 
 // ui_importador_final.php - VERSIÓN MEJORADA Y FUNCIONAL
