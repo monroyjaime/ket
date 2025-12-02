@@ -317,6 +317,17 @@ $tituloLista = '<h2 style="background-color: #037C79; padding-bottom: 14px; colo
             width: 120px; /* Ancho preferido */
         }
 
+        /* Estilos para ocultar el check maestro */
+        .bootstrap-table .fixed-table-header th input[type="checkbox"] {
+            display: none !important;
+        }
+        .bootstrap-table .fixed-table-container thead th .th-inner.checkbox {
+            display: none !important;
+        }
+        .bootstrap-table th:first-child .th-inner.check-all {
+            display: none !important;
+        }
+
     </style>
 </head>
 
@@ -359,7 +370,9 @@ $tituloLista = '<h2 style="background-color: #037C79; padding-bottom: 14px; colo
             data-url="../../php/getListaProdAllPresup.php"
             data-mobile-responsive="false"
             data-check-on-init="true"
-            data-row-style="rowStyle">
+            data-row-style="rowStyle"
+            <!-- AGREGADO: Deshabilitar check maestro -->
+            data-checkbox-header="false">
             <thead>
                 <tr>
                     <?php 
@@ -453,90 +466,90 @@ $tituloLista = '<h2 style="background-color: #037C79; padding-bottom: 14px; colo
                             <th data-field="precio_combinado" data-halign="center" data-align="center" data-width="280" data-formatter="precioCombinadoFormater">Precio</th>                            <th data-field="cantidad" data-halign="center" data-align="center" data-width="100" data-formatter="cantidadFormater">Cantidad</th>
                             <th data-field="unidad" data-halign="center" data-align="center" data-width="80">Unidad</th>
                             <th data-field="tiempo_entrega" data-halign="center" data-align="center" data-width="120" data-formatter="tiempoEntregaFormater">Tiempo Entrega</th>
-                            <th data-field="monto" data-halign="center" data-align="right" data-width="100" data-formatter="montoFormater">Monto</th>
-                        </tr>
-                    </thead>
-                </table>
-                
-                <div style="text-align: right; margin-top: 20px;">
-                    <a class="updTot" href="javascript:void(0)" onClick="updateTotal()" title="update">
-                        <i class="bi bi-arrow-clockwise"></i>
-                        <h4 id="MontoTotal" style="color: #037C79; font-weight: bold;"></h4>
-                    </a>
-                </div>
-
-                <div class="input-group mt-3">
-                    <span class="input-group-text">Comentarios del Presupuesto:</span>
-                    <textarea class="form-control" id="comentarioPresupuesto" rows="2"></textarea>
-                </div>
-
-                <!-- NUEVA SECCIÓN: Descuentos y Recargos -->
-                <div class="container mt-3">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="card">
-                                <div class="card-header bg-warning">
-                                    <h6 class="mb-0">Descuento</h6>
-                                </div>
-                                <div class="card-body">
-                                    <div class="mb-2">
-                                        <label class="form-label">Concepto de Descuento:</label>
-                                        <input type="text" class="form-control" id="descuento_texto" placeholder="Ej: Descuento por volumen">
-                                    </div>
-                                    <div class="mb-2">
-                                        <label class="form-label">Porcentaje de Descuento (%):</label>
-                                        <input type="number" class="form-control" id="descuento_porcentaje" step="0.1" min="0" max="100" placeholder="0.0" value="0" onchange="calcularDescuentoDesdePorcentaje()">
-                                    </div>
-                                    <div class="mb-2">
-                                        <label class="form-label">Monto Calculado ($):</label>
-                                        <input type="number" class="form-control" id="descuento_monto" step="0.001" min="0" placeholder="0.000" value="0" readonly>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="card">
-                                <div class="card-header bg-info text-white">
-                                    <h6 class="mb-0">Recargo</h6>
-                                </div>
-                                <div class="card-body">
-                                    <div class="mb-2">
-                                        <label class="form-label">Concepto de Recargo:</label>
-                                        <input type="text" class="form-control" id="recargo_texto" placeholder="Ej: Recargo por urgencia">
-                                    </div>
-                                    <div class="mb-2">
-                                        <label class="form-label">Monto de Recargo ($):</label>
-                                        <input type="number" class="form-control" id="recargo_monto" step="0.001" min="0" placeholder="0.000" value="0">
-                                    </div>
-                                     <!-- NUEVO CAMPO IVA -->
-                                    <div class="mb-2">
-                                        <label class="form-label">IVA (%):</label>
-                                        <input type="number" class="form-control" id="iva_porcentaje" step="0.1" min="0" max="100" placeholder="0.0" value="0" onchange="calcularIVA()">
-                                    </div>
-                                    <div class="mb-2">
-                                        <label class="form-label">Monto de IVA ($):</label>
-                                        <input type="number" class="form-control" id="iva_monto" step="0.001" min="0" placeholder="0.000" value="0" readonly>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        
-                    </div>
-
-
-
-                </div>
-
-                <button type="button" class="btn btn-success btn-lg" id="reg-presupuesto" onClick="guardarPresupuesto()" style="margin: 20px 40px 10px;">
-                    <i class="bi bi-save"></i> Guardar Presupuesto
-                </button>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-bs-dismiss="modal"><i class="bi bi-arrow-return-left"></i> Regresar</button>
-            </div>
+                    <th data-field="monto" data-halign="center" data-align="right" data-width="100" data-formatter="montoFormater">Monto</th>
+                </tr>
+            </thead>
+        </table>
+        
+        <div style="text-align: right; margin-top: 20px;">
+            <a class="updTot" href="javascript:void(0)" onClick="updateTotal()" title="update">
+                <i class="bi bi-arrow-clockwise"></i>
+                <h4 id="MontoTotal" style="color: #037C79; font-weight: bold;"></h4>
+            </a>
         </div>
+
+        <div class="input-group mt-3">
+            <span class="input-group-text">Comentarios del Presupuesto:</span>
+            <textarea class="form-control" id="comentarioPresupuesto" rows="2"></textarea>
+        </div>
+
+        <!-- NUEVA SECCIÓN: Descuentos y Recargos -->
+        <div class="container mt-3">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header bg-warning">
+                            <h6 class="mb-0">Descuento</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-2">
+                                <label class="form-label">Concepto de Descuento:</label>
+                                <input type="text" class="form-control" id="descuento_texto" placeholder="Ej: Descuento por volumen">
+                            </div>
+                            <div class="mb-2">
+                                <label class="form-label">Porcentaje de Descuento (%):</label>
+                                <input type="number" class="form-control" id="descuento_porcentaje" step="0.1" min="0" max="100" placeholder="0.0" value="0" onchange="calcularDescuentoDesdePorcentaje()">
+                            </div>
+                            <div class="mb-2">
+                                <label class="form-label">Monto Calculado ($):</label>
+                                <input type="number" class="form-control" id="descuento_monto" step="0.001" min="0" placeholder="0.000" value="0" readonly>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header bg-info text-white">
+                            <h6 class="mb-0">Recargo</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-2">
+                                <label class="form-label">Concepto de Recargo:</label>
+                                <input type="text" class="form-control" id="recargo_texto" placeholder="Ej: Recargo por urgencia">
+                            </div>
+                            <div class="mb-2">
+                                <label class="form-label">Monto de Recargo ($):</label>
+                                <input type="number" class="form-control" id="recargo_monto" step="0.001" min="0" placeholder="0.000" value="0">
+                            </div>
+                             <!-- NUEVO CAMPO IVA -->
+                            <div class="mb-2">
+                                <label class="form-label">IVA (%):</label>
+                                <input type="number" class="form-control" id="iva_porcentaje" step="0.1" min="0" max="100" placeholder="0.0" value="0" onchange="calcularIVA()">
+                            </div>
+                            <div class="mb-2">
+                                <label class="form-label">Monto de IVA ($):</label>
+                                <input type="number" class="form-control" id="iva_monto" step="0.001" min="0" placeholder="0.000" value="0" readonly>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                
+            </div>
+
+
+
+        </div>
+
+        <button type="button" class="btn btn-success btn-lg" id="reg-presupuesto" onClick="guardarPresupuesto()" style="margin: 20px 40px 10px;">
+            <i class="bi bi-save"></i> Guardar Presupuesto
+        </button>
     </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-bs-dismiss="modal"><i class="bi bi-arrow-return-left"></i> Regresar</button>
+    </div>
+</div>
+</div>
 </div>
 
 
@@ -628,6 +641,118 @@ $tituloLista = '<h2 style="background-color: #037C79; padding-bottom: 14px; colo
          window.location.href = 'verPresupuestos.php';
     }
 
+    // Función para cargar el carrito al iniciar la página
+    function cargarCarritoInicial() {
+        console.log('Cargando carrito inicial...');
+        $.get("../../php/getCarritoCurrentData.php", function(data) {
+            try {
+                const carritoData = JSON.parse(data);
+                codes_carrito = carritoData.map(item => ({
+                    code: item.code,
+                    cantidad: item.cantidad,
+                    precio: item.precio,
+                    tiempo_entrega: item.tiempo_entrega
+                }));
+                console.log('Carrito inicial cargado:', codes_carrito.length, 'productos');
+                
+                // Forzar actualización de los checks en la tabla principal
+                if ($tableMain.length > 0) {
+                    setTimeout(() => {
+                        $tableMain.bootstrapTable('refresh');
+                    }, 500);
+                }
+            } catch (e) {
+                console.error('Error cargando carrito inicial:', e);
+            }
+        }).fail(function() {
+            console.error('Error al cargar carrito inicial');
+        });
+    }
+
+    // SISTEMA UNIFICADO DE NOTIFICACIONES TOAST
+    function showToast(type, title, message) {
+        // Configurar colores e iconos según tipo
+        const config = {
+            success: {
+                bg: 'bg-success',
+                icon: 'bi-check-circle',
+                iconColor: 'text-white'
+            },
+            danger: {
+                bg: 'bg-danger',
+                icon: 'bi-exclamation-circle',
+                iconColor: 'text-white'
+            },
+            warning: {
+                bg: 'bg-warning',
+                icon: 'bi-exclamation-triangle',
+                iconColor: 'text-dark'
+            },
+            info: {
+                bg: 'bg-info',
+                icon: 'bi-info-circle',
+                iconColor: 'text-white'
+            },
+            primary: {
+                bg: 'bg-primary',
+                icon: 'bi-info-circle',
+                iconColor: 'text-white'
+            }
+        };
+        
+        const toastConfig = config[type] || config.info;
+        
+        // Crear ID único
+        const toastId = 'toast-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+        
+        // Crear HTML del toast
+        const toastHtml = `
+            <div id="${toastId}" class="toast align-items-center ${toastConfig.bg} text-white border-0 position-fixed bottom-0 end-0 m-3" 
+                 role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="5000">
+                <div class="d-flex">
+                    <div class="toast-body p-3">
+                        <div class="d-flex align-items-center">
+                            <i class="bi ${toastConfig.icon} ${toastConfig.iconColor} fs-4 me-3"></i>
+                            <div>
+                                ${title ? `<strong class="me-2">${title}</strong><br>` : ''}
+                                <span class="small">${message}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-close btn-close-white me-3 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                </div>
+            </div>
+        `;
+        
+        // Agregar al body
+        $('body').append(toastHtml);
+        
+        // Inicializar y mostrar
+        const toastElement = document.getElementById(toastId);
+        const toast = new bootstrap.Toast(toastElement);
+        toast.show();
+        
+        // Limpiar del DOM después de ocultar
+        toastElement.addEventListener('hidden.bs.toast', function() {
+            $(this).remove();
+        });
+        
+        return toastId;
+    }
+
+    // Función rápida para notificaciones comunes
+    function mostrarNotificacion(mensaje, tipo = 'success') {
+        const titulos = {
+            success: 'Éxito',
+            danger: 'Error',
+            warning: 'Advertencia',
+            info: 'Información',
+            primary: 'Información'
+        };
+        
+        return showToast(tipo, titulos[tipo] || 'Información', mensaje);
+    }
+
     // Función para limpiar el carrito
     function limpiarCarrito() {
         if (!confirm('¿Está seguro que desea limpiar todo el carrito?\n\n⚠️ Esta acción eliminará todos los productos seleccionados y no se puede deshacer.')) {
@@ -690,42 +815,31 @@ $tituloLista = '<h2 style="background-color: #037C79; padding-bottom: 14px; colo
         });
     }
 
-    // Función para cargar el carrito al iniciar la página
-    function cargarCarritoInicial() {
-        console.log('Cargando carrito inicial...');
-        $.get("../../php/getCarritoCurrentData.php", function(data) {
-            try {
-                const carritoData = JSON.parse(data);
-                codes_carrito = carritoData.map(item => ({
-                    code: item.code,
-                    cantidad: item.cantidad,
-                    precio: item.precio,
-                    tiempo_entrega: item.tiempo_entrega
-                }));
-                console.log('Carrito inicial cargado:', codes_carrito.length, 'productos');
-                
-                // Forzar actualización de los checks en la tabla principal
-                if ($tableMain.length > 0) {
-                    setTimeout(() => {
-                        $tableMain.bootstrapTable('refresh');
-                    }, 500);
-                }
-            } catch (e) {
-                console.error('Error cargando carrito inicial:', e);
-            }
-        }).fail(function() {
-            console.error('Error al cargar carrito inicial');
+    // Función para asegurar que el check maestro no aparece
+    function asegurarSinCheckMaestro() {
+        // Eliminar cualquier checkbox en el header
+        $('.bootstrap-table th:first-child input[type="checkbox"]').remove();
+        
+        // También eliminar cualquier elemento de check-all
+        $('.bootstrap-table .check-all').remove();
+        
+        // Prevenir clicks en el header de la primera columna
+        $('.bootstrap-table thead th:first-child').css({
+            'pointer-events': 'none',
+            'cursor': 'default'
         });
     }
 
-    // Event handlers para checkboxes de la tabla principal - CORREGIDOS
+    // Event handlers para checkboxes de la tabla principal
     $(function() {
         // Cargar carrito al iniciar
         cargarCarritoInicial();
-    // Verificar si la tabla existe y no está ya inicializada
-    if ($tableMain.length > 0 && !$tableMain.data('bootstrap.table')) 
-    {
-        $tableMain.bootstrapTable({})
+        
+        // Verificar si la tabla existe y no está ya inicializada
+        if ($tableMain.length > 0) {
+            $tableMain.bootstrapTable({
+                checkboxHeader: false  // Deshabilitar check maestro
+            })
             .on('check.bs.table', function(e, row) {
                 // PRIMERO agregar al carrito (sin precio)
                 $.post("../../php/insDelOneProdCarrito.php", { 
@@ -798,8 +912,15 @@ $tituloLista = '<h2 style="background-color: #037C79; padding-bottom: 14px; colo
                         }
                     }
                 });
-            });
-    }
+            })
+            // Ejecutar cuando la tabla cargue
+            .on('load-success.bs.table', asegurarSinCheckMaestro)
+            .on('post-body.bs.table', asegurarSinCheckMaestro);
+        }
+        
+        // También llamar en ready después de un tiempo
+        setTimeout(asegurarSinCheckMaestro, 1000);
+        
         // Mejorar la barra de búsqueda
         $('.float-right.search.btn-group').find('input').attr('placeholder', '....');
         $('.float-right.search.btn-group').find('input').wrap("<div class='input-group' id='awsearch'> </div>"); 
@@ -844,122 +965,10 @@ $tituloLista = '<h2 style="background-color: #037C79; padding-bottom: 14px; colo
         }
     }
 
-    // SISTEMA UNIFICADO DE NOTIFICACIONES TOAST
-    function showToast(type, title, message) {
-        // Configurar colores e iconos según tipo
-        const config = {
-            success: {
-                bg: 'bg-success',
-                icon: 'bi-check-circle',
-                iconColor: 'text-white'
-            },
-            danger: {
-                bg: 'bg-danger',
-                icon: 'bi-exclamation-circle',
-                iconColor: 'text-white'
-            },
-            warning: {
-                bg: 'bg-warning',
-                icon: 'bi-exclamation-triangle',
-                iconColor: 'text-dark'
-            },
-            info: {
-                bg: 'bg-info',
-                icon: 'bi-info-circle',
-                iconColor: 'text-white'
-            },
-            primary: {
-                bg: 'bg-primary',
-                icon: 'bi-info-circle',
-                iconColor: 'text-white'
-            }
-        };
-        
-        const toastConfig = config[type] || config.info;
-        
-        // Crear ID único
-        const toastId = 'toast-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
-        
-        // Crear HTML del toast
-        const toastHtml = `
-            <div id="${toastId}" class="toast align-items-center ${toastConfig.bg} text-white border-0 position-fixed bottom-0 end-0 m-3" 
-                role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="5000">
-                <div class="d-flex">
-                    <div class="toast-body p-3">
-                        <div class="d-flex align-items-center">
-                            <i class="bi ${toastConfig.icon} ${toastConfig.iconColor} fs-4 me-3"></i>
-                            <div>
-                                ${title ? `<strong class="me-2">${title}</strong><br>` : ''}
-                                <span class="small">${message}</span>
-                            </div>
-                        </div>
-                    </div>
-                    <button type="button" class="btn-close btn-close-white me-3 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
-                </div>
-            </div>
-        `;
-        
-        // Agregar al body
-        $('body').append(toastHtml);
-        
-        // Inicializar y mostrar
-        const toastElement = document.getElementById(toastId);
-        const toast = new bootstrap.Toast(toastElement);
-        toast.show();
-        
-        // Limpiar del DOM después de ocultar
-        toastElement.addEventListener('hidden.bs.toast', function() {
-            $(this).remove();
-        });
-        
-        return toastId;
-    }
-
-    // Función rápida para notificaciones comunes
-    function mostrarNotificacion(mensaje, tipo = 'success') {
-        const titulos = {
-            success: 'Éxito',
-            danger: 'Error',
-            warning: 'Advertencia',
-            info: 'Información',
-            primary: 'Información'
-        };
-        
-        return showToast(tipo, titulos[tipo] || 'Información', mensaje);
-    }
-
     // Llamar la función cuando el documento esté listo
     $(document).ready(function() {
         verificarAbrirModal();
     });
-
-    function mostrarNotificacion(mensaje, tipo = 'success') {
-    // Crear notificación tipo toast
-    const toastId = 'toast-' + Date.now();
-    const bgColor = tipo === 'success' ? 'bg-success' : 'bg-danger';
-    const icon = tipo === 'success' ? 'bi-check-circle' : 'bi-exclamation-circle';
-    
-    const toastHtml = `
-        <div id="${toastId}" class="toast align-items-center text-white ${bgColor} border-0 position-fixed bottom-0 end-0 m-3" role="alert">
-            <div class="d-flex">
-                <div class="toast-body">
-                    <i class="bi ${icon} me-2"></i> ${mensaje}
-                </div>
-                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
-            </div>
-        </div>
-    `;
-    
-    $('body').append(toastHtml);
-    const toastElement = document.getElementById(toastId);
-    const toast = new bootstrap.Toast(toastElement, { delay: 3000 });
-    toast.show();
-    
-    // Remover del DOM después de ocultar
-    toastElement.addEventListener('hidden.bs.toast', function() {
-        $(this).remove();
-    });
-}
 
 
 </script>
