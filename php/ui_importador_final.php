@@ -4,7 +4,10 @@ session_start();
 $sesionAlreadyActive = (isset($_SESSION['ses_num']))? true : false;
 
 if(!$sesionAlreadyActive)
-    window.location.href ='https://ketelectropartes.com/';
+{
+    header('Location: https://ketelectropartes.com');
+    exit(); // Importante: siempre usar exit después de header
+}
 
 // ui_importador_final.php - VERSIÓN MEJORADA Y FUNCIONAL
 header('Content-Type: text/html; charset=utf-8');
