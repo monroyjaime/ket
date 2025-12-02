@@ -371,7 +371,6 @@ $tituloLista = '<h2 style="background-color: #037C79; padding-bottom: 14px; colo
             data-mobile-responsive="false"
             data-check-on-init="true"
             data-row-style="rowStyle"
-            <!-- AGREGADO: Deshabilitar check maestro -->
             data-checkbox-header="false">
             <thead>
                 <tr>
