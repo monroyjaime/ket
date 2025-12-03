@@ -63,11 +63,11 @@ function reportPrecioChange($tipo, $code, $prevPrecio, $newPrecio, $prevCosto = 
     } else {
         log_update("⚠️ agregarLineaCSV no disponible para registrar cambio: $code");
     }
-    // Mantener también el log legacy si existe la función log_echo
-    if (function_exists('log_echo')) {
+    // Mantener también el log legacy si existe la función log_echo ---- not it is not used any more
+    //if (function_exists('log_echo')) {
         // registrar una línea compacta en el log legacy
-        log_echo("$tipo,$code,$prevPrecio,$newPrecio,$prevCosto,$newCosto", false);
-    }
+        //log_echo("$tipo,$code,$prevPrecio,$newPrecio,$prevCosto,$newCosto", false);
+    //}
 }
 
 // Consulta principal
