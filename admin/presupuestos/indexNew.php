@@ -371,6 +371,7 @@ $tituloLista = '<h2 style="background-color: #037C79; padding-bottom: 14px; colo
             data-mobile-responsive="false"
             data-check-on-init="true"
             data-row-style="rowStyle"
+            <!-- AGREGADO: Deshabilitar check maestro -->
             data-checkbox-header="false">
             <thead>
                 <tr>
@@ -758,9 +759,6 @@ $tituloLista = '<h2 style="background-color: #037C79; padding-bottom: 14px; colo
             return;
         }
         
-        console.log('🔄 Iniciando limpieza de carrito...');
-        console.log('Usuario actual:', numUsr);
-        
         // Mostrar indicador de carga en el botón
         const btnLimpiar = event.target.closest('button') || event.target;
         const originalHtml = btnLimpiar.innerHTML;
@@ -770,82 +768,50 @@ $tituloLista = '<h2 style="background-color: #037C79; padding-bottom: 14px; colo
         // Mostrar toast de "procesando"
         const loadingToastId = showToast('info', 'Limpiando carrito', 'Por favor espere...');
         
-        // CORREGIR LA RUTA: Desde admin/presupuestos/index.php necesitamos subir 2 niveles
-        const url = '../../../php/limpiarCarrito.php';
-        console.log('🌐 URL de petición:', url);
-        
-        $.ajax({
-            url: url,
-            type: 'POST',
-            dataType: 'json',
-            data: {
-                usuario: numUsr
-            },
-            success: function(data) {
-                console.log('📥 Respuesta del servidor:', data);
+        $.post("../../php/limpiarCarrito.php", {
+            usuario: numUsr
+        }, function(data) {
+            console.log('Respuesta limpieza carrito:', data);
+            
+            // Restaurar botón
+            btnLimpiar.innerHTML = originalHtml;
+            btnLimpiar.disabled = false;
+            
+            if (data.success) {
+                // Limpiar la variable global
+                codes_carrito = [];
                 
-                // Restaurar botón
-                btnLimpiar.innerHTML = originalHtml;
-                btnLimpiar.disabled = false;
-                
-                if (data && data.success) {
-                    // Limpiar la variable global
-                    codes_carrito = [];
-                    
-                    // Desmarcar todos los checkboxes en la tabla principal
-                    if ($tableMain && $tableMain.length > 0) {
-                        $tableMain.bootstrapTable('uncheckAll');
-                    }
-                    
-                    // Refrescar la tabla
-                    $tableMain.bootstrapTable('refresh');
-                    
-                    // Mostrar notificación de éxito
-                    const mensaje = data.productos_eliminados > 0 
-                        ? `✅ Se eliminaron ${data.productos_eliminados} productos del carrito`
-                        : '✅ El carrito ya estaba vacío';
-                    
-                    mostrarNotificacion(mensaje, 'success');
-                    
-                    // Si el modal está abierto, cerrarlo
-                    if ($('#ModalMakePedido').is(':visible')) {
-                        $('#ModalMakePedido').modal('hide');
-                    }
-                } else {
-                    const errorMsg = data && data.error ? data.error : 'Error desconocido';
-                    console.error('❌ Error del servidor:', errorMsg);
-                    mostrarNotificacion('Error: ' + errorMsg, 'danger');
-                }
-            },
-            error: function(jqXHR, textStatus, errorThrown) {
-                console.error('❌ Error AJAX:', {
-                    status: jqXHR.status,
-                    textStatus: textStatus,
-                    errorThrown: errorThrown,
-                    responseText: jqXHR.responseText
-                });
-                
-                // Restaurar botón
-                btnLimpiar.innerHTML = originalHtml;
-                btnLimpiar.disabled = false;
-                
-                let errorMsg = 'Error de conexión con el servidor';
-                if (textStatus === 'timeout') {
-                    errorMsg = 'Tiempo de espera agotado';
-                } else if (jqXHR.status === 404) {
-                    errorMsg = 'Archivo no encontrado: limpiarCarrito.php en ' + url;
-                } else if (jqXHR.responseText) {
-                    // Intentar parsear la respuesta aunque no sea JSON
-                    try {
-                        const response = JSON.parse(jqXHR.responseText);
-                        errorMsg = response.error || 'Error del servidor';
-                    } catch (e) {
-                        errorMsg = 'Respuesta inválida del servidor: ' + jqXHR.responseText.substring(0, 100);
-                    }
+                // Desmarcar todos los checkboxes en la tabla principal
+                if ($tableMain && $tableMain.length > 0) {
+                    $tableMain.bootstrapTable('uncheckAll');
                 }
                 
-                mostrarNotificacion(errorMsg, 'danger');
+                // Refrescar la tabla
+                $tableMain.bootstrapTable('refresh');
+                
+                // Mostrar notificación de éxito
+                mostrarNotificacion('Carrito limpiado correctamente', 'success');
+                
+                // Si el modal está abierto, cerrarlo
+                if ($('#ModalMakePedido').is(':visible')) {
+                    $('#ModalMakePedido').modal('hide');
+                }
+            } else {
+                mostrarNotificacion('Error: ' + (data.error || 'No se pudo limpiar el carrito'), 'danger');
             }
+        }).fail(function(jqXHR, textStatus, errorThrown) {
+            // Restaurar botón
+            btnLimpiar.innerHTML = originalHtml;
+            btnLimpiar.disabled = false;
+            
+            let errorMsg = 'Error de conexión';
+            if (textStatus === 'timeout') {
+                errorMsg = 'Tiempo de espera agotado';
+            } else if (errorThrown) {
+                errorMsg = errorThrown;
+            }
+            
+            mostrarNotificacion(errorMsg, 'danger');
         });
     }
 

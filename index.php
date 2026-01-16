@@ -43,7 +43,7 @@ foreach ($consult as $value)
 
 
 
-    $consult = $db->consultas("SELECT short_name, full_name, client, email, rol, admin, only_with_stock	 FROM usuario WHERE num=".$numUsr);
+    $consult = $db->consultas("SELECT short_name, full_name, client, email, rol, admin, only_with_stock, do_pedido, do_presupuesto, do_update_db	 FROM usuario WHERE num=".$numUsr);
     foreach ($consult as $value)
     {
       $shortName= $value->short_name;
@@ -53,6 +53,10 @@ foreach ($consult as $value)
       $usrMail = $value->email;
       $admin = ($value->admin == 't')? 1 : 0;
       $onlyStock = ($value->only_with_stock == 'f')? 0 : 1;
+      $doPedidos = ($value->do_pedido == 'f')? 0 : 1;
+      $doPresupuestos = ($value->do_presupuesto == 'f')? 0 : 1;
+      $doUpdDb = ($value->do_update_db == 'f')? 0 : 1;
+
     }
     $_SESSION["role"] = $role;
     $_SESSION["usr_short_name"] = $shortName;
@@ -62,26 +66,37 @@ foreach ($consult as $value)
 
     //$icon_admin = ($admin == 0)? '' : '<a href="./admin/" class="btn-link" id="btnsMenu"><i class="bi bi-pencil-square icon-dark-blue icon-large"></i></a>';
     $icon_admin ='';
-      if($admin ==1)
+      if($admin ==1 && ($doPedidos==1 || $doPresupuestos==1 || $doUpdDb==1))
       {
         $icon_admin   ='<li class="nav-item dropend">';
         $icon_admin  .=    '<a href="#" class="dropdown-toggle text-decoration-none text-dark" data-toggle="dropdown">';
         $icon_admin  .=        '<i class="bi bi-pencil-square icon-dark-blue icon-large" id="btnsMenu"></i>Admin...</a>';
         $icon_admin  .=    '<ul id="admin-opt" class="dropdown-menu w-auto">';
-        $icon_admin  .=        '<li>';
-       // $icon_admin  .=            '<div class="row">';
-        $icon_admin  .=                '<a href="https://ketelectropartes.com/admin/pedidos" class="btn-link text-decoration-none text-dark p-2 rounded hover-bg-light d-block" id="btnsMenu">';
-        $icon_admin  .=                    '<h5 class="d-inline ms-2">Pedidos</h5>';
-        $icon_admin  .=                '</a>';
-       // $icon_admin  .=            '</div>';
-        $icon_admin  .=        '</li>';
-        $icon_admin  .=        '<li>';
-       // $icon_admin  .=            '<div class="row">';
-        $icon_admin  .=                '<a href="https://ketelectropartes.com/admin/presupuestos" class="btn-link text-decoration-none text-dark p-2 rounded hover-bg-light d-block" id="btnsMenu">';
-        $icon_admin  .=                    '<h5 class="d-inline ms-2">Presupuestos</h5>';
-        $icon_admin  .=                '</a>';
-       // $icon_admin  .=            '</div>';
-        $icon_admin  .=        '</li>';
+        if($doPedidos==1)
+        {
+          $icon_admin  .=        '<li>';
+          $icon_admin  .=                '<a href="https://ketelectropartes.com/admin/pedidos" class="btn-link text-decoration-none text-dark p-2 rounded hover-bg-light d-block" id="btnsMenu">';
+          $icon_admin  .=                    '<h5 class="d-inline ms-2">Pedidos</h5>';
+          $icon_admin  .=                '</a>';
+          $icon_admin  .=        '</li>';
+        }
+        if($doPresupuestos == 1)
+        {
+          $icon_admin  .=        '<li>';
+          $icon_admin  .=                '<a href="https://ketelectropartes.com/admin/presupuestos" class="btn-link text-decoration-none text-dark p-2 rounded hover-bg-light d-block" id="btnsMenu">';
+          $icon_admin  .=                    '<h5 class="d-inline ms-2">Presupuestos</h5>';
+          $icon_admin  .=                '</a>';
+          $icon_admin  .=        '</li>';
+        }
+        if($doUpdDb == 1)
+        {
+          $icon_admin  .=        '<li>';
+          $icon_admin  .=                '<a href="https://ketelectropartes.com/php/ui_importador_final.php" class="btn-link text-decoration-none text-dark p-2 rounded hover-bg-light d-block" id="btnsMenu">';
+          $icon_admin  .=                    '<h5 class="d-inline ms-2">Actualizar DB.</h5>';
+          $icon_admin  .=                '</a>';
+          $icon_admin  .=        '</li>';
+        }
+        
         $icon_admin  .=    '</ul>';
         $icon_admin  .='</li>';
         /*
@@ -116,29 +131,49 @@ foreach ($consult as $value)
       $role = $_SESSION["role"];
       $admin = $_SESSION["usr_admin"];
 
+      $consult = $db->consultas("SELECT do_pedido, do_presupuesto, do_update_db	 FROM usuario WHERE num=".$numUsr);
+      foreach ($consult as $value)
+      {
+        $doPedidos = ($value->do_pedido == 'f')? 0 : 1;
+        $doPresupuestos = ($value->do_presupuesto == 'f')? 0 : 1;
+        $doUpdDb = ($value->do_update_db == 'f')? 0 : 1;
+      }
+      
+
       //$icon_admin = ($admin == 0)? '' : '<a href="./admin/" class="btn-link" id="btnsMenu"><i class="bi bi-pencil-square icon-dark-blue icon-large"></i></a>';
         $icon_admin ='';
-            if($admin ==1)
+            if($admin ==1&& ($doPedidos==1 || $doPresupuestos==1 || $doUpdDb==1))
             {
 
               $icon_admin   ='<li class="nav-item dropend">';
               $icon_admin  .=    '<a href="#" class="dropdown-toggle text-decoration-none text-dark" data-toggle="dropdown">';
               $icon_admin  .=        '<i class="bi bi-pencil-square icon-dark-blue icon-large" id="btnsMenu"></i>Admin...</a>';
               $icon_admin  .=    '<ul id="admin-opt" class="dropdown-menu w-auto">';
-              $icon_admin  .=        '<li>';
-             // $icon_admin  .=            '<div class="row">';
-              $icon_admin  .=                '<a href="https://ketelectropartes.com/admin/pedidos" class="btn-link text-decoration-none text-dark p-2 rounded hover-bg-light d-block" id="btnsMenu">';
-              $icon_admin  .=                    '<h5 class="d-inline ms-2">Pedidos</h5>';
-              $icon_admin  .=                '</a>';
-             // $icon_admin  .=            '</div>';
-              $icon_admin  .=        '</li>';
-              $icon_admin  .=        '<li>';
-             // $icon_admin  .=            '<div class="row">';
-              $icon_admin  .=                '<a href="https://ketelectropartes.com/admin/presupuestos" class="btn-link text-decoration-none text-dark p-2 rounded hover-bg-light d-block" id="btnsMenu">';
-              $icon_admin  .=                    '<h5 class="d-inline ms-2">Presupuestos</h5>';
-              $icon_admin  .=                '</a>';
-             // $icon_admin  .=            '</div>';
-              $icon_admin  .=        '</li>';
+              if($doPedidos==1)
+              {
+                $icon_admin  .=        '<li>';
+                $icon_admin  .=                '<a href="https://ketelectropartes.com/admin/pedidos" class="btn-link text-decoration-none text-dark p-2 rounded hover-bg-light d-block" id="btnsMenu">';
+                $icon_admin  .=                    '<h5 class="d-inline ms-2">Pedidos</h5>';
+                $icon_admin  .=                '</a>';
+                $icon_admin  .=        '</li>';
+              }
+              if($doPresupuestos == 1)
+              {
+                $icon_admin  .=        '<li>';
+                $icon_admin  .=                '<a href="https://ketelectropartes.com/admin/presupuestos" class="btn-link text-decoration-none text-dark p-2 rounded hover-bg-light d-block" id="btnsMenu">';
+                $icon_admin  .=                    '<h5 class="d-inline ms-2">Presupuestos</h5>';
+                $icon_admin  .=                '</a>';
+                $icon_admin  .=        '</li>';
+              }
+              if($doUpdDb == 1)
+              {
+                $icon_admin  .=        '<li>';
+                $icon_admin  .=                '<a href="https://ketelectropartes.com/php/ui_importador_final.php" class="btn-link text-decoration-none text-dark p-2 rounded hover-bg-light d-block" id="btnsMenu">';
+                $icon_admin  .=                    '<h5 class="d-inline ms-2">Actualizar DB.</h5>';
+                $icon_admin  .=                '</a>';
+                $icon_admin  .=        '</li>';
+              }
+              
               $icon_admin  .=    '</ul>';
               $icon_admin  .='</li>';
                 /*

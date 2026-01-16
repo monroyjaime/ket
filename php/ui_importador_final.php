@@ -1,4 +1,36 @@
 <?php
+session_start();
+
+$sesionAlreadyActive = (isset($_SESSION['ses_num']))? true : false;
+$numUsr = isset($_SESSION['usr_num']) ? intval($_SESSION['usr_num']) : -1;
+if(!$sesionAlreadyActive || $numUsr==-1)
+{
+    header('Location: https://ketelectropartes.com');
+    exit(); // Importante: siempre usar exit después de header
+}
+
+// validate if current user is able to do Data base updete
+
+try {
+    require_once("dbcat_async.php");
+    $db = new DBAsync();
+    
+    // Consultar si usuario actual puede actualiza BD.
+    $consult = $db->consultaSegura("SELECT do_update_db FROM usuario WHERE num = $1", [$numUsr]);
+    
+    if (!empty($consult)) {
+        if ($consult[0]->do_update_db == 'f')
+        {
+            header('Location: https://ketelectropartes.com');
+            exit(); // Importante: siempre usar exit después de header
+        }
+    }
+} catch (Exception $e) {
+    error_log("Error en consultas: " . $e->getMessage());
+}
+
+
+
 // ui_importador_final.php - VERSIÓN MEJORADA Y FUNCIONAL
 header('Content-Type: text/html; charset=utf-8');
 
@@ -197,6 +229,78 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion'])) {
         }
         exit;
     }
+
+    // NUEVA ACCIÓN: CARGAR CAMBIOS DE PRECIOS
+    if ($_POST['accion'] === 'cargar_cambios_precios') {
+        try {
+            $csv_file = '/var/www/html/reports/preciosChanged.csv';
+            
+            if (!file_exists($csv_file)) {
+                echo json_encode([
+                    'success' => false,
+                    'error' => 'No hay archivo de cambios de precios disponible',
+                    'html' => '<div class="alert alert-warning">No se encontraron cambios de precios registrados</div>'
+                ]);
+                exit;
+            }
+            
+            // Leer el archivo CSV
+            $csv_content = file_get_contents($csv_file);
+            if ($csv_content === false) {
+                throw new Exception("No se pudo leer el archivo CSV");
+            }
+            
+            // Parsear el CSV
+            $rows = str_getcsv($csv_content, "\n");
+            $table_html = '<div class="table-responsive" style="max-height: 400px; overflow-y: auto;">';
+            $table_html .= '<table class="table table-striped table-bordered table-sm">';
+            $table_html .= '<thead class="thead-dark" style="position: sticky; top: 0; z-index: 1;">';
+            
+            // Obtener encabezados
+            if (!empty($rows)) {
+                $headers = str_getcsv($rows[0]);
+                $table_html .= '<tr>';
+                foreach ($headers as $header) {
+                    $table_html .= '<th>' . htmlspecialchars($header) . '</th>';
+                }
+                $table_html .= '</tr>';
+                $table_html .= '</thead><tbody>';
+                
+                // Agregar filas de datos
+                for ($i = 1; $i < count($rows); $i++) {
+                    $row_data = str_getcsv($rows[$i]);
+                    $table_html .= '<tr>';
+                    foreach ($row_data as $cell) {
+                        $table_html .= '<td>' . htmlspecialchars($cell) . '</td>';
+                    }
+                    $table_html .= '</tr>';
+                }
+                
+                $table_html .= '</tbody>';
+                $row_count = count($rows) - 1;
+            } else {
+                $table_html .= '</thead><tbody><tr><td colspan="10" class="text-center">El archivo está vacío</td></tr></tbody>';
+                $row_count = 0;
+            }
+            
+            $table_html .= '</table></div>';
+            
+            echo json_encode([
+                'success' => true,
+                'html' => $table_html,
+                'row_count' => $row_count,
+                'file_date' => date('Y-m-d H:i:s', filemtime($csv_file))
+            ]);
+            
+        } catch (Exception $e) {
+            echo json_encode([
+                'success' => false,
+                'error' => $e->getMessage(),
+                'html' => '<div class="alert alert-danger">Error: ' . htmlspecialchars($e->getMessage()) . '</div>'
+            ]);
+        }
+        exit;
+    }
 }
 ?>
 
@@ -219,7 +323,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion'])) {
         }
         .header-top {
             background-color: #CCC;
-            padding: 10px 0;
             border-bottom: 1px solid #999;
         }
         .header-main {
@@ -252,6 +355,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion'])) {
         }
         .card-custom.error {
             border-left-color: #dc3545;
+        }
+        .card-custom.info {
+            border-left-color: #17a2b8;
         }
         .stats-grid {
             display: grid;
@@ -322,7 +428,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion'])) {
         }
         /* ESTILOS PARA EL ÍCONO DE FLECHA */
         .icon-dark-blue {
-            color: #037C79 !important;
+            color: #003272 !important;
         }
         .icon-large {
             font-size: 2rem !important;
@@ -334,6 +440,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion'])) {
             font-weight: 500;
             display: none;
         }
+        /* Estilos para la tabla de cambios */
+        .table-responsive {
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            margin: 15px 0;
+        }
+        .table-sm th, .table-sm td {
+            padding: 8px 12px;
+            font-size: 0.9em;
+        }
+        .thead-dark th {
+            background-color: #343a40;
+            color: white;
+            border-color: #454d55;
+        }
+        /* Estilos específicos para el área de resultados */
+        .result-content {
+            max-height: 500px;
+            overflow-y: auto;
+        }
     </style>
 </head>
 <body>
@@ -343,20 +469,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion'])) {
             <div class="row align-items-center">
                 <!-- Ícono de flecha izquierda -->
                 <div class="col-auto">
-                    <a href="#" onclick="history.back()" title="Página anterior">
+                    <a href="https://ketelectropartes.com/" title="Página anterior">
                         <i class="bi bi-arrow-left-circle-fill icon-dark-blue icon-large"></i>
                     </a>
                 </div>
                 
-                <!-- Logo centrado -->
-                <div class="col text-center">
-                    <img src="../catalogo/images/logoMini.png" class="img-fluid" alt="logo" style="max-height: 40px;">
+                <!-- Logo al final -->
+                <div class="col text-end" style="max-height: 40px;">
+                    <img src="../catalogo/images/logoMini.png" class="img-fluid" alt="logo">
                 </div>
                 
-                <!-- Espacio balanceado (invisible) -->
-                <div class="col-auto" style="visibility: hidden;">
-                    <i class="bi bi-arrow-left-circle-fill icon-large"></i>
-                </div>
+                
             </div>
         </div>
     </div>
@@ -407,6 +530,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion'])) {
                 <div class="mb-3">
                     <button class="btn btn-success btn-custom" id="btnEjecutar" onclick="ejecutarImportacion()">
                         🚀 Ejecutar Importación Manual
+                    </button>
+                    <button class="btn btn-info btn-custom" id="btnVerCambiosPrecios" onclick="cargarCambiosPrecios()">
+                        💰 Ver Cambios de Precios
                     </button>
                     <button class="btn btn-warning btn-custom" onclick="verLogsCompletos()">
                         📋 Ver Logs Completos
@@ -558,6 +684,78 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion'])) {
                 `;
                 mostrarAlerta('❌ Error de conexión con el servidor', 'danger');
             });
+        }
+        
+        function cargarCambiosPrecios() {
+            const btn = document.getElementById('btnVerCambiosPrecios');
+            const resultado = document.getElementById('resultado');
+            const loading = document.getElementById('loading');
+            
+            btn.disabled = true;
+            btn.innerHTML = '⏳ Cargando...';
+            resultado.innerHTML = '';
+            loading.style.display = 'block';
+            
+            const formData = new FormData();
+            formData.append('accion', 'cargar_cambios_precios');
+            
+            fetch('ui_importador_final.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                loading.style.display = 'none';
+                btn.disabled = false;
+                btn.innerHTML = '💰 Ver Cambios de Precios';
+                
+                if (data.success) {
+                    resultado.innerHTML = `
+                        <div class="card-custom info">
+                            <h3>💰 Cambios de Precios Detectados</h3>
+                            <div class="mb-3">
+                                <span class="badge bg-primary">${data.row_count} registros</span>
+                                <span class="badge bg-secondary ms-2">Última actualización: ${data.file_date}</span>
+                            </div>
+                            <div class="result-content">
+                                ${data.html}
+                            </div>
+                            <div class="mt-3">
+                                <button class="btn btn-sm btn-outline-secondary" onclick="descargarCSVPrecios()">
+                                    <i class="bi bi-download"></i> Descargar CSV
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                    mostrarAlerta('✅ Cambios de precios cargados correctamente', 'success');
+                } else {
+                    resultado.innerHTML = `
+                        <div class="card-custom error">
+                            <h3>❌ Error al cargar cambios de precios</h3>
+                            <div class="alert alert-danger">${data.error || 'Error desconocido'}</div>
+                            ${data.html || ''}
+                        </div>
+                    `;
+                    mostrarAlerta('❌ Error: ' + (data.error || 'No se pudieron cargar los cambios'), 'danger');
+                }
+            })
+            .catch(error => {
+                loading.style.display = 'none';
+                btn.disabled = false;
+                btn.innerHTML = '💰 Ver Cambios de Precios';
+                
+                resultado.innerHTML = `
+                    <div class="card-custom error">
+                        <h3>❌ Error de Conexión</h3>
+                        <div class="alert alert-danger">No se pudo conectar con el servidor: ${error.message}</div>
+                    </div>
+                `;
+                mostrarAlerta('❌ Error de conexión con el servidor', 'danger');
+            });
+        }
+        
+        function descargarCSVPrecios() {
+            window.open('/reports/preciosChanged.csv', '_blank');
         }
         
         function mostrarAlerta(mensaje, tipo) {

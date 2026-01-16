@@ -22,9 +22,16 @@ foreach ($consulta as $value)
   
 if($numSesionsAvail == 0)
 {
-    echo "<script>alert('En este momento no podemos atender su requerimiento, por favor intente mas tarde');
+    /*echo "<script>alert('En este momento no podemos atender su requerimiento, por favor intente mas tarde');
                              window.location.href ='../index.php';
-                            </script>";
+                            </script>";*/
+    //no more available sesion, so reset them all
+    $sesionResetQuery = $db->querySet("UPDATE sesion SET active = 'f', timer = 0, id = 0, usuario = 0, ip_client='0.0.0.0'");  
+    if($sesionResetQuery == -1)
+     {
+       echo "error reseteando todas las sesiones";
+       exit -1;
+     }                                   
 }
 
 $username = $_POST['input_email'];
