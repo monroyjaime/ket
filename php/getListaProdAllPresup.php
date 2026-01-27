@@ -27,6 +27,7 @@ foreach ($consult as $value){
     $objRtn->llegando =$value->llegando;
     $objRtn->unit = $value->unit;
     $objRtn->photo_url = $value->photo_url;
+    $objRtn->no_code = $value->no_code; // ← Asegúrate que esto venga de la BD
     $listaPrecAll[] = $objRtn;
     $numProd++;
 }
