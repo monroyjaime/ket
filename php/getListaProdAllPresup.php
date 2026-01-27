@@ -9,7 +9,7 @@ $onlyStock = (isset($_SESSION['only_stock']))? intval($_SESSION['only_stock']) :
 
 $numProd = 0;
 $query  = "SELECT id,code,relacionado,name,cost_max AS prec_min,cost_mayor AS prec_may, costo,";
-$query .= "unit,photo_url, current_stock AS stock,stock_lleg AS llegando, checked";
+$query .= "unit,photo_url, current_stock AS stock,stock_lleg AS llegando, checked, no_code";
 $query .= " FROM productos order by dpto_id,code";
 $consult = $db->consultas($query);
 foreach ($consult as $value){
