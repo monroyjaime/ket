@@ -614,7 +614,7 @@ $tituloLista = '<h2 style="background-color: #037C79; padding-bottom: 14px; colo
     // Formateador para la descripción
     function descripcionFormater(value, row) {
         // Si no_code es true, mostrar input + botón
-        if (row.no_code) {
+        if (row.no_code == 't') {
             return `
                 <div class="descripcion-editable-container">
                     <div class="input-group input-group-sm">
