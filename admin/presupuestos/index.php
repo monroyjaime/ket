@@ -613,37 +613,45 @@ $tituloLista = '<h2 style="background-color: #037C79; padding-bottom: 14px; colo
 
     // Formateador para la descripción
     function descripcionFormater(value, row) {
-        // Si no_code es true, mostrar input + botón
-        if (row.no_code == 't') {
-            return `
-                <div class="descripcion-editable-container">
-                    <div class="input-group input-group-sm">
-                        <input type="text" 
-                            class="form-control descripcion-input" 
-                            value="${value || ''}" 
+         // row.no_code ya debería venir como 't' o 'f' desde la BD
+    const esEditable = row.no_code === 't' || row.no_code === true || row.no_code === 1;
+    
+    // Si no_code es true, mostrar input + botón
+    if (esEditable) {
+        // Escapar comillas en el value para evitar problemas
+        const safeValue = (value || '').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+        
+        return `
+            <div class="descripcion-editable-container" onclick="event.stopPropagation();">
+                <div class="input-group input-group-sm">
+                    <input type="text" 
+                           class="form-control descripcion-input" 
+                           value="${safeValue}" 
+                           data-code="${row.code}"
+                           placeholder="Ingrese descripción personalizada"
+                           style="font-size: 0.9rem;"
+                           onclick="event.stopPropagation();">
+                    <button class="btn btn-outline-primary btn-sm guardar-descripcion" 
+                            type="button"
                             data-code="${row.code}"
-                            placeholder="Ingrese descripción personalizada"
-                            style="font-size: 0.9rem;">
-                        <button class="btn btn-outline-primary btn-sm guardar-descripcion" 
-                                type="button"
-                                data-code="${row.code}"
-                                title="Guardar descripción">
-                            <i class="bi bi-save"></i>
-                        </button>
-                    </div>
-                    <small class="text-muted d-block mt-1" style="font-size: 0.7rem;">
-                        Producto sin código - Puede personalizar la descripción
-                    </small>
+                            title="Guardar descripción"
+                            onclick="event.stopPropagation();">
+                        <i class="bi bi-save"></i>
+                    </button>
                 </div>
-            `;
-        }
+                <small class="text-muted d-block mt-1" style="font-size: 0.7rem;">
+                    Producto sin código - Puede personalizar la descripción
+                </small>
+            </div>
+        `;
+    }
         
         // Si no_code es false, mostrar la descripción normal
         return `<span class="descripcion-normal">${value || ''}</span>`;
     }
 
     // Función para guardar la descripción personalizada
-    function guardarDescripcionPersonalizada(code) {
+    /*function guardarDescripcionPersonalizada(code) {
         const input = $(`.descripcion-input[data-code="${code}"]`);
         const descripcion = input.val().trim();
         const boton = $(`.guardar-descripcion[data-code="${code}"]`);
@@ -698,10 +706,103 @@ $tituloLista = '<h2 style="background-color: #037C79; padding-bottom: 14px; colo
             boton.prop('disabled', false);
             mostrarNotificacion('Error de conexión con el servidor', 'danger');
         });
+    }*/
+    function guardarDescripcionPersonalizada(code) {
+        const input = $(`.descripcion-input[data-code="${code}"]`);
+        const descripcion = input.val().trim();
+        const boton = $(`.guardar-descripcion[data-code="${code}"]`);
+        
+        if (!descripcion) {
+            mostrarNotificacion('Por favor ingrese una descripción', 'warning');
+            input.focus();
+            return;
+        }
+        
+        // Mostrar indicador de carga en el botón
+        const iconoOriginal = boton.html();
+        boton.html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>');
+        boton.prop('disabled', true);
+        
+        // Obtener el usuario actual (ya está definido en el script principal)
+        const usuarioId = numUsr || <?php echo isset($_SESSION['usr_num']) ? $_SESSION['usr_num'] : 0; ?>;
+        
+        console.log('Enviando descripción:', { code, descripcion, usuarioId });
+        
+        // Enviar al servidor - VERIFICA LA RUTA
+        const url = "../../php/guardarDescripcionPersonalizada.php";
+        
+        $.ajax({
+            url: url,
+            type: 'POST',
+            data: {
+                code: code,
+                descripcion: descripcion,
+                usuario: usuarioId
+            },
+            dataType: 'json',
+            success: function(data) {
+                console.log('Respuesta del servidor:', data);
+                
+                // Restaurar botón
+                boton.html(iconoOriginal);
+                boton.prop('disabled', false);
+                
+                if (data.success) {
+                    mostrarNotificacion(data.message || 'Descripción guardada correctamente', 'success');
+                    
+                    // Actualizar el dato en la fila de la tabla
+                    // Encuentra la fila y actualiza solo el campo name
+                    const $table = $('#table-main');
+                    const rows = $table.bootstrapTable('getData');
+                    
+                    for (let i = 0; i < rows.length; i++) {
+                        if (rows[i].code === code) {
+                            // Actualizar la fila
+                            $table.bootstrapTable('updateRow', {
+                                index: i,
+                                row: {
+                                    name: descripcion
+                                }
+                            });
+                            break;
+                        }
+                    }
+                } else {
+                    mostrarNotificacion(data.error || 'Error al guardar', 'danger');
+                    console.error('Error del servidor:', data);
+                }
+            },
+            error: function(jqXHR, textStatus, errorThrown) {
+                console.error('Error AJAX:', {
+                    status: jqXHR.status,
+                    textStatus: textStatus,
+                    errorThrown: errorThrown,
+                    responseText: jqXHR.responseText
+                });
+                
+                // Restaurar botón
+                boton.html(iconoOriginal);
+                boton.prop('disabled', false);
+                
+                let errorMsg = 'Error de conexión con el servidor';
+                if (jqXHR.status === 500) {
+                    errorMsg = 'Error interno del servidor (500)';
+                    try {
+                        const response = JSON.parse(jqXHR.responseText);
+                        errorMsg = response.error || errorMsg;
+                    } catch (e) {
+                        errorMsg = 'Error 500 en el servidor. Revisa logs de PHP.';
+                    }
+                }
+                
+                mostrarNotificacion(errorMsg, 'danger');
+            }
+        });
     }
-
     // Event delegation para los botones de guardar descripción
-    $(document).on('click', '.guardar-descripcion', function() {
+    $(document).on('click', '.guardar-descripcion', function(e) {
+        e.preventDefault();
+        e.stopPropagation(); // ¡IMPORTANTE! Detener la propagación del evento
         const code = $(this).data('code');
         guardarDescripcionPersonalizada(code);
     });
@@ -709,9 +810,10 @@ $tituloLista = '<h2 style="background-color: #037C79; padding-bottom: 14px; colo
     // Permitir guardar con Enter en el input
     $(document).on('keypress', '.descripcion-input', function(e) {
         if (e.which === 13) { // Enter key
+            e.preventDefault();
+            e.stopPropagation(); // ¡IMPORTANTE!
             const code = $(this).data('code');
             guardarDescripcionPersonalizada(code);
-            e.preventDefault();
         }
     });
 
@@ -1053,6 +1155,18 @@ $tituloLista = '<h2 style="background-color: #037C79; padding-bottom: 14px; colo
                     }
                 });
             })
+           .on('click-row.bs.table', function(e, row, $element) {
+                // Verificar si el click fue en un elemento que debe ignorarse
+                const target = e.originalEvent.target;
+                const $target = $(target);
+                
+                // Si el click fue en elementos del formulario de descripción, no hacer nada
+                if ($target.is('.descripcion-input, .guardar-descripcion, .guardar-descripcion i, .descripcion-input *')) {
+                    e.stopPropagation(); // Detener propagación
+                    return false;
+                }
+            }) 
+
             // Ejecutar cuando la tabla cargue
             .on('load-success.bs.table', asegurarSinCheckMaestro)
             .on('post-body.bs.table', asegurarSinCheckMaestro);
