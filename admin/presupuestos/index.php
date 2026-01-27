@@ -383,13 +383,12 @@ $tituloLista = '<h2 style="background-color: #037C79; padding-bottom: 14px; colo
                     <th data-field="code" data-halign="center" data-align="left">CODIGO</th>
                     <th data-field="relacionado" data-halign="center" data-align="left">RELACIONADO</th>
                     <th data-field="stock" data-halign="center" data-align="left">STOCK</th>
-                    <th data-field="llegando" data-halign="center" data-align="left">LLEGANDO</th>
+                    <th data-field="llegando" data-halign="center" data-align="left">LLEGANDO</th> 
                     <th data-field="prec_min" data-formatter="precioFormaterPresup" data-halign="center" data-align="left">PREC 1</th>
                     <th data-field="prec_may" data-formatter="precioFormaterPresup" data-halign="center" data-align="left">PREC 2</th>
                     <th data-field="costo" data-formatter="precioFormatergen" data-halign="center" data-align="left">COSTO</th>
                     <th data-field="unit">UNIDAD</th>
-                    <th data-field="name" data-halign="center" data-align="left" data-width="500">. . . . . . DESCRIPCION . . . . . .</th>
-                    <th data-field="photo_url" data-formatter="fotoFormater">FOTO</th>
+                    <th data-field="name" data-halign="center" data-align="left" data-width="500" data-formatter="descripcionFormater">. . . . . . DESCRIPCION . . . . . .</th>                    <th data-field="photo_url" data-formatter="fotoFormater">FOTO</th>
                 </tr>
             </thead>
         </table>
@@ -610,6 +609,113 @@ $tituloLista = '<h2 style="background-color: #037C79; padding-bottom: 14px; colo
         }
         return '$'+value.replace(/[.]/, ",");
     }
+
+
+    // Formateador para la descripción
+    function descripcionFormater(value, row) {
+        // Si no_code es true, mostrar input + botón
+        if (row.no_code) {
+            return `
+                <div class="descripcion-editable-container">
+                    <div class="input-group input-group-sm">
+                        <input type="text" 
+                            class="form-control descripcion-input" 
+                            value="${value || ''}" 
+                            data-code="${row.code}"
+                            placeholder="Ingrese descripción personalizada"
+                            style="font-size: 0.9rem;">
+                        <button class="btn btn-outline-primary btn-sm guardar-descripcion" 
+                                type="button"
+                                data-code="${row.code}"
+                                title="Guardar descripción">
+                            <i class="bi bi-save"></i>
+                        </button>
+                    </div>
+                    <small class="text-muted d-block mt-1" style="font-size: 0.7rem;">
+                        Producto sin código - Puede personalizar la descripción
+                    </small>
+                </div>
+            `;
+        }
+        
+        // Si no_code es false, mostrar la descripción normal
+        return `<span class="descripcion-normal">${value || ''}</span>`;
+    }
+
+    // Función para guardar la descripción personalizada
+    function guardarDescripcionPersonalizada(code) {
+        const input = $(`.descripcion-input[data-code="${code}"]`);
+        const descripcion = input.val().trim();
+        const boton = $(`.guardar-descripcion[data-code="${code}"]`);
+        
+        if (!descripcion) {
+            mostrarNotificacion('Por favor ingrese una descripción', 'warning');
+            input.focus();
+            return;
+        }
+        
+        // Mostrar indicador de carga en el botón
+        const iconoOriginal = boton.html();
+        boton.html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>');
+        boton.prop('disabled', true);
+        
+        // Enviar al servidor
+        $.post("../../php/guardarDescripcionPersonalizada.php", {
+            code: code,
+            descripcion: descripcion,
+            usuario: numUsr
+        }, function(data) {
+            // Restaurar botón
+            boton.html(iconoOriginal);
+            boton.prop('disabled', false);
+            
+            try {
+                const respuesta = JSON.parse(data);
+                if (respuesta.success) {
+                    mostrarNotificacion('Descripción guardada correctamente', 'success');
+                    
+                    // Actualizar el dato en la fila de la tabla
+                    const filaIndex = $tableMain.bootstrapTable('getRowIndexByUniqueId', code);
+                    if (filaIndex !== -1) {
+                        // Actualizar el valor en la tabla
+                        $tableMain.bootstrapTable('updateRow', {
+                            index: filaIndex,
+                            row: {
+                                name: descripcion
+                            }
+                        });
+                    }
+                } else {
+                    mostrarNotificacion(respuesta.error || 'Error al guardar', 'danger');
+                }
+            } catch (e) {
+                console.error('Error parseando respuesta:', e);
+                mostrarNotificacion('Error en la respuesta del servidor', 'danger');
+            }
+        }).fail(function() {
+            // Restaurar botón en caso de error
+            boton.html(iconoOriginal);
+            boton.prop('disabled', false);
+            mostrarNotificacion('Error de conexión con el servidor', 'danger');
+        });
+    }
+
+    // Event delegation para los botones de guardar descripción
+    $(document).on('click', '.guardar-descripcion', function() {
+        const code = $(this).data('code');
+        guardarDescripcionPersonalizada(code);
+    });
+
+    // Permitir guardar con Enter en el input
+    $(document).on('keypress', '.descripcion-input', function(e) {
+        if (e.which === 13) { // Enter key
+            const code = $(this).data('code');
+            guardarDescripcionPersonalizada(code);
+            e.preventDefault();
+        }
+    });
+
+
 
     function rowStyle(row, index) {
         if (index % 2 === 0) {
