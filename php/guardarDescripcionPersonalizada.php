@@ -1,97 +1,105 @@
 <?php
+// guardarDescripcionPersonalizada.php - VERSIÓN CORREGIDA
 session_start();
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
-
-require_once("dbcat.php");
-
 header('Content-Type: application/json; charset=utf-8');
 
-// Verificar si hay sesión activa
-if (!isset($_SESSION['usr_num'])) {
-    echo json_encode(['success' => false, 'error' => 'No hay sesión activa', 'session' => $_SESSION]);
-    exit;
-}
-
-// Obtener datos
-$code = isset($_POST['code']) ? trim($_POST['code']) : '';
-$descripcion = isset($_POST['descripcion']) ? trim($_POST['descripcion']) : '';
-$usuario = isset($_POST['usuario']) ? intval($_POST['usuario']) : 0;
-
-error_log("Guardando descripción - Code: $code, Desc: $descripcion, Usuario: $usuario");
-
-// Validaciones
-if (empty($code)) {
-    echo json_encode(['success' => false, 'error' => 'Código del producto no especificado', 'post_data' => $_POST]);
-    exit;
-}
-
-if (empty($descripcion)) {
-    echo json_encode(['success' => false, 'error' => 'La descripción no puede estar vacía']);
-    exit;
-}
+$response = ['success' => false, 'error' => ''];
 
 try {
+    // 1. Validar sesión
+    if (!isset($_SESSION['usr_num'])) {
+        throw new Exception('Sesión expirada. Por favor, vuelva a iniciar sesión.');
+    }
+    
+    // 2. Obtener datos
+    $code = isset($_POST['code']) ? trim($_POST['code']) : '';
+    $descripcion = isset($_POST['descripcion']) ? trim($_POST['descripcion']) : '';
+    
+    if (empty($code)) {
+        throw new Exception('Código del producto no especificado');
+    }
+    
+    if (empty($descripcion)) {
+        throw new Exception('La descripción no puede estar vacía');
+    }
+    
+    // 3. Conectar a la base de datos
+    require_once("dbcat.php");
     $db = new DB();
     
-    // Verificar que el producto existe
-    $verificar = $db->consultas("SELECT code, no_code FROM productos WHERE code = $1", [$code]);
+    // 4. ESCAPAR los valores para evitar SQL injection
+    // Ya que tu clase DB no usa parámetros preparados
+    $code_escaped = pg_escape_string($code);
+    $descripcion_escaped = pg_escape_string($descripcion);
     
-    if (empty($verificar)) {
-        echo json_encode(['success' => false, 'error' => 'Producto no encontrado', 'code_buscado' => $code]);
-        exit;
+    // 5. Verificar que el producto existe y es editable (no_code = 't')
+    $sql_verificar = "SELECT code, no_code, name FROM productos WHERE code = '$code_escaped'";
+    $producto = $db->consultas($sql_verificar);
+    
+    if (empty($producto)) {
+        throw new Exception("Producto '$code' no encontrado en la base de datos");
     }
     
-    // Verificar si tiene permiso para editar (no_code = 't' o true)
-    $producto = $verificar[0];
-    $no_code_val = $producto->no_code;
+    // 6. Verificar si permite modificación (no_code debe ser 't' o true)
+    $no_code_val = $producto[0]->no_code;
+    $es_editable = false;
     
-    // Convertir a booleano para verificación
-    $es_no_code = false;
     if (is_bool($no_code_val)) {
-        $es_no_code = $no_code_val;
+        $es_editable = $no_code_val;
     } elseif (is_string($no_code_val)) {
-        $es_no_code = ($no_code_val === 't' || $no_code_val === 'true' || $no_code_val === '1');
+        $es_editable = ($no_code_val === 't' || $no_code_val === 'true' || $no_code_val === '1');
     } elseif (is_numeric($no_code_val)) {
-        $es_no_code = ($no_code_val == 1);
+        $es_editable = ($no_code_val == 1);
     }
     
-    if (!$es_no_code) {
-        echo json_encode(['success' => false, 'error' => 'Este producto no permite descripción personalizada', 'no_code_value' => $no_code_val]);
-        exit;
+    if (!$es_editable) {
+        throw new Exception("Este producto no permite modificar la descripción (no_code = '$no_code_val')");
     }
     
-    // Actualizar la descripción
-    $resultado = $db->consultas(
-        "UPDATE productos SET name = $1 WHERE code = $2",
-        [$descripcion, $code]
-    );
+    // 7. Actualizar la descripción
+    $sql_actualizar = "UPDATE productos SET name = '$descripcion_escaped' WHERE code = '$code_escaped'";
+    $resultado = $db->consultas($sql_actualizar);
     
-    // Registrar en el historial si tienes la tabla
-    try {
-        $db->consultas(
-            "INSERT INTO historial_descripciones (producto_code, descripcion, usuario_id, fecha) VALUES ($1, $2, $3, NOW())",
-            [$code, $descripcion, $usuario]
-        );
-    } catch (Exception $e) {
-        // Si la tabla no existe, solo registrar en log
-        error_log("Nota: Tabla historial_descripciones no existe o error: " . $e->getMessage());
+    // 8. Verificar que se actualizó correctamente
+    $sql_verificar_update = "SELECT name FROM productos WHERE code = '$code_escaped'";
+    $verificar = $db->consultas($sql_verificar_update);
+    
+    if (!empty($verificar)) {
+        // Comparar la descripción actualizada
+        $descripcion_actual = $verificar[0]->name;
+        
+        if ($descripcion_actual === $descripcion) {
+            $response = [
+                'success' => true,
+                'message' => '✅ Descripción actualizada correctamente',
+                'code' => $code,
+                'new_descripcion' => $descripcion
+            ];
+        } else {
+            // Puede haber diferencias de encoding, hacer comparación insensible
+            if (strcasecmp($descripcion_actual, $descripcion) === 0) {
+                $response = [
+                    'success' => true,
+                    'message' => '✅ Descripción actualizada (con diferencia de mayúsculas)',
+                    'code' => $code,
+                    'new_descripcion' => $descripcion_actual
+                ];
+            } else {
+                throw new Exception("No se pudo verificar la actualización. Esperado: '$descripcion', Obtenido: '$descripcion_actual'");
+            }
+        }
+    } else {
+        throw new Exception('Error al verificar la actualización');
     }
-    
-    echo json_encode([
-        'success' => true, 
-        'message' => 'Descripción actualizada',
-        'new_descripcion' => $descripcion
-    ]);
     
 } catch (Exception $e) {
-    error_log("Error al guardar descripción: " . $e->getMessage());
-    error_log("Trace: " . $e->getTraceAsString());
+    $response['error'] = $e->getMessage();
     
-    echo json_encode([
-        'success' => false, 
-        'error' => 'Error en el servidor: ' . $e->getMessage(),
-        'trace' => $e->getTraceAsString()
-    ]);
+    // Log para debugging
+    error_log("Error en guardarDescripcionPersonalizada: " . $e->getMessage());
 }
+
+// 9. Enviar respuesta JSON
+echo json_encode($response);
+exit;
 ?>
