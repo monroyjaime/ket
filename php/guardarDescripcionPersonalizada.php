@@ -63,7 +63,7 @@ try {
     
     // Actualizar la descripción
     $resultado = $db->consultas(
-        "UPDATE productos SET name = $1, updated_at = NOW() WHERE code = $2",
+        "UPDATE productos SET name = $1 WHERE code = $2",
         [$descripcion, $code]
     );
     
