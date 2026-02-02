@@ -707,113 +707,64 @@ $tituloLista = '<h2 style="background-color: #037C79; padding-bottom: 14px; colo
             mostrarNotificacion('Error de conexión con el servidor', 'danger');
         });
     }*/
-    function guardarDescripcionPersonalizada(code) {
-        const input = $(`.descripcion-input[data-code="${code}"]`);
-        const descripcion = input.val().trim();
-        const boton = $(`.guardar-descripcion[data-code="${code}"]`);
+   // Event handler para el botón - VERSIÓN CORREGIDA
+    $(document).on('click', '.guardar-descripcion', function(e) {
+        console.log('🖱️ Botón clickeado - Iniciando...');
         
-        if (!descripcion) {
-            mostrarNotificacion('Por favor ingrese una descripción', 'warning');
-            input.focus();
+        // IMPORTANTE: Solo stopPropagation, NO preventDefault
+        e.stopPropagation();
+        e.stopImmediatePropagation();
+        
+        const code = $(this).data('code');
+        console.log('Código del botón:', code);
+        
+        // Pequeño delay para evitar múltiples clics
+        if ($(this).data('processing')) {
+            console.log('⚠️ Ya se está procesando, ignorando clic');
             return;
         }
         
-        // Mostrar indicador de carga en el botón
-        const iconoOriginal = boton.html();
-        boton.html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>');
-        boton.prop('disabled', true);
+        $(this).data('processing', true);
         
-        // Obtener el usuario actual (ya está definido en el script principal)
-        const usuarioId = numUsr || <?php echo isset($_SESSION['usr_num']) ? $_SESSION['usr_num'] : 0; ?>;
+        // Pequeño timeout para permitir que la UI se actualice
+        setTimeout(() => {
+            guardarDescripcionPersonalizada(code);
+            // Resetear después de un tiempo
+            setTimeout(() => {
+                $(this).data('processing', false);
+            }, 2000);
+        }, 100);
         
-        console.log('Enviando descripción:', { code, descripcion, usuarioId });
-        
-        // Enviar al servidor - VERIFICA LA RUTA
-        const url = "../../php/guardarDescripcionPersonalizada.php";
-        
-        $.ajax({
-            url: url,
-            type: 'POST',
-            data: {
-                code: code,
-                descripcion: descripcion,
-                usuario: usuarioId
-            },
-            dataType: 'json',
-            success: function(data) {
-                console.log('Respuesta del servidor:', data);
-                
-                // Restaurar botón
-                boton.html(iconoOriginal);
-                boton.prop('disabled', false);
-                
-                if (data.success) {
-                    mostrarNotificacion(data.message || 'Descripción guardada correctamente', 'success');
-                    
-                    // Actualizar el dato en la fila de la tabla
-                    // Encuentra la fila y actualiza solo el campo name
-                    const $table = $('#table-main');
-                    const rows = $table.bootstrapTable('getData');
-                    
-                    for (let i = 0; i < rows.length; i++) {
-                        if (rows[i].code === code) {
-                            // Actualizar la fila
-                            $table.bootstrapTable('updateRow', {
-                                index: i,
-                                row: {
-                                    name: descripcion
-                                }
-                            });
-                            break;
-                        }
-                    }
-                } else {
-                    mostrarNotificacion(data.error || 'Error al guardar', 'danger');
-                    console.error('Error del servidor:', data);
-                }
-            },
-            error: function(jqXHR, textStatus, errorThrown) {
-                console.error('Error AJAX:', {
-                    status: jqXHR.status,
-                    textStatus: textStatus,
-                    errorThrown: errorThrown,
-                    responseText: jqXHR.responseText
-                });
-                
-                // Restaurar botón
-                boton.html(iconoOriginal);
-                boton.prop('disabled', false);
-                
-                let errorMsg = 'Error de conexión con el servidor';
-                if (jqXHR.status === 500) {
-                    errorMsg = 'Error interno del servidor (500)';
-                    try {
-                        const response = JSON.parse(jqXHR.responseText);
-                        errorMsg = response.error || errorMsg;
-                    } catch (e) {
-                        errorMsg = 'Error 500 en el servidor. Revisa logs de PHP.';
-                    }
-                }
-                
-                mostrarNotificacion(errorMsg, 'danger');
-            }
-        });
-    }
-    // Event delegation para los botones de guardar descripción
-    $(document).on('click', '.guardar-descripcion', function(e) {
-        e.preventDefault();
-        e.stopPropagation(); // ¡IMPORTANTE! Detener la propagación del evento
-        const code = $(this).data('code');
-        guardarDescripcionPersonalizada(code);
+        return false;
     });
 
-    // Permitir guardar con Enter en el input
-    $(document).on('keypress', '.descripcion-input', function(e) {
-        if (e.which === 13) { // Enter key
-            e.preventDefault();
-            e.stopPropagation(); // ¡IMPORTANTE!
+    // Event handler para Enter - VERSIÓN MEJORADA
+    $(document).on('keydown', '.descripcion-input', function(e) {
+        if (e.key === 'Enter' || e.keyCode === 13) {
+            console.log('⌨️ Enter presionado');
+            
+            // Solo stopPropagation
+            e.stopPropagation();
+            e.stopImmediatePropagation();
+            
             const code = $(this).data('code');
-            guardarDescripcionPersonalizada(code);
+            
+            // Evitar múltiples ejecuciones
+            if ($(this).data('enterProcessing')) {
+                return false;
+            }
+            
+            $(this).data('enterProcessing', true);
+            
+            setTimeout(() => {
+                guardarDescripcionPersonalizada(code);
+                // Resetear
+                setTimeout(() => {
+                    $(this).data('enterProcessing', false);
+                }, 2000);
+            }, 100);
+            
+            return false;
         }
     });
 
@@ -1057,6 +1008,117 @@ $tituloLista = '<h2 style="background-color: #037C79; padding-bottom: 14px; colo
         });
     }
 
+    // 1. FUNCIÓN PRINCIPAL (actualizar cambio) - Guardar descripción
+    function guardarDescripcionPersonalizada(code) {
+        console.log('🚀 Guardando descripción para:', code);
+        
+        const input = $(`.descripcion-input[data-code="${code}"]`);
+        const descripcion = input.val().trim();
+        const boton = $(`.guardar-descripcion[data-code="${code}"]`);
+        
+        if (!descripcion) {
+            mostrarNotificacion('Por favor ingrese una descripción', 'warning');
+            input.focus();
+            return;
+        }
+        
+        const originalHtml = boton.html();
+        boton.html('<span class="spinner-border spinner-border-sm"></span>');
+        boton.prop('disabled', true);
+        input.prop('disabled', true);
+        
+        const url = '../../../php/guardarDescripcionPersonalizada.php';
+        
+        $.ajax({
+            url: url,
+            type: 'POST',
+            data: { code: code, descripcion: descripcion },
+            dataType: 'json',
+            timeout: 10000,
+            success: function(data) {
+                boton.html(originalHtml);
+                boton.prop('disabled', false);
+                input.prop('disabled', false);
+                
+                if (data.success) {
+                    mostrarNotificacion(data.message || '✅ Descripción guardada', 'success');
+                    const nuevaDescripcion = data.nueva_descripcion || descripcion;
+                    actualizarDescripcionEnTabla(code, nuevaDescripcion);
+                } else {
+                    mostrarNotificacion('❌ ' + (data.error || 'Error desconocido'), 'danger');
+                    input.focus();
+                }
+            },
+            error: function(xhr, status, error) {
+                boton.html(originalHtml);
+                boton.prop('disabled', false);
+                input.prop('disabled', false);
+                mostrarNotificacion('❌ Error de conexión: ' + status, 'danger');
+                input.focus();
+            }
+        });
+    }
+
+    // 2. FUNCIÓN SECUNDARIA - Actualizar tabla
+    function actualizarDescripcionEnTabla(code, nuevaDescripcion) {
+        console.log('🔄 Actualizando tabla para:', code);
+        
+        if (!$tableMain || $tableMain.length === 0) {
+            console.warn('⚠️ Tabla no encontrada');
+            return;
+        }
+        
+        try {
+            const datos = $tableMain.bootstrapTable('getData');
+            let filaIndex = -1;
+            
+            for (let i = 0; i < datos.length; i++) {
+                if (datos[i] && datos[i].code === code) {
+                    filaIndex = i;
+                    break;
+                }
+            }
+            
+            if (filaIndex !== -1) {
+                $tableMain.bootstrapTable('updateRow', {
+                    index: filaIndex,
+                    row: { name: nuevaDescripcion }
+                });
+                
+                console.log('✅ Fila actualizada en índice:', filaIndex);
+                
+                setTimeout(() => {
+                    $tableMain.bootstrapTable('refresh', { silent: true });
+                }, 300);
+                
+            } else {
+                console.warn('⚠️ Fila no encontrada, refrescando tabla completa');
+                setTimeout(() => {
+                    $tableMain.bootstrapTable('refresh');
+                }, 300);
+            }
+            
+        } catch (error) {
+            console.error('❌ Error:', error);
+            setTimeout(() => {
+                forzarActualizacionTabla();
+            }, 500);
+        }
+    }
+
+    // 3. FUNCIÓN DE RESERVA - Forzar refresh
+    function forzarActualizacionTabla() {
+        console.log('💥 Forzando actualización completa');
+        
+        if (!$tableMain || $tableMain.length === 0) return;
+        
+        $tableMain.bootstrapTable('refresh');
+        
+        setTimeout(() => {
+            $tableMain.bootstrapTable('refresh', { silent: true });
+        }, 500);
+    }
+
     // Función para asegurar que el check maestro no aparece
     function asegurarSinCheckMaestro() {
         // Eliminar cualquier checkbox en el header
@@ -1185,7 +1247,48 @@ $tituloLista = '<h2 style="background-color: #037C79; padding-bottom: 14px; colo
             $(".modal-body").html("");
         });
     });
-
+$(document).on('click', '.guardar-descripcion', function(e) {
+        console.log('🖱️ Botón clickeado');
+        e.stopPropagation();
+        e.stopImmediatePropagation();
+        
+        const code = $(this).data('code');
+        
+        if ($(this).data('processing')) return;
+        $(this).data('processing', true);
+        
+        setTimeout(() => {
+            guardarDescripcionPersonalizada(code);
+            setTimeout(() => {
+                $(this).data('processing', false);
+            }, 2000);
+        }, 100);
+        
+        return false;
+    });
+    
+    $(document).on('keydown', '.descripcion-input', function(e) {
+        if (e.key === 'Enter' || e.keyCode === 13) {
+            console.log('⌨️ Enter presionado');
+            e.stopPropagation();
+            e.stopImmediatePropagation();
+            
+            const code = $(this).data('code');
+            
+            if ($(this).data('enterProcessing')) return false;
+            $(this).data('enterProcessing', true);
+            
+            setTimeout(() => {
+                guardarDescripcionPersonalizada(code);
+                setTimeout(() => {
+                    $(this).data('enterProcessing', false);
+                }, 2000);
+            }, 100);
+            
+            return false;
+        }
+    })
+    
     console.log('Página cargada correctamente');
 
     // Función para abrir modal automáticamente cuando viene con parámetro
