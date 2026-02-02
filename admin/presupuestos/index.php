@@ -328,6 +328,154 @@ $tituloLista = '<h2 style="background-color: #037C79; padding-bottom: 14px; colo
             display: none !important;
         }
 
+        /* ====== ESTILOS MEJORADOS PARA DESCRIPCIÓN EDITABLE ====== */
+
+        /* Contenedor principal */
+        .descripcion-editable-container {
+            text-align: left;
+            padding: 6px 2px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            margin: -2px 0;
+        }
+
+        /* Grupo de input y botón */
+        .descripcion-editable-container .input-group {
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        /* Input de descripción */
+        .descripcion-input {
+            font-size: 0.85rem !important;
+            height: 32px !important;
+            border: 1px solid #037C79 !important;
+            border-right: none !important;
+            background-color: white !important;
+            color: #333 !important;
+            padding: 0.25rem 0.5rem !important;
+        }
+
+        .descripcion-input:focus {
+            box-shadow: 0 0 0 0.25rem rgba(3, 124, 121, 0.25) !important;
+            border-color: #025a57 !important;
+            outline: none !important;
+            z-index: 3 !important;
+        }
+
+        /* Botón de guardar - MEJORADO PARA MEJOR CONTRASTE */
+        .guardar-descripcion {
+            height: 32px !important;
+            min-width: 36px !important;
+            padding: 0 8px !important;
+            background-color: #037C79 !important;
+            border: 1px solid #037C79 !important;
+            color: white !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            transition: all 0.2s ease !important;
+        }
+
+        .guardar-descripcion:hover {
+            background-color: #025a57 !important;
+            border-color: #025a57 !important;
+            color: white !important;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .guardar-descripcion:active {
+            background-color: #014947 !important;
+            transform: translateY(0);
+        }
+
+        .guardar-descripcion:disabled {
+            background-color: #6c757d !important;
+            border-color: #6c757d !important;
+            cursor: not-allowed !important;
+        }
+
+        /* Icono dentro del botón */
+        .guardar-descripcion i {
+            font-size: 0.9rem;
+            margin: 0 !important;
+        }
+
+        /* Texto informativo - MEJOR CONTRASTE PARA AMBOS FONDOS */
+        .descripcion-editable-container small {
+            font-size: 0.7rem !important;
+            line-height: 1.2 !important;
+            margin-top: 4px !important;
+            display: block !important;
+            padding: 2px 4px !important;
+            border-radius: 3px !important;
+            font-weight: 500 !important;
+        }
+
+        /* Para filas con fondo verde oscuro (#037C79) */
+        tr[style*="background: #037C79"] .descripcion-editable-container small,
+        tr[style*="background:#037C79"] .descripcion-editable-container small {
+            background-color: rgba(255, 255, 255, 0.15) !important;
+            color: #E6F7F7 !important; /* Color claro que contrasta con verde oscuro */
+            border: 1px solid rgba(255, 255, 255, 0.2) !important;
+        }
+
+        /* Para filas con fondo verde claro (#00CCCC) */
+        tr[style*="background: #00CCCC"] .descripcion-editable-container small,
+        tr[style*="background:#00CCCC"] .descripcion-editable-container small {
+            background-color: rgba(3, 124, 121, 0.1) !important;
+            color: #014947 !important; /* Color oscuro que contrasta con verde claro */
+            border: 1px solid rgba(3, 124, 121, 0.2) !important;
+        }
+
+        /* Para cualquier otra fila (fallback) */
+        .descripcion-editable-container small {
+            background-color: #f8f9fa !important;
+            color: #037C79 !important;
+            border: 1px solid #dee2e6 !important;
+        }
+
+        /* Estado de carga en el botón */
+        .guardar-descripcion .spinner-border {
+            width: 1rem;
+            height: 1rem;
+            border-width: 0.15em;
+        }
+
+        /* Asegurar que el input group sea responsive */
+        @media (max-width: 768px) {
+            .descripcion-editable-container .input-group {
+                flex-direction: column;
+            }
+            
+            .descripcion-input {
+                border-right: 1px solid #037C79 !important;
+                border-bottom: none !important;
+                border-radius: 4px 4px 0 0 !important;
+            }
+            
+            .guardar-descripcion {
+                border-radius: 0 0 4px 4px !important;
+                border-top: none !important;
+                width: 100% !important;
+            }
+        }
+
+        /* Prevenir que los eventos de click afecten la selección de fila */
+        .descripcion-editable-container * {
+            pointer-events: auto !important;
+        }
+
+        /* Asegurar que el texto normal de descripción también tenga buen contraste */
+        .descripcion-normal {
+            color: inherit !important;
+            padding: 4px 0;
+            display: block;
+            line-height: 1.4;
+        }
+
     </style>
 </head>
 
@@ -613,37 +761,41 @@ $tituloLista = '<h2 style="background-color: #037C79; padding-bottom: 14px; colo
 
     // Formateador para la descripción
     function descripcionFormater(value, row) {
-         // row.no_code ya debería venir como 't' o 'f' desde la BD
-    const esEditable = row.no_code === 't' || row.no_code === true || row.no_code === 1;
-    
-    // Si no_code es true, mostrar input + botón
-    if (esEditable) {
-        // Escapar comillas en el value para evitar problemas
-        const safeValue = (value || '').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+        // row.no_code ya debería venir como 't' o 'f' desde la BD
+        const esEditable = row.no_code === 't' || row.no_code === true || row.no_code === 1;
         
-        return `
-            <div class="descripcion-editable-container" onclick="event.stopPropagation();">
-                <div class="input-group input-group-sm">
-                    <input type="text" 
-                           class="form-control descripcion-input" 
-                           value="${safeValue}" 
-                           data-code="${row.code}"
-                           placeholder="Ingrese descripción personalizada"
-                           style="font-size: 0.9rem;"
-                           onclick="event.stopPropagation();">
-                    <button class="btn btn-outline-primary btn-sm guardar-descripcion" 
-                            type="button"
+        // Si no_code es true, mostrar input + botón
+        if (esEditable) {
+            // Escapar comillas en el value para evitar problemas
+            const safeValue = (value || '').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+            
+            return `
+                <div class="descripcion-editable-container" onclick="event.stopPropagation();">
+                    <div class="input-group input-group-sm">
+                        <input type="text" 
+                            class="form-control descripcion-input" 
+                            value="${safeValue}" 
                             data-code="${row.code}"
-                            title="Guardar descripción"
-                            onclick="event.stopPropagation();">
-                        <i class="bi bi-save"></i>
-                    </button>
+                            placeholder="Ingrese descripción personalizada"
+                            onclick="event.stopPropagation();"
+                            style="font-size: 0.85rem;">
+                        <button class="btn guardar-descripcion" 
+                                type="button"
+                                data-code="${row.code}"
+                                title="Guardar descripción"
+                                onclick="event.stopPropagation();">
+                            <i class="bi bi-save"></i>
+                        </button>
+                    </div>
+                    <small class="text-muted d-block mt-1">
+                        <i class="bi bi-pencil-square me-1"></i>Producto sin código - Puede personalizar la descripción
+                    </small>
                 </div>
-                <small class="text-muted d-block mt-1" style="font-size: 0.7rem;">
-                    Producto sin código - Puede personalizar la descripción
-                </small>
-            </div>
-        `;
+            `;
+        }
+        
+        // Si no_code es false, mostrar la descripción normal
+        return `<span class="descripcion-normal">${value || ''}</span>`;
     }
         
         // Si no_code es false, mostrar la descripción normal
