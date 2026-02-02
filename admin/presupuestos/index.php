@@ -797,10 +797,6 @@ $tituloLista = '<h2 style="background-color: #037C79; padding-bottom: 14px; colo
         // Si no_code es false, mostrar la descripción normal
         return `<span class="descripcion-normal">${value || ''}</span>`;
     }
-        
-        // Si no_code es false, mostrar la descripción normal
-        return `<span class="descripcion-normal">${value || ''}</span>`;
-    }
 
     function rowStyle(row, index) {
         if (index % 2 === 0) {
