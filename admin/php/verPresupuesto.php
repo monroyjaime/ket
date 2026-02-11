@@ -51,7 +51,7 @@ try {
     $iva = floatval($presupuesto->iva_monto) ?? 0;
     $iva_porcentaje = floatval($presupuesto->iva_porcentaje) ?? 0;
     $total = $subtotal - $descuento + $recargo + $iva;
-    $descPercent = (1-($subtotal/($subtotal - $descuento))) *100;
+    $descPercent = ($subtotal/($subtotal - $descuento)) *100;
     $descLabel = ($descPercent ===0)? "" : "Descuento (".$descPercent."%): ";
 } catch (Exception $e) {
     die("Error al cargar el presupuesto: " . $e->getMessage());
@@ -350,7 +350,7 @@ try {
                     </tr>
                     <?php if ($descuento > 0): ?>
                     <tr>
-                        <td class="label">$<?php echo $descLabel; ?></td>
+                        <td class="label"><?php echo $descLabel; ?></td>
                         <td class="text-right">-$<?php echo number_format($descuento, 2, ',', '.'); ?></td>
                     </tr>
                     <?php endif; ?>
