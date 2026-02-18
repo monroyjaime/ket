@@ -116,15 +116,14 @@ try {
     foreach ($data['productos'] as $producto) {
         $db->consultaSegura(
             "INSERT INTO presupuesto_detail 
-            (pres_idx, cantidad, precio, tiempo_entrega, product_code, orden) 
-            VALUES ($1, $2, $3, $4, $5, $6)",
+            (pres_idx, cantidad, precio, tiempo_entrega, product_code) 
+            VALUES ($1, $2, $3, $4, $5)",
             [
                 $presupuestoIdx,
                 $producto['cantidad'],
                 $producto['precio'],
                 $producto['tiempo_entrega'],
-                $producto['code'],
-                $producto['orden']
+                $producto['code']
             ]
         );
     }

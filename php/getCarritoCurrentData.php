@@ -17,12 +17,13 @@ if ($numUsr <= 0) {
 try {
     // Obtener productos del carrito con información completa
     $carrito = $db->consultaSegura(
-        "SELECT pc.product_code, pc.cantidad, pc.precio, pc.tiempo_entrega,pc.orden,
+        "SELECT pc.product_code, pc.cantidad, pc.precio, pc.tiempo_entrega,
                 p.name, p.unit, p.current_stock, p.stock_lleg, p.cost_max, p.cost_mayor, p.cost_min, p.costo, p.relacionado 
          FROM presupuesto_carrito pc
          INNER JOIN productos p ON pc.product_code = p.code
          WHERE pc.user_num = $1 
-         ORDER BY pc.orden"
+         ORDER BY pc.orden", 
+        [$numUsr]
     );
     
     $resultado = [];
@@ -42,7 +43,6 @@ try {
         $obj->precio = floatval($item->precio);
         $obj->relacionado = $item->relacionado; // NUEVO CAMPO
         $obj->tiempo_entrega = intval($item->tiempo_entrega);
-        //$obj->orden = intval($item->orden);
         
         $resultado[] = $obj;
     }
