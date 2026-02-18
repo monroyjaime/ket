@@ -42,6 +42,7 @@ try {
         $obj->precio = floatval($item->precio);
         $obj->relacionado = $item->relacionado; // NUEVO CAMPO
         $obj->tiempo_entrega = intval($item->tiempo_entrega);
+        $obj->orden = intval($item->orden);
         
         $resultado[] = $obj;
     }
