@@ -30,9 +30,9 @@ try {
         "SELECT pd.*, p.name as producto_nombre, p.unit as unidad
          FROM presupuesto_detail pd
          LEFT JOIN productos p ON pd.product_code = p.code
-         WHERE pd.pres_idx = $1
-         ORDER BY pd.product_code",
-        [$presupuesto_id]
+         WHERE pd.pres_idx = $1"
+        // ORDER BY pd.product_code",
+        //[$presupuesto_id]
     );
     
     if (empty($detalles)) {
