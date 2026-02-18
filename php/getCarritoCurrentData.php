@@ -17,7 +17,7 @@ if ($numUsr <= 0) {
 try {
     // Obtener productos del carrito con información completa
     $carrito = $db->consultaSegura(
-        "SELECT pc.product_code, pc.cantidad, pc.precio, pc.tiempo_entrega,
+        "SELECT pc.product_code, pc.cantidad, pc.precio, pc.tiempo_entrega,pc.orden,
                 p.name, p.unit, p.current_stock, p.stock_lleg, p.cost_max, p.cost_mayor, p.cost_min, p.costo, p.relacionado 
          FROM presupuesto_carrito pc
          INNER JOIN productos p ON pc.product_code = p.code
