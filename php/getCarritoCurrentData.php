@@ -22,8 +22,7 @@ try {
          FROM presupuesto_carrito pc
          INNER JOIN productos p ON pc.product_code = p.code
          WHERE pc.user_num = $1 
-         ORDER BY pc.orden", 
-        [$numUsr]
+         ORDER BY pc.orden"
     );
     
     $resultado = [];
