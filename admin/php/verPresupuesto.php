@@ -31,7 +31,7 @@ try {
          FROM presupuesto_detail pd
          LEFT JOIN productos p ON pd.product_code = p.code
          WHERE pd.pres_idx = $1
-         ORDER BY pd.product_code",
+         ORDER BY pd.orden",
         [$presupuesto_id]
     );
     
