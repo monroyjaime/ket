@@ -837,7 +837,8 @@ $tituloLista = '<h2 style="background-color: #037C79; padding-bottom: 14px; colo
                     code: item.code,
                     cantidad: item.cantidad,
                     precio: item.precio,
-                    tiempo_entrega: item.tiempo_entrega
+                    tiempo_entrega: item.tiempo_entrega,
+                    orden: item.orden
                 }));
                 console.log('Carrito inicial cargado:', codes_carrito.length, 'productos');
                 
