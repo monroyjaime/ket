@@ -113,20 +113,42 @@ try {
     $presupuestoIdx = $presupuestoGen[0]->idx;
     
     // Insertar productos
-    foreach ($data['productos'] as $producto) {
+    
+    // ============================================================
+    // MODIFICADO: Obtener productos DIRECTAMENTE del carrito en BD
+    // ============================================================
+    // 1. Consultar los productos del carrito para este usuario
+    $productosCarrito = $db->consultaSegura(
+        "SELECT product_code, cantidad, precio, tiempo_entrega, orden 
+         FROM presupuesto_carrito 
+         WHERE user_num = $1 
+         ORDER BY orden", // El ORDER BY asegura que se respete el orden del carrito
+        [$numUsr]
+    );
+
+    if (empty($productosCarrito)) {
+        throw new Exception('No hay productos en el carrito para este usuario');
+    }
+
+    // 2. Insertar los productos en presupuesto_detail (incluyendo el campo 'orden')
+    foreach ($productosCarrito as $producto) {
         $db->consultaSegura(
-            "INSERT INTO presupuesto_detail 
-            (pres_idx, cantidad, precio, tiempo_entrega, product_code) 
-            VALUES ($1, $2, $3, $4, $5)",
+            "INSERT INTO presupuesto_detail
+            (pres_idx, cantidad, precio, tiempo_entrega, product_code, orden)
+            VALUES ($1, $2, $3, $4, $5, $6)",
             [
                 $presupuestoIdx,
-                $producto['cantidad'],
-                $producto['precio'],
-                $producto['tiempo_entrega'],
-                $producto['code']
+                $producto->cantidad,
+                $producto->precio,
+                $producto->tiempo_entrega,
+                $producto->product_code,
+                $producto->orden // Ahora sí, tomamos el orden directamente del carrito
             ]
         );
     }
+    // ============================================================
+    // FIN DE LA MODIFICACIÓN
+    // ============================================================
     
     // Limpiar carrito
     $db->consultaSegura(
