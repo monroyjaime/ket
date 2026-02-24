@@ -123,7 +123,7 @@ $tags .=    '</div>';
         </style>
 	</head>
 
-	<body>
+	<body style="background-color: #FFF;">
 
     <div class="w-100 p-0" style="background-color: #FFF;">
         <div class="row align-items-start" style="max-height: 50px; background-color: #FFF;">
