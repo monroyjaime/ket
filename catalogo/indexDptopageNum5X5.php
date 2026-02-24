@@ -47,21 +47,7 @@ $numPages = ceil($numProducts/25);
 $lastPageProdNum = ($pageNum == $numPages)? 25 - (($numPages*25 - $numProducts) + 1) : 24;
 $tags = '<div class="col text-center">';
 
-$tags .=    '<h1 style="
-    background-color: #003272;
-    color: #FFF;
-    border-radius: 30px;
-    width: 75%;
-    margin-left: auto;
-    margin-right: auto;
-    font-family: "Varela Round", sans-serif;
-    font-weight: 900;
-    padding-top: 1.5rem;
-    padding-bottom: 1.5rem;
-    letter-spacing: 6px;
-    display: inline-block;
-    box-sizing: border-box;
-  ">'.$currCatName.'</h1>';
+$tags .=    '<h1 class="rounded-title">'.$currCatName.'</h1>';
 $tags .= '</div>';
 
 $tags .=    '<div class="row row-cols-1 row-cols-sm-5 g-5 ">';
@@ -128,6 +114,33 @@ $tags .=    '</div>';
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
 
         <style>
+            @import url('https://fonts.googleapis.com/css2?family=Varela+Round&display=swap');
+
+            .rounded-title {
+            /* Fondo con esquinas redondeadas */
+            background-color: #003272;
+            color: #FFF;
+            border-radius: 50px;
+            
+            /* Ancho controlado */
+            width: 70%;
+            margin-left: auto;
+            margin-right: auto;
+            
+            /* Fuente redondeada */
+            font-family: 'Varela Round', 'Arial Rounded MT Bold', 'Helvetica Rounded', Arial, sans-serif;
+            font-weight: 400;
+            
+            /* Espaciado */
+            padding-top: 1.5rem;
+            padding-bottom: 1.5rem;
+            letter-spacing: 2px;
+            
+            /* Ajustes */
+            display: inline-block;
+            box-sizing: border-box;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+            }
             .icon-large {
                 font-size: 25px;
             }
