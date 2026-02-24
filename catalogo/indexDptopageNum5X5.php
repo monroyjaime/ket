@@ -74,7 +74,7 @@ for ($i=$currRangeFrom; $i<=$currRangeTo; $i++){
 
     $currUrl = $currCatImgRoute.$productVal_url;
     //echo "currUrl: ".$currUrl;
-    $tags .=    '<div class="col" style="background-color: #DDD;">';
+    $tags .=    '<div class="col" style="background-color: #FFF;">';
     $tags .=        '<div class="card h-100 text-bg-light">';
     $tags .=            '<div class="card-header" style="background-color: #037C79;">';
     $tags .=                '<h3 style="color: #FFF;">'.$productVal_code.'</h3>';
