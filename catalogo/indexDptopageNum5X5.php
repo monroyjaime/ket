@@ -125,7 +125,7 @@ $tags .=    '</div>';
 
 	<body>
 
-    <div class="w-100 p-0" style="background-color: #CCC;">
+    <div class="w-100 p-0" style="background-color: #FFF;">
         <div class="row align-items-start" style="max-height: 50px;">
             <div class="col text-start" style="max-height: 40px; padding-left: 20px;  " > 
                 <a href="#" onClick="backHome()" title="Pag. Prev."><i class="bi bi-arrow-left-circle-fill icon-dark-blue icon-large"></i></a>
