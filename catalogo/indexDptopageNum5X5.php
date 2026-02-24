@@ -132,7 +132,7 @@ $tags .=    '</div>';
             </div>    
         
 
-            <div class="col text-end" style="max-height: 40px;" >
+            <div class="col text-end" style="max-height: 40px; background-color: #FFF;" >
                 <img src="../catalogo/images/logoMini.png" class="img-fluid" alt="logo" />
             </div>       
 
