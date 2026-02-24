@@ -139,7 +139,7 @@ $tags .=    '</div>';
         </div>
     </div>
 
-    <div class="w-100 p-3" style="background-color: #DDD;"> 
+    <div class="w-100 p-3" style="background-color: #FFF;"> 
         <div id="productos" >
             <?php echo $tags; ?>
         </div>    
