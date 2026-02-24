@@ -120,7 +120,7 @@ $tags .=    '</div>';
             /* Fondo con esquinas redondeadas */
             background-color: #003272;
             color: #FFF;
-            border-radius: 50px;
+            border-radius: 30px;
             
             /* Ancho controlado */
             width: 70%;
@@ -132,9 +132,9 @@ $tags .=    '</div>';
             font-weight: 400;
             
             /* Espaciado */
-            padding-top: 1.5rem;
-            padding-bottom: 1.5rem;
-            letter-spacing: 2px;
+            padding-top: 1.1rem;
+            padding-bottom: 1.1rem;
+            letter-spacing: 3px;
             
             /* Ajustes */
             display: inline-block;
