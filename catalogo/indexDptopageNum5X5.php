@@ -45,7 +45,7 @@ foreach ($consult1 as $value){
 $numPages = ceil($numProducts/25);
 
 $lastPageProdNum = ($pageNum == $numPages)? 25 - (($numPages*25 - $numProducts) + 1) : 24;
-$tags = '<div class="col text-center">';
+$tags = '<div class="col text-center" style="background-color: #FFF;">';
 
 $tags .=    '<h2>Catalogo de '.$currCatName.' (Pag. '.$pageNum.' / '.$numPages.')';
 $tags .= '</div>';
