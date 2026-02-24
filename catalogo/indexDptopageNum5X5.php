@@ -91,7 +91,7 @@ for ($i=$currRangeFrom; $i<=$currRangeTo; $i++){
     $tags .=    '<div class="col" style="background-color: #FFF;">';
     $tags .=        '<div class="card h-100 text-bg-light">';
     $tags .=            '<div class="card-header" style="background-color: #037C79;">';
-    $tags .=                '<h1 style="color: #FFF;">'.$productVal_code.'</h1>';
+    $tags .=                '<h3 style="color: #FFF;">'.$productVal_code.'</h3>';
     $tags .=            '</div>';
     $tags .=            '<img src="'.$currUrl.'" class="card-img-top" alt="'.$productVal_code.'">';
     $tags .=            '<div class="card-body" style="background-color: #0CC;">';
@@ -146,6 +146,9 @@ $tags .=    '</div>';
                 <img src="../catalogo/images/logo.png" class="img-fluid" alt="logo" />
             </div>       
 
+        </div>
+        <div class="col text-end" style="max-height: 40px; background-color: #FFF;" >
+            <p> pag. <?php echo $pageNum; ?> / <?php echo $numPages; ?></p>      
         </div>
     </div>
 
