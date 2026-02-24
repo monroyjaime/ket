@@ -54,11 +54,11 @@ $tags .=    '<h1 style="
     width: 75%;
     margin-left: auto;
     margin-right: auto;
-    font-family: "Arial Rounded", sans-serif;
+    font-family: "Arial Rounded";
     font-weight: 900;
     padding-top: 1.5rem;
     padding-bottom: 1.5rem;
-    letter-spacing: 4px;
+    letter-spacing: 6px;
     display: inline-block;
     box-sizing: border-box;
   ">'.$currCatName.'</h1>';
