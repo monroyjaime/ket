@@ -45,9 +45,23 @@ foreach ($consult1 as $value){
 $numPages = ceil($numProducts/25);
 
 $lastPageProdNum = ($pageNum == $numPages)? 25 - (($numPages*25 - $numProducts) + 1) : 24;
-$tags = '<div class="col text-center" style="background-color: #003272; color: #FFF;">';
+$tags = '<div class="col text-center">';
 
-$tags .=    '<h1>'.$currCatName.'</h1>';
+$tags .=    '<h1 h1 style="
+    background-color: #003272;
+    color: #FFF;
+    border-radius: 50px;
+    width: 70%;
+    margin-left: auto;
+    margin-right: auto;
+    font-family: 'Arial Black', 'Arial Rounded', 'Arial', sans-serif;
+    font-weight: 900;
+    padding-top: 1.5rem;
+    padding-bottom: 1.5rem;
+    letter-spacing: 2px;
+    display: inline-block;
+    box-sizing: border-box;
+  ">'.$currCatName.'</h1>';
 $tags .= '</div>';
 
 $tags .=    '<div class="row row-cols-1 row-cols-sm-5 g-5 ">';
