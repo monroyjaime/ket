@@ -232,9 +232,6 @@ try {
                     <img src="https://ketelectropartes.com/catalogo/images/logoSlogan.png" alt="KET ELECTROPARTES C.A." class="logo">
                     <div class="info-empresa">
                         RIF: J-303726445<br>
-                        Dirección: Crta. Petare Santa Lucia, Km. 1 Local Centro Industria Viana<br> 
-                        Nro. Galpon 1-A Sector Altos de Valencia Filas de Mariche Miranda<br>
-                        Zona Postal 1030<br>
                         Teléfono: (0414) 316-1207<br>
                     </div>
                 </div>
