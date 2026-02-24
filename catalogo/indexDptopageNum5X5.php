@@ -54,7 +54,7 @@ $tags .=    '<h1 style="
     width: 70%;
     margin-left: auto;
     margin-right: auto;
-    font-family: 'Arial Black', 'Arial Rounded', 'Arial', sans-serif;
+    font-family: "Arial Black", "Arial Rounded", "Arial", sans-serif;
     font-weight: 900;
     padding-top: 1.5rem;
     padding-bottom: 1.5rem;
