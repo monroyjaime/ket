@@ -127,13 +127,9 @@ $tags .=    '</div>';
 
     <div class="w-100 p-0" style="background-color: #FFF;">
         <div class="row align-items-start" style="max-height: 50px; background-color: #FFF;">
-            <div class="col text-start" style="max-height: 40px; padding-left: 20px; background-color: #FFF; " > 
-                <a href="#" onClick="backHome()" title="Pag. Prev."><i class="bi bi-arrow-left-circle-fill icon-dark-blue icon-large"></i></a>
-            </div>    
-        
 
-            <div class="col text-end" style="max-height: 40px; background-color: #FFF;" >
-                <img src="../catalogo/images/logoMini.png" class="img-fluid" alt="logo" />
+            <div class="col text-start" style="max-height: 40px; background-color: #FFF;" >
+                <img src="../catalogo/images/logo.png" class="img-fluid" alt="logo" />
             </div>       
 
         </div>
