@@ -47,7 +47,8 @@ try {
               INNER JOIN productos c ON a.product_code = c.code
               INNER JOIN departamentos b ON b.id = c.dpto_id
               WHERE b.img_route != 'no' 
-                AND a.pres_idx = $1";
+                AND a.pres_idx = $1
+              ORDER BY a.orden ASC";
     
     // Ejecutar consulta preparada con DBAsync
     $consult = $db->consultaSegura($query, [$presupuestoId]);
