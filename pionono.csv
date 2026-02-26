@@ -1,0 +1,2 @@
+num;short_name;full_name;email;cel_num;client;admin;salt;psw;rol;direct_login;do_pedido;vendedor;show_all_ped;only_with_stock;do_presupuesto;show_all_pres;do_update_db
+44;Pionono;vendedor Aragua-Carabobo;Piononovergara_15@hotmail.com;424-3359297;1255;f;4715;5b0fa0e4c041548bb6289e15d865a696;3;1;f;26;f;f;f;f;f
