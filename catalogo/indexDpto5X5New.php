@@ -56,7 +56,7 @@ $tags = '<div class="col text-center">';
 
 if ($pageNum == 1) {
     // Título con márgenes superior e inferior para separarlo de los productos
-    $tags .= '<h1 class="rounded-title" style="margin: 9.5rem 0;">'.$currCatName.'</h1>';
+    $tags .= '<h1 class="rounded-title" style="margin: 10.0rem 0;">'.$currCatName.'</h1>';
     
     $inicio = 0;
     $fin = min($productosPrimeraPagina, $numProducts) - 1;
