@@ -42,48 +42,51 @@ foreach ($consult1 as $value){
 }
 
 // Calcular número de páginas
-// En primera página: título ocupa 1 fila (5 productos menos)
 $productosPorPagina = 25; // 5x5 = 25 productos por página normalmente
 $productosPrimeraPagina = 20; // 4x5 = 20 productos (primera fila es para título)
 
 if ($numProducts <= $productosPrimeraPagina) {
-    // Una sola página con título
     $numPages = 1;
 } else {
-    // Múltiples páginas
     $productosRestantes = $numProducts - $productosPrimeraPagina;
     $numPages = 1 + ceil($productosRestantes / $productosPorPagina);
 }
 
 // Determinar el rango de productos para esta página
-$tags = '<div class="col text-center">';
+$tags = '';
 
 if ($pageNum == 1) {
-    // Página 1: incluir título
-    $tags .= '<h1 class="rounded-title">'.$currCatName.'</h1>';
+    // Página 1: Título ocupa la primera fila con la misma altura que una fila de productos
     
-    // En primera página: mostrar 20 productos (4 filas de 5)
+    // Primero creamos la fila del título con la misma estructura que una fila de productos
+    $tags .= '<div class="row row-cols-1 row-cols-sm-5 g-5">';
+    $tags .=    '<div class="col">'; // Una sola columna que ocupa todo el ancho
+    $tags .=        '<div class="card h-100 text-bg-light" style="border: none; background-color: transparent;">'; // Card sin bordes para el título
+    $tags .=            '<div class="card-body d-flex align-items-center justify-content-center" style="background-color: transparent; height: 100%;">';
+    $tags .=                '<h1 class="rounded-title m-0">'.$currCatName.'</h1>';
+    $tags .=            '</div>';
+    $tags .=        '</div>';
+    $tags .=    '</div>';
+    $tags .= '</div>';
+    
+    // Luego las 4 filas de productos (20 productos)
     $inicio = 0;
     $fin = min($productosPrimeraPagina, $numProducts) - 1;
+    
+    // Agregar contenedor para las filas de productos
+    $tags .= '<div class="row row-cols-1 row-cols-sm-5 g-5 justify-content-center">';
+    
 } else {
-    // Páginas subsiguientes: sin título, 25 productos
+    // Páginas subsiguientes: sin título, 5 filas de productos (25 productos)
     $inicio = $productosPrimeraPagina + (($pageNum - 2) * $productosPorPagina);
     $fin = min($inicio + $productosPorPagina - 1, $numProducts - 1);
+    
+    // Contenedor para las 5 filas de productos
+    $tags .= '<div class="row row-cols-1 row-cols-sm-5 g-5 justify-content-center">';
 }
-
-$tags .= '</div>';
-
-// Contenedor principal de productos
-$tags .= '<div class="row row-cols-1 row-cols-sm-5 g-5 justify-content-center">';
-
-// Variable para controlar el contador de productos en la fila actual
-$productosEnFila = 0;
 
 // Generar productos para esta página
 for ($i = $inicio; $i <= $fin; $i++) {
-    
-    // Si estamos en página 1 y es el primer producto, verificamos si necesitamos
-    // agregar la fila del título (ya está arriba, solo controlamos el flujo normal)
     
     $productVal_id = $productVals[$i]->id;
     $productVal_code = $productVals[$i]->code;
@@ -112,15 +115,13 @@ for ($i = $inicio; $i <= $fin; $i++) {
     $tags .=        '</div>';
     $tags .=    '</div>';
     $tags .= '</div>';
-    
-    $productosEnFila++;
 }
 
-// Si es la última página y hay menos de 5 productos en la última fila,
-// no necesitamos hacer nada especial porque Bootstrap con justify-content-center
-// centrará automáticamente las columnas restantes
-
+// Cerrar el contenedor de productos
 $tags .= '</div>';
+
+// Si estamos en página 1 y hay menos de 20 productos, necesitamos completar con filas vacías?
+// No es necesario porque Bootstrap maneja automáticamente el espacio
 
 ?>
 <!DOCTYPE html>
@@ -145,7 +146,6 @@ $tags .= '</div>';
                 color: #FFF;
                 border-radius: 30px;
                 width: 70%;
-                margin: 20px auto;
                 font-family: 'Varela Round', 'Arial Rounded MT Bold', 'Helvetica Rounded', Arial, sans-serif;
                 font-weight: 400;
                 padding: 1.1rem 0;
@@ -173,6 +173,20 @@ $tags .= '</div>';
                 flex: 0 0 auto;
                 width: 20%; /* 5 columnas = 20% cada una */
                 max-width: 20%;
+            }
+            
+            /* Estilo especial para la fila del título */
+            .row:first-child .col .card {
+                background-color: transparent;
+                border: none;
+            }
+            
+            .row:first-child .col .card .card-body {
+                min-height: 200px; /* Ajusta esto según la altura de tus cards */
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                padding: 0;
             }
             
             @media (max-width: 576px) {
