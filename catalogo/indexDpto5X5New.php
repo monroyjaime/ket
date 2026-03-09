@@ -56,10 +56,18 @@ if ($numProducts <= $productosPrimeraPagina) {
 $tags = '';
 
 if ($pageNum == 1) {
-    // Página 1: Título con padding para que ocupe altura de fila
+    // Página 1: Título con la misma estructura que una card
     $tags .= '<div class="row row-cols-1 row-cols-sm-5 g-5">';
-    $tags .=    '<div class="col text-center">';
-    $tags .=        '<h1 class="rounded-title py-5">'.$currCatName.'</h1>'; // py-5 da padding vertical grande
+    $tags .=    '<div class="col">';
+    $tags .=        '<div class="card h-100 text-bg-light" style="background-color: transparent; border: none;">'; // Card transparente sin borde
+    $tags .=            '<div class="card-header" style="background-color: transparent; border: none;">'; // Header vacío pero con altura
+    $tags .=            '</div>';
+    $tags .=            '<div class="card-body d-flex align-items-center justify-content-center" style="background-color: transparent;">'; // Body centrado
+    $tags .=                '<h1 class="rounded-title">'.$currCatName.'</h1>';
+    $tags .=            '</div>';
+    $tags .=            '<div class="card-footer" style="background-color: transparent; border: none;">'; // Footer vacío pero con altura
+    $tags .=            '</div>';
+    $tags .=        '</div>';
     $tags .=    '</div>';
     $tags .= '</div>';
     
@@ -137,20 +145,14 @@ $tags .= '</div>';
                 color: #FFF;
                 border-radius: 30px;
                 width: 70%;
-                margin-left: auto;
-                margin-right: auto;
+                margin: 0 auto;
                 font-family: 'Varela Round', 'Arial Rounded MT Bold', 'Helvetica Rounded', Arial, sans-serif;
                 font-weight: 400;
+                padding: 1.1rem 0;
                 letter-spacing: 3px;
                 display: inline-block;
                 box-sizing: border-box;
                 text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
-            }
-            
-            /* Padding personalizado para que el título ocupe altura de fila */
-            .rounded-title.py-5 {
-                padding-top: 3rem !important;
-                padding-bottom: 3rem !important;
             }
             
             .icon-large {
@@ -171,6 +173,27 @@ $tags .= '</div>';
                 flex: 0 0 auto;
                 width: 20%; /* 5 columnas = 20% cada una */
                 max-width: 20%;
+            }
+            
+            /* Estilo para la card del título */
+            .row:first-child .card {
+                background-color: transparent !important;
+                border: none !important;
+            }
+            
+            .row:first-child .card-header,
+            .row:first-child .card-footer {
+                background-color: transparent !important;
+                border: none !important;
+                min-height: 20px; /* Ajusta según necesites */
+            }
+            
+            .row:first-child .card-body {
+                background-color: transparent !important;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                padding: 0;
             }
             
             @media (max-width: 576px) {
@@ -219,6 +242,30 @@ $tags .= '</div>';
             function backHome() {      
                 urlString =  "../index.php";
                 window.location.href = urlString;
+            }
+            
+            // Opcional: ajustar alturas dinámicamente
+            window.onload = function() {
+                // Medir altura de un producto normal
+                var productCard = document.querySelector('.row .col .card:not(.row:first-child .card)');
+                if (productCard) {
+                    var cardHeight = productCard.offsetHeight;
+                    
+                    // Ajustar header y footer del título para que coincida la altura total
+                    var titleHeader = document.querySelector('.row:first-child .card-header');
+                    var titleFooter = document.querySelector('.row:first-child .card-footer');
+                    var titleBody = document.querySelector('.row:first-child .card-body');
+                    
+                    if (titleHeader && titleFooter && titleBody) {
+                        // Distribuir la altura
+                        var headerHeight = 40; // Altura típica del header de producto
+                        var footerHeight = 0; // Los productos no tienen footer
+                        
+                        titleHeader.style.minHeight = headerHeight + 'px';
+                        titleFooter.style.minHeight = '0px';
+                        // El body se ajustará automáticamente con flex
+                    }
+                }
             }
         </script> 
     </body>
