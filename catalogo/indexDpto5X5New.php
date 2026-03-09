@@ -56,16 +56,10 @@ if ($numProducts <= $productosPrimeraPagina) {
 $tags = '';
 
 if ($pageNum == 1) {
-    // Página 1: Título ocupa la primera fila con la misma altura que una fila de productos
-    
-    // Primero creamos la fila del título con la misma estructura que una fila de productos
+    // Página 1: Título con padding para que ocupe altura de fila
     $tags .= '<div class="row row-cols-1 row-cols-sm-5 g-5">';
-    $tags .=    '<div class="col">'; // Una sola columna que ocupa todo el ancho
-    $tags .=        '<div class="card h-100 text-bg-light" style="border: none; background-color: transparent;">'; // Card sin bordes para el título
-    $tags .=            '<div class="card-body d-flex align-items-center justify-content-center" style="background-color: transparent; height: 100%;">';
-    $tags .=                '<h1 class="rounded-title m-0">'.$currCatName.'</h1>';
-    $tags .=            '</div>';
-    $tags .=        '</div>';
+    $tags .=    '<div class="col text-center">';
+    $tags .=        '<h1 class="rounded-title py-5">'.$currCatName.'</h1>'; // py-5 da padding vertical grande
     $tags .=    '</div>';
     $tags .= '</div>';
     
@@ -120,9 +114,6 @@ for ($i = $inicio; $i <= $fin; $i++) {
 // Cerrar el contenedor de productos
 $tags .= '</div>';
 
-// Si estamos en página 1 y hay menos de 20 productos, necesitamos completar con filas vacías?
-// No es necesario porque Bootstrap maneja automáticamente el espacio
-
 ?>
 <!DOCTYPE html>
 <html>
@@ -146,13 +137,20 @@ $tags .= '</div>';
                 color: #FFF;
                 border-radius: 30px;
                 width: 70%;
+                margin-left: auto;
+                margin-right: auto;
                 font-family: 'Varela Round', 'Arial Rounded MT Bold', 'Helvetica Rounded', Arial, sans-serif;
                 font-weight: 400;
-                padding: 1.1rem 0;
                 letter-spacing: 3px;
                 display: inline-block;
                 box-sizing: border-box;
                 text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+            }
+            
+            /* Padding personalizado para que el título ocupe altura de fila */
+            .rounded-title.py-5 {
+                padding-top: 3rem !important;
+                padding-bottom: 3rem !important;
             }
             
             .icon-large {
@@ -173,20 +171,6 @@ $tags .= '</div>';
                 flex: 0 0 auto;
                 width: 20%; /* 5 columnas = 20% cada una */
                 max-width: 20%;
-            }
-            
-            /* Estilo especial para la fila del título */
-            .row:first-child .col .card {
-                background-color: transparent;
-                border: none;
-            }
-            
-            .row:first-child .col .card .card-body {
-                min-height: 200px; /* Ajusta esto según la altura de tus cards */
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                padding: 0;
             }
             
             @media (max-width: 576px) {
