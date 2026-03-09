@@ -55,8 +55,8 @@ if ($numProducts <= $productosPrimeraPagina) {
 $tags = '<div class="col text-center">';
 
 if ($pageNum == 1) {
-    // Título con márgenes superior e inferior para separarlo de los productos
-    $tags .= '<h1 class="rounded-title" style="margin: 10.0rem 0;">'.$currCatName.'</h1>';
+    // Título con margen y ancho aumentado para evitar dos líneas incluso con zoom
+    $tags .= '<h1 class="rounded-title" style="margin: 10rem 0; width: 95%;">'.$currCatName.'</h1>';
     
     $inicio = 0;
     $fin = min($productosPrimeraPagina, $numProducts) - 1;
@@ -120,16 +120,21 @@ $tags .= '</div>';
                 background-color: #003272;
                 color: #FFF;
                 border-radius: 30px;
-                width: 70%;
+                width: 95%;  /* Aumentado de 70% a 95% */
+                max-width: 1200px; /* Límite máximo para pantallas muy grandes */
                 margin-left: auto;
                 margin-right: auto;
                 font-family: 'Varela Round', 'Arial Rounded MT Bold', 'Helvetica Rounded', Arial, sans-serif;
                 font-weight: 400;
-                padding: 1.1rem 0;  /* Padding interno se mantiene */
+                padding: 1.1rem 0;
                 letter-spacing: 3px;
                 display: inline-block;
                 box-sizing: border-box;
                 text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+                /* Forzar una sola línea incluso con zoom */
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis; /* Opcional: agrega ... si es demasiado largo */
             }
             
             .icon-large {
@@ -155,13 +160,27 @@ $tags .= '</div>';
                     width: 100%;
                     max-width: 100%;
                 }
+                
+                .rounded-title {
+                    white-space: normal; /* En móvil sí permitir varias líneas */
+                    font-size: 1.5rem;
+                }
             }
             
+            /* Configuración específica para impresión/PDF */
             @media print {
                 body { 
                     background-color: #FFF; 
                     margin: 0;
                     padding: 0;
+                }
+                
+                .rounded-title {
+                    white-space: nowrap; /* Forzar una línea en PDF */
+                    width: 95%;
+                    font-size: 24pt; /* Tamaño fijo para PDF */
+                    -webkit-print-color-adjust: exact;
+                    print-color-adjust: exact;
                 }
             }
         </style>
