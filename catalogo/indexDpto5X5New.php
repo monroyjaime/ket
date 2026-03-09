@@ -55,8 +55,8 @@ if ($numProducts <= $productosPrimeraPagina) {
 $tags = '<div class="col text-center">';
 
 if ($pageNum == 1) {
-    // Título con padding para que ocupe altura de fila
-    $tags .= '<h1 class="rounded-title" style="padding: 2.5rem 0;">'.$currCatName.'</h1>';
+    // Título con márgenes superior e inferior para separarlo de los productos
+    $tags .= '<h1 class="rounded-title" style="margin: 2.5rem 0;">'.$currCatName.'</h1>';
     
     $inicio = 0;
     $fin = min($productosPrimeraPagina, $numProducts) - 1;
@@ -125,6 +125,7 @@ $tags .= '</div>';
                 margin-right: auto;
                 font-family: 'Varela Round', 'Arial Rounded MT Bold', 'Helvetica Rounded', Arial, sans-serif;
                 font-weight: 400;
+                padding: 1.1rem 0;  /* Padding interno se mantiene */
                 letter-spacing: 3px;
                 display: inline-block;
                 box-sizing: border-box;
