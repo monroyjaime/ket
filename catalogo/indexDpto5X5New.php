@@ -42,8 +42,8 @@ foreach ($consult1 as $value){
 }
 
 // Calcular número de páginas
-$productosPorPagina = 25; // 5x5 = 25 productos por página normalmente
-$productosPrimeraPagina = 20; // 4x5 = 20 productos (primera fila es para título)
+$productosPorPagina = 25;
+$productosPrimeraPagina = 20;
 
 if ($numProducts <= $productosPrimeraPagina) {
     $numPages = 1;
@@ -52,44 +52,23 @@ if ($numProducts <= $productosPrimeraPagina) {
     $numPages = 1 + ceil($productosRestantes / $productosPorPagina);
 }
 
-// Determinar el rango de productos para esta página
-$tags = '';
+$tags = '<div class="col text-center">';
 
 if ($pageNum == 1) {
-    // Página 1: Título con la misma estructura que una card
-    $tags .= '<div class="row row-cols-1 row-cols-sm-5 g-5">';
-    $tags .=    '<div class="col">';
-    $tags .=        '<div class="card h-100 text-bg-light" style="background-color: transparent; border: none;">'; // Card transparente sin borde
-    $tags .=            '<div class="card-header" style="background-color: transparent; border: none;">'; // Header vacío pero con altura
-    $tags .=            '</div>';
-    $tags .=            '<div class="card-body d-flex align-items-center justify-content-center" style="background-color: transparent;">'; // Body centrado
-    $tags .=                '<h1 class="rounded-title">'.$currCatName.'</h1>';
-    $tags .=            '</div>';
-    $tags .=            '<div class="card-footer" style="background-color: transparent; border: none;">'; // Footer vacío pero con altura
-    $tags .=            '</div>';
-    $tags .=        '</div>';
-    $tags .=    '</div>';
-    $tags .= '</div>';
+    // Título con padding para que ocupe altura de fila
+    $tags .= '<h1 class="rounded-title" style="padding: 2.5rem 0;">'.$currCatName.'</h1>';
     
-    // Luego las 4 filas de productos (20 productos)
     $inicio = 0;
     $fin = min($productosPrimeraPagina, $numProducts) - 1;
-    
-    // Agregar contenedor para las filas de productos
-    $tags .= '<div class="row row-cols-1 row-cols-sm-5 g-5 justify-content-center">';
-    
 } else {
-    // Páginas subsiguientes: sin título, 5 filas de productos (25 productos)
     $inicio = $productosPrimeraPagina + (($pageNum - 2) * $productosPorPagina);
     $fin = min($inicio + $productosPorPagina - 1, $numProducts - 1);
-    
-    // Contenedor para las 5 filas de productos
-    $tags .= '<div class="row row-cols-1 row-cols-sm-5 g-5 justify-content-center">';
 }
 
-// Generar productos para esta página
-for ($i = $inicio; $i <= $fin; $i++) {
-    
+$tags .= '</div>';
+$tags .= '<div class="row row-cols-1 row-cols-sm-5 g-5 justify-content-center">';
+
+for ($i = $inicio; $i <= $fin; $i++){
     $productVal_id = $productVals[$i]->id;
     $productVal_code = $productVals[$i]->code;
     $productVal_desc = $productVals[$i]->desc;
@@ -101,7 +80,6 @@ for ($i = $inicio; $i <= $fin; $i++) {
 
     $currUrl = $currCatImgRoute.$productVal_url;
     
-    // Cada producto en su columna
     $tags .= '<div class="col" style="background-color: #FFF;">';
     $tags .=    '<div class="card h-100 text-bg-light">';
     $tags .=        '<div class="card-header" style="background-color: #037C79;">';
@@ -119,16 +97,14 @@ for ($i = $inicio; $i <= $fin; $i++) {
     $tags .= '</div>';
 }
 
-// Cerrar el contenedor de productos
 $tags .= '</div>';
-
 ?>
 <!DOCTYPE html>
 <html>
     <head>
         <meta charset="utf-8"/>
         <meta name="viewport" content="initial-scale=1, maximum-scale=1">
-		<title>Catálogo - <?php echo $currCatName; ?></title>
+		<title>catalogo ket</title>
         <link rel="Shortcut Icon" href="../favicon.ico" type="image/x-icon" />
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-KK94CHFLLe+nY2dmCWGMq91rCGa5gtU4mk92HdvYe+M/SXH301p5ILy+dN9+nJOZ" crossorigin="anonymous">		
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">  
@@ -145,10 +121,10 @@ $tags .= '</div>';
                 color: #FFF;
                 border-radius: 30px;
                 width: 70%;
-                margin: 0 auto;
+                margin-left: auto;
+                margin-right: auto;
                 font-family: 'Varela Round', 'Arial Rounded MT Bold', 'Helvetica Rounded', Arial, sans-serif;
                 font-weight: 400;
-                padding: 1.1rem 0;
                 letter-spacing: 3px;
                 display: inline-block;
                 box-sizing: border-box;
@@ -162,38 +138,15 @@ $tags .= '</div>';
             .icon-dark-blue{
                 color: #003272;
             }
-            
-            /* Asegurar que las columnas se centren cuando hay menos de 5 */
+
             .row.justify-content-center {
                 justify-content: center !important;
             }
             
-            /* Mantener el ancho de las columnas consistente */
             .row > .col {
                 flex: 0 0 auto;
-                width: 20%; /* 5 columnas = 20% cada una */
+                width: 20%;
                 max-width: 20%;
-            }
-            
-            /* Estilo para la card del título */
-            .row:first-child .card {
-                background-color: transparent !important;
-                border: none !important;
-            }
-            
-            .row:first-child .card-header,
-            .row:first-child .card-footer {
-                background-color: transparent !important;
-                border: none !important;
-                min-height: 20px; /* Ajusta según necesites */
-            }
-            
-            .row:first-child .card-body {
-                background-color: transparent !important;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                padding: 0;
             }
             
             @media (max-width: 576px) {
@@ -203,70 +156,38 @@ $tags .= '</div>';
                 }
             }
             
-            /* Para impresión */
             @media print {
                 body { 
                     background-color: #FFF; 
                     margin: 0;
                     padding: 0;
                 }
-                .rounded-title {
-                    page-break-after: avoid;
-                }
-                .card {
-                    page-break-inside: avoid;
-                }
             }
         </style>
 	</head>
 
 	<body style="background-color: #FFF;">
-        <div class="w-100 p-0" style="background-color: #FFF;">
-            <div class="row align-items-start" style="max-height: 50px; background-color: #FFF;">
-                <div class="col text-start" style="max-height: 40px; background-color: #FFF;" >
-                    <img src="../catalogo/images/logo.png" class="img-fluid" alt="logo" />
-                </div>       
-            </div>
-            <div class="col text-end" style="max-height: 40px; background-color: #FFF;" >
-                <p>pag. <?php echo $pageNum; ?> / <?php echo $numPages; ?></p>      
-            </div>
+    <div class="w-100 p-0" style="background-color: #FFF;">
+        <div class="row align-items-start" style="max-height: 50px; background-color: #FFF;">
+            <div class="col text-start" style="max-height: 40px; background-color: #FFF;" >
+                <img src="../catalogo/images/logo.png" class="img-fluid" alt="logo" />
+            </div>       
         </div>
+        <div class="col text-end" style="max-height: 40px; background-color: #FFF;" >
+            <p> pag. <?php echo $pageNum; ?> / <?php echo $numPages; ?></p>      
+        </div>
+    </div>
 
-        <div class="w-100 p-3" style="background-color: #FFF;"> 
-            <div id="productos">
-                <?php echo $tags; ?>
-            </div>    
-        </div>
-       
-        <script>
-            function backHome() {      
-                urlString =  "../index.php";
-                window.location.href = urlString;
-            }
-            
-            // Opcional: ajustar alturas dinámicamente
-            window.onload = function() {
-                // Medir altura de un producto normal
-                var productCard = document.querySelector('.row .col .card:not(.row:first-child .card)');
-                if (productCard) {
-                    var cardHeight = productCard.offsetHeight;
-                    
-                    // Ajustar header y footer del título para que coincida la altura total
-                    var titleHeader = document.querySelector('.row:first-child .card-header');
-                    var titleFooter = document.querySelector('.row:first-child .card-footer');
-                    var titleBody = document.querySelector('.row:first-child .card-body');
-                    
-                    if (titleHeader && titleFooter && titleBody) {
-                        // Distribuir la altura
-                        var headerHeight = 40; // Altura típica del header de producto
-                        var footerHeight = 0; // Los productos no tienen footer
-                        
-                        titleHeader.style.minHeight = headerHeight + 'px';
-                        titleFooter.style.minHeight = '0px';
-                        // El body se ajustará automáticamente con flex
-                    }
-                }
-            }
-        </script> 
-    </body>
+    <div class="w-100 p-3" style="background-color: #FFF;"> 
+        <div id="productos" >
+            <?php echo $tags; ?>
+        </div>    
+    </div>
+   <script>
+       function backHome(){      
+        urlString =  "../index.php";
+        window.location.href = urlString;
+    }
+  </script> 
+</body>
 </html>
