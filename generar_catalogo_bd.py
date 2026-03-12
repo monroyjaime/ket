@@ -75,7 +75,7 @@ class GeneradorCatalogoConBD:
             
             # Mostrar los primeros para verificar
             for r in resultados[:5]:
-                print(f"    - Orden {r['orden']}: {r['name'][:40]}... (productos: {r['num_productos']})")
+                print(f"    - Orden {r['orden']}: {r['nombre'][:40]}... (productos: {r['num_productos']})")
             
             if len(resultados) > 5:
                 print(f"    ... y {len(resultados) - 5} más")
@@ -357,7 +357,7 @@ class GeneradorCatalogoConBD:
             if fusionados:
                 print(f"\n🔗 Departamentos que empezaron sin título:")
                 for d in fusionados[:10]:
-                    print(f"  - {d['name'][:40]}: empezó desde producto {d['catalogo_first_prod']}")
+                    print(f"  - {d['nombre'][:40]}: empezó desde producto {d['catalogo_first_prod']}")
                 if len(fusionados) > 10:
                     print(f"  ... y {len(fusionados) - 10} más")
         
