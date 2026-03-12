@@ -232,17 +232,15 @@ class GeneradorCatalogoConBD:
             return (productos_restantes + 24) // 25
     
     async def generar_catalogo(self):
-        """Genera el catálogo completo usando la BD para control"""
-        modo = "PRUEBA" if self.limite else "COMPLETO"
         print(f"\n{'='*60}")
-        print(f"🚀 GENERANDO CATÁLOGO {self.nombre_linea.upper()} (MODO {modo})")
+        print(f"🚀 GENERANDO CATÁLOGO {self.nombre_linea.upper()} (MODO {'PRUEBA' if self.limite else 'COMPLETO'})")
         print(f"{'='*60}")
         print(f"📁 Usando: {self.base_url}")
         
-        # Resetear estado
+        # 🔴 PRIMERO: Resetear estado
         self.reset_estado()
         
-        # Obtener departamentos directamente de BD
+        # Luego obtener departamentos
         print(f"\n📡 Leyendo departamentos de BD...")
         departamentos = self.obtener_departamentos_de_bd()
         
