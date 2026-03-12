@@ -37,7 +37,7 @@ class GeneradorCatalogoConBD:
     def obtener_departamentos_de_bd(self):
         """
         Obtiene los departamentos directamente de la BD
-        Aplica límite si está definido
+        Aplica límite si está definido ..
         """
         with self.conn.cursor() as cur:
             query = """
