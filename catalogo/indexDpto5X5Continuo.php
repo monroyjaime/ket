@@ -88,9 +88,10 @@ if ($fusionMode && $pageNum == $numPagesDpto) {
 $tags = '<div class="col text-center">';
 
 if ($pageNum == 1) {
-    $tags .= '<h1 class="rounded-title" style="margin: 10rem 0;">'.$currCatName.'</h1>';
-    $inicio = 0;
-    $fin = min($productosPrimeraPagina, $numProducts) - 1;
+    $tags .= '<div class="col text-center" style="display: flex; justify-content: center; align-items: center; min-height: 150px;">';
+    $tags .= '<h1 class="rounded-title" style="margin: 2rem auto; width: 90%;">'.$currCatName.'</h1>';
+    $tags .= '</div>';
+    // ...
 } else {
     $inicio = $productosPrimeraPagina + (($pageNum - 2) * $productosPorPagina);
     $fin = min($inicio + $productosPorPagina - 1, $numProducts - 1);
@@ -129,8 +130,9 @@ $tags .= '</div>';
 
 // Si estamos en modo fusión y hay que incluir título del siguiente
 if ($incluirTituloSiguiente) {
-    $tags .= '<div class="col text-center" style="margin-top: 30px; border-top: 3px solid #003272; padding-top: 20px;">';
-    $tags .= '<h1 class="rounded-title" style="margin: 2rem 0;">'.$nombreSiguiente.'</h1>';
+    $tags .= '<div style="border-top: 3px solid #003272; margin: 30px 0 20px 0;"></div>';
+    $tags .= '<div class="col text-center" style="display: flex; justify-content: center; align-items: center; min-height: 120px;">';
+    $tags .= '<h1 class="rounded-title" style="margin: 1rem auto; width: 90%;">'.$nombreSiguiente.'</h1>';
     $tags .= '</div>';
 }
 
@@ -147,28 +149,77 @@ if ($incluirTituloSiguiente) {
         <link rel="stylesheet" href="css/non-responsive.css">  
         <style>
             @import url('https://fonts.googleapis.com/css2?family=Varela+Round&display=swap');
+            
             .rounded-title {
                 background-color: #003272;
                 color: #FFF;
                 border-radius: 30px;
-                width: 70%;
+                width: 90%;  /* Aumentado de 70% a 90% */
+                max-width: 1200px;  /* Límite para pantallas muy grandes */
                 margin-left: auto;
                 margin-right: auto;
                 font-family: 'Varela Round', sans-serif;
-                padding: 1.1rem 0;
+                padding: 1.5rem 0;  /* Aumentado ligeramente */
                 letter-spacing: 3px;
                 text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+                /* FORZAR UNA SOLA LÍNEA */
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                /* CENTRADO VERTICAL ADICIONAL */
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                line-height: 1.2;
             }
+            
+            /* Para asegurar que el contenedor del título también centre bien */
+            .col.text-center {
+                display: flex;
+                justify-content: center;
+                align-items: center;
+            }
+            
+            .card-header {
+                background-color: #037C79 !important;
+            }
+            
+            .card-header h3 {
+                color: #FFF;
+                margin: 0;
+                font-size: 1.2rem;
+            }
+            
+            .card-body {
+                background-color: #0CC !important;
+            }
+            
             .row.justify-content-center {
                 justify-content: center !important;
             }
+            
             .row > .col {
                 flex: 0 0 auto;
                 width: 20%;
                 max-width: 20%;
             }
+            
+            img.card-img-top {
+                height: 100px;
+                object-fit: contain;
+                background-color: white;
+            }
+            
             @media print {
-                body { margin: 0; padding: 0; }
+                body { 
+                    margin: 0; 
+                    padding: 0; 
+                }
+                .rounded-title {
+                    -webkit-print-color-adjust: exact;
+                    print-color-adjust: exact;
+                    white-space: nowrap;  /* Reforzar en impresión */
+                }
             }
         </style>
     </head>
