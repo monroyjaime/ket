@@ -379,7 +379,7 @@ def main():
     
     # Configuración de conexión a PostgreSQL - ¡ACTUALIZAR!
     conn_params = {
-        'host': 'ketelectropartes.com',
+        'host': 'localhost',
         'port': 5432,
         'database': 'ketdb',
         'user': 'ketadmin',
