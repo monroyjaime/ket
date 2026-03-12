@@ -43,7 +43,7 @@ class GeneradorCatalogoConBD:
             query = """
                 SELECT 
                     id, 
-                    name, 
+                    name as nombre, 
                     num, 
                     catalogo_orden as orden,
                     catalogo_num_prod as num_productos,
@@ -347,7 +347,7 @@ class GeneradorCatalogoConBD:
         # Mostrar resumen de fusión
         with self.conn.cursor() as cur:
             cur.execute("""
-                SELECT id, name, catalogo_first_prod 
+                SELECT id, name as nombre, catalogo_first_prod 
                 FROM departamentos 
                 WHERE num = %s AND catalogo_first_prod > 1
                 ORDER BY catalogo_orden
