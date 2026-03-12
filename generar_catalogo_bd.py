@@ -20,7 +20,7 @@ class DepartamentoEstado:
     img_route: str
 
 class GeneradorCatalogoConBD:
-    def __init__(self, linea, conn_params, base_url, limite=None, carpeta_salida="./catalogos_bd"):
+    def __init__(self, linea, conn_params, base_url, limite=None, carpeta_salida="/var/www/html/pdfs"):
         self.linea = linea
         self.linea_num = 1 if linea == 'A' else 2
         self.prefijo = 'A' if linea == 'A' else 'F'
