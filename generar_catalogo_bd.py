@@ -104,9 +104,12 @@ class GeneradorCatalogoConBD:
     
     def reset_estado(self):
         """Resetea el estado para una nueva generación"""
+        print(f"  🔴 ENTRANDO A reset_estado() para {self.nombre_linea}")
+    
         with self.conn.cursor() as cur:
             # Resetear solo los departamentos que vamos a procesar (según límite)
             if self.limite:
+                print(f"     📊 Modo PRUEBA: resetear hasta orden {self.limite}")
                 cur.execute("""
                     UPDATE departamentos 
                     SET catalogo_first_prod = 1,
@@ -116,14 +119,22 @@ class GeneradorCatalogoConBD:
                       AND catalogo_orden <= %s
                 """, (self.linea_num, self.limite))
             else:
+                print(f"     📊 Modo COMPLETO: resetear todos")
                 cur.execute("""
                     UPDATE departamentos 
                     SET catalogo_first_prod = 1,
                         catalogo_procesado = false
                     WHERE num = %s AND catalogo_orden > 0
                 """, (self.linea_num,))
+            # Ver qué se actualizó
+                resultados = cur.fetchall()
+                print(f"     🔄 Filas actualizadas: {len(resultados)}")
+                for r in resultados:
+                    print(f"        - Orden {r['catalogo_orden']}: {r['name'][:30]}")
             
             self.conn.commit()
+
+            print(f"  🟢 Saliendo de reset_estado()")
             modo = "PRUEBA" if self.limite else "COMPLETO"
             print(f"  🔄 Estado reseteado para {self.nombre_linea} (modo {modo})")
     
