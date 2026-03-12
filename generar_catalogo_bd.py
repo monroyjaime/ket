@@ -37,7 +37,7 @@ class GeneradorCatalogoConBD:
     def obtener_departamentos_de_bd(self):
         """
         Obtiene los departamentos directamente de la BD
-        Aplica límite si está definido ..
+        Aplica límite si está definido ..q
         """
         with self.conn.cursor() as cur:
             query = """
@@ -322,13 +322,15 @@ class GeneradorCatalogoConBD:
         for archivo in paginas_generadas:
             merger.append(archivo)
         
-        # Nombre del archivo con modo y timestamp
-        timestamp = time.strftime("%Y%m%d_%H%M%S")
+        # DESPUÉS (sin timestamp, nombre fijo)
         modo_sufijo = f"prueba_{self.limite}" if self.limite else "completo"
         output_filename = os.path.join(
             self.carpeta_salida, 
-            f"catalogo_{self.nombre_linea.lower()}_{modo_sufijo}_{timestamp}.pdf"
+            f"catalogo_{self.nombre_linea.lower()}_{modo_sufijo}.pdf"  # Sin timestamp
         )
+
+        # Si el archivo ya existe, lo sobrescribiremos
+        print(f"📁 Generando: {output_filename}")
         merger.write(output_filename)
         merger.close()
         
