@@ -1,4 +1,4 @@
-name: '${{ github.event.head_commit.message }}'
+name: 'Site Update Workflow'
 
 on:
   push:
