@@ -1,4 +1,4 @@
-name: 🚀 Site Update
+name: '${{ github.event.head_commit.message }}'
 
 on:
   push:
