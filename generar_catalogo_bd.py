@@ -309,18 +309,20 @@ class GeneradorCatalogoConBD:
                         espacio_libre = 25 - productos_en_pagina
                         # Calcular filas ocupadas en la última página
                         filas_ocupadas = productos_en_pagina // 5
-
+                        print(f"    🧮 filas_ocupadas = {productos_en_pagina} // 5 = {filas_ocupadas}")
                         if filas_ocupadas >= 4:  # Ya hay 4 o más filas, no cabe título completo
                             nuevo_first_prod = 1
+                            print(f"    ✅ CASO A: filas_ocupadas >= 4 → nuevo_first_prod = 1")
                             print(f"    ✨ No cabe título completo, {siguiente_dpto.nombre} empezará con título en nueva página")
                         else:
                             # Cabe el título + algunas filas
                             filas_disponibles = 4 - filas_ocupadas
                             productos_que_caben = filas_disponibles * 5
                             nuevo_first_prod = productos_que_caben + 1
-                            print(f"    ✨ Cabe título + {productos_que_caben} productos")
-                            print(f"    ➡️  {siguiente_dpto.nombre} empezará desde producto {nuevo_first_prod}")
-
+                            print(f"    ✅ CASO B: filas_disponibles = {filas_disponibles}")
+                            print(f"               productos_que_caben = {productos_que_caben}")
+                            print(f"               nuevo_first_prod = {productos_que_caben} + 1 = {nuevo_first_prod}")
+                        print(f"    🎯 VALOR FINAL: nuevo_first_prod = {nuevo_first_prod}")
                         print(f"    ✨ Espacio libre: {espacio_libre} productos")
                         print(f"    ➡️  {siguiente_dpto.nombre} empezará sin título")
                         
