@@ -202,7 +202,7 @@ class GeneradorCatalogoConBD:
                     return count;
                 }
             """)
-            
+            print("    🔍 DEBUG - Productos contados:", productos)
             await browser.close()
             return productos
     
