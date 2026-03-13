@@ -307,14 +307,28 @@ class GeneradorCatalogoConBD:
                     if productos_en_pagina <= 20:
                         siguiente_dpto = departamentos[dpto_idx + 1]
                         espacio_libre = 25 - productos_en_pagina
+                        # Calcular filas ocupadas en la última página
+                        filas_ocupadas = productos_en_pagina // 5
+
+                        if filas_ocupadas >= 4:  # Ya hay 4 o más filas, no cabe título completo
+                            nuevo_first_prod = 1
+                            print(f"    ✨ No cabe título completo, {siguiente_dpto.nombre} empezará con título en nueva página")
+                        else:
+                            # Cabe el título + algunas filas
+                            filas_disponibles = 4 - filas_ocupadas
+                            productos_que_caben = filas_disponibles * 5
+                            nuevo_first_prod = productos_que_caben + 1
+                            print(f"    ✨ Cabe título + {productos_que_caben} productos")
+                            print(f"    ➡️  {siguiente_dpto.nombre} empezará desde producto {nuevo_first_prod}")
+
                         print(f"    ✨ Espacio libre: {espacio_libre} productos")
                         print(f"    ➡️  {siguiente_dpto.nombre} empezará sin título")
                         
                         # El siguiente departamento empezará sin título
-                        self.actualizar_first_prod(siguiente_dpto.id, 21)
+                        self.actualizar_first_prod(siguiente_dpto.id, nuevo_first_prod)
                         
                         # Actualizar el objeto en memoria
-                        departamentos[dpto_idx + 1].first_prod = 21
+                        departamentos[dpto_idx + 1].first_prod = nuevo_first_prod
             
             # Marcar como procesado
             self.marcar_procesado(dpto.id)
