@@ -138,13 +138,13 @@ class GeneradorCatalogoConBD:
             modo = "PRUEBA" if self.limite else "COMPLETO"
             print(f"  🔄 Estado reseteado para {self.nombre_linea} (modo {modo})")
     
-    async def obtener_escala_optima(self, dpto_id, num_pagina):
+    async def obtener_escala_optima(self, dpto_id, num_pagina, first_prod):
         """Encuentra la escala óptima para una página"""
         async with async_playwright() as p:
             browser = await p.chromium.launch(headless=True)
             page = await browser.new_page()
             
-            url = f"{self.base_url}?dpto_id={dpto_id}&page_num={num_pagina}&role_num=-1"
+            url = f"{self.base_url}?dpto_id={dpto_id}&page_num={num_pagina}&role_num=-1&first_prod={first_prod}"
             print(f"      📡 Cargando: {url}")
             await page.goto(url, wait_until="networkidle")
             
@@ -206,7 +206,7 @@ class GeneradorCatalogoConBD:
             await browser.close()
             return productos
     
-    async def generar_pagina(self, dpto_id, num_pagina, escala):
+    async def generar_pagina(self, dpto_id, num_pagina, escala, first_prod):
         """Genera una página PDF"""
         archivo = os.path.join(self.carpeta_salida, f"temp_{dpto_id}_{num_pagina}.pdf")
         
@@ -214,7 +214,9 @@ class GeneradorCatalogoConBD:
             browser = await p.chromium.launch(headless=True)
             page = await browser.new_page()
             
-            url = f"{self.base_url}?dpto_id={dpto_id}&page_num={num_pagina}&role_num=-1"
+            url = f"{self.base_url}?dpto_id={dpto_id}&page_num={num_pagina}&role_num=-1&first_prod={first_prod}"
+            print(f"      📡 Cargando: {url}")
+            
             await page.goto(url, wait_until="networkidle", timeout=30000)
             
             await page.pdf(
@@ -301,7 +303,7 @@ class GeneradorCatalogoConBD:
                 escala = await self.obtener_escala_optima(dpto.id, num_pag)
                 
                 # Generar página
-                archivo = await self.generar_pagina(dpto.id, num_pag, escala)
+                archivo = await self.generar_pagina(dpto.id, num_pag, escala, dpto.first_prod)
                 paginas_generadas.append(archivo)
                 
                 print(f"    Página {num_pag}/{paginas_necesarias} generada (escala: {escala:.2f})")
