@@ -184,12 +184,20 @@ class GeneradorCatalogoConBD:
             url = f"{self.base_url}?dpto_id={dpto_id}&page_num={num_pagina}&role_num=-1"
             await page.goto(url, wait_until="networkidle")
             
+            # 🔴 CORREGIDO: Contar TODAS las cards que son productos
             productos = await page.evaluate("""
                 () => {
                     const cards = document.querySelectorAll('.card');
                     let count = 0;
                     cards.forEach(card => {
-                        if (card.querySelector('.card-header h3')) count++;
+                        // Un producto tiene header con código y NO es el título especial
+                        if (card.querySelector('.card-header h3')) {
+                            // Verificar que no sea la card del título (si existe)
+                            const header = card.querySelector('.card-header');
+                            if (header && header.style.backgroundColor !== 'transparent') {
+                                count++;
+                            }
+                        }
                     });
                     return count;
                 }
@@ -325,6 +333,7 @@ class GeneradorCatalogoConBD:
                         print(f"    🎯 VALOR FINAL: nuevo_first_prod = {nuevo_first_prod}")
                         print(f"    ✨ Espacio libre: {espacio_libre} productos")
                         print(f"    ➡️  {siguiente_dpto.nombre} empezará sin título")
+                        
                         
                         # El siguiente departamento empezará sin título
                         self.actualizar_first_prod(siguiente_dpto.id, nuevo_first_prod)
