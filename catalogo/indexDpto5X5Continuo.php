@@ -5,6 +5,7 @@ $role = isset($_GET['role_num']) ? intval($_GET['role_num']) : -1;
 $dptoId = isset($_GET['dpto_id']) ? intval($_GET['dpto_id']) : 1;
 $pageNum = isset($_GET['page_num']) ? intval($_GET['page_num']) : 1;
 $fusionMode = isset($_GET['fusion']) && $_GET['fusion'] == 'true';
+$firstProd = isset($_GET['first_prod']) ? intval($_GET['first_prod']) : 1;
 
 $db = new DB();
 
@@ -17,10 +18,38 @@ foreach ($consult as $value){
     $currCatImgRoute = $value->img_route;
 }
 
-// Obtener productos del departamento actual
+// Obtener TOTAL de productos del departamento (para paginación)
+$queryTotal = "SELECT COUNT(*) as total FROM productos WHERE show='t' AND dpto_id=".$dptoId." AND photo_url != 'empty.jpg' AND cost_max > 0";
+$consultTotal = $db->consultas($queryTotal);
+$totalProductos = $consultTotal[0]->total;
+
+// Calcular número TOTAL de páginas del departamento
+$productosPorPagina = 25;
+$productosPrimeraPagina = 20;
+
+if ($totalProductos <= $productosPrimeraPagina) {
+    $numPagesDpto = 1;
+} else {
+    $productosRestantes = $totalProductos - $productosPrimeraPagina;
+    $numPagesDpto = 1 + ceil($productosRestantes / $productosPorPagina);
+}
+
+// Calcular cuántos productos mostrar en ESTA página según firstProd
+$productosRestantesVisibles = $totalProductos - ($firstProd - 1);
+
+if ($pageNum == 1 && $firstProd == 1) {
+    // Página 1 normal: título + hasta 20 productos
+    $limit = min(20, $productosRestantesVisibles);
+} else {
+    // Páginas siguientes o primera página sin título: hasta 25 productos
+    $limit = min(25, $productosRestantesVisibles);
+}
+
+// Consulta principal con OFFSET (firstProd-1) y LIMIT
 $query  = "SELECT id, code, name, photo_url, cost_max, unit, current_stock FROM productos ";
 $query .= "WHERE show='t' AND dpto_id=".$dptoId." AND photo_url != 'empty.jpg' AND cost_max > 0 ";
-$query .= "ORDER BY orden, code";
+$query .= "ORDER BY orden, code ";
+$query .= "OFFSET ".($firstProd - 1)." LIMIT ".$limit;
 
 $consult1 = $db->consultas($query);
 $productVals = array();
@@ -41,17 +70,6 @@ foreach ($consult1 as $value){
     $numProducts++;
 }
 
-// Calcular número de páginas del departamento actual
-$productosPorPagina = 25;
-$productosPrimeraPagina = 20;
-
-if ($numProducts <= $productosPrimeraPagina) {
-    $numPagesDpto = 1;
-} else {
-    $productosRestantes = $numProducts - $productosPrimeraPagina;
-    $numPagesDpto = 1 + ceil($productosRestantes / $productosPorPagina);
-}
-
 // Determinar si debemos incluir título del siguiente departamento
 $incluirTituloSiguiente = false;
 $nombreSiguiente = '';
@@ -60,19 +78,10 @@ $idSiguiente = 0;
 if ($fusionMode && $pageNum == $numPagesDpto) {
     // Estamos en la última página de este departamento
     // Verificar cuántos productos tiene esta página
-    $productosEnEstaPagina = 0;
-    if ($pageNum == 1) {
-        $productosEnEstaPagina = min($productosPrimeraPagina, $numProducts);
-    } else {
-        $inicio = $productosPrimeraPagina + (($pageNum - 2) * $productosPorPagina);
-        $fin = min($inicio + $productosPorPagina - 1, $numProducts - 1);
-        $productosEnEstaPagina = ($fin - $inicio + 1);
-    }
+    $productosEnEstaPagina = $numProducts;
     
     // Si hay espacio para al menos 2 filas (10 productos), podemos agregar título del siguiente
     if ($productosEnEstaPagina <= 15) { // 3 filas o menos
-        // Obtener el siguiente departamento (hardcodeado o de una tabla)
-        // Por ahora, lo pasaremos como parámetro desde Python
         if (isset($_GET['next_dpto_id'])) {
             $idSiguiente = intval($_GET['next_dpto_id']);
             $consultNext = $db->consultas("SELECT name FROM departamentos WHERE id=".$idSiguiente);
@@ -84,55 +93,50 @@ if ($fusionMode && $pageNum == $numPagesDpto) {
     }
 }
 
-// Generar contenido
-$tags = '<div class="col text-center">';
+// Generar contenido HTML
+$tags = '';
 
-if ($pageNum == 1) {
-    $tags .= '<div class="col text-center" style="display: flex; justify-content: center; align-items: center; min-height: 150px;">';
-    $tags .= '<h1 class="rounded-title" style="margin: 2rem auto; width: 90%;">'.$currCatName.'</h1>';
+// Título del departamento actual (solo si es página 1 Y firstProd == 1)
+if ($pageNum == 1 && $firstProd == 1) {
+    $tags .= '<div class="row">';
+    $tags .= '<div class="col text-center">';
+    $tags .= '<h1 class="rounded-title" style="margin: 8rem 0; white-space: nowrap; width: 90%;">'.$currCatName.'</h1>';
     $tags .= '</div>';
-    // ...
-} else {
-    $inicio = $productosPrimeraPagina + (($pageNum - 2) * $productosPorPagina);
-    $fin = min($inicio + $productosPorPagina - 1, $numProducts - 1);
+    $tags .= '</div>';
 }
 
-$tags .= '</div>';
-$tags .= '<div class="row row-cols-1 row-cols-sm-5 g-5 justify-content-center">';
-
-for ($i = $inicio; $i <= $fin; $i++){
-    $productVal_code = $productVals[$i]->code;
-    $productVal_desc = $productVals[$i]->desc;
-    $productVal_url = $productVals[$i]->url;
-    $productVal_cost = $productVals[$i]->cost;
-    $productVal_cost_80 = $productVals[$i]->cost_80;
-
-    $currUrl = $currCatImgRoute.$productVal_url;
+// Siempre mostrar productos (el offset ya está aplicado)
+if ($numProducts > 0) {
+    $tags .= '<div class="row row-cols-1 row-cols-sm-5 g-5 justify-content-center">';
     
-    $tags .= '<div class="col" style="background-color: #FFF;">';
-    $tags .=    '<div class="card h-100 text-bg-light">';
-    $tags .=        '<div class="card-header" style="background-color: #037C79;">';
-    $tags .=            '<h3 style="color: #FFF;">'.$productVal_code.'</h3>';
-    $tags .=        '</div>';
-    $tags .=        '<img src="'.$currUrl.'" class="card-img-top" alt="'.$productVal_code.'">';
-    $tags .=        '<div class="card-body" style="background-color: #0CC;">';
-    $tags .=            '<h6 class="card-text">'.$productVal_desc.'</h6>';
-    if($role > -1) {
-        $tags .=        '<h5 class="card-text">Prec. : $'.number_format($productVal_cost, 3, ",").'</h5>';
-        $tags .=        '<h5 class="card-text">-20% : $'.number_format($productVal_cost_80, 3, ",").'</h5>';
+    foreach ($productVals as $producto){
+        $currUrl = $currCatImgRoute . $producto->url;
+        
+        $tags .= '<div class="col" style="background-color: #FFF;">';
+        $tags .=    '<div class="card h-100 text-bg-light">';
+        $tags .=        '<div class="card-header" style="background-color: #037C79;">';
+        $tags .=            '<h3 style="color: #FFF;">'.$producto->code.'</h3>';
+        $tags .=        '</div>';
+        $tags .=        '<img src="'.$currUrl.'" class="card-img-top" alt="'.$producto->code.'">';
+        $tags .=        '<div class="card-body" style="background-color: #0CC;">';
+        $tags .=            '<h6 class="card-text">'.$producto->desc.'</h6>';
+        if($role > -1) {
+            $tags .=        '<h5 class="card-text">Prec. : $'.number_format($producto->cost, 3, ",").'</h5>';
+            $tags .=        '<h5 class="card-text">-20% : $'.number_format($producto->cost_80, 3, ",").'</h5>';
+        }
+        $tags .=        '</div>';
+        $tags .=    '</div>';
+        $tags .= '</div>';
     }
-    $tags .=        '</div>';
-    $tags .=    '</div>';
+    
     $tags .= '</div>';
 }
 
-$tags .= '</div>';
-
-// Si estamos en modo fusión y hay que incluir título del siguiente
+// Si estamos en modo fusión, agregar título del siguiente departamento
 if ($incluirTituloSiguiente) {
     $tags .= '<div style="border-top: 3px solid #003272; margin: 30px 0 20px 0;"></div>';
-    $tags .= '<div class="col text-center" style="display: flex; justify-content: center; align-items: center; min-height: 120px;">';
-    $tags .= '<h1 class="rounded-title" style="margin: 1rem auto; width: 90%;">'.$nombreSiguiente.'</h1>';
+    $tags .= '<div class="col text-center">';
+    $tags .= '<h1 class="rounded-title" style="margin: 2rem 0; white-space: nowrap; width: 90%;">'.$nombreSiguiente.'</h1>';
     $tags .= '</div>';
 }
 
@@ -154,30 +158,17 @@ if ($incluirTituloSiguiente) {
                 background-color: #003272;
                 color: #FFF;
                 border-radius: 30px;
-                width: 90%;  /* Aumentado de 70% a 90% */
-                max-width: 1200px;  /* Límite para pantallas muy grandes */
+                width: 90%;
+                max-width: 1200px;
                 margin-left: auto;
                 margin-right: auto;
                 font-family: 'Varela Round', sans-serif;
-                padding: 1.5rem 0;  /* Aumentado ligeramente */
+                padding: 1.5rem 0;
                 letter-spacing: 3px;
                 text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-                /* FORZAR UNA SOLA LÍNEA */
                 white-space: nowrap;
                 overflow: hidden;
                 text-overflow: ellipsis;
-                /* CENTRADO VERTICAL ADICIONAL */
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                line-height: 1.2;
-            }
-            
-            /* Para asegurar que el contenedor del título también centre bien */
-            .col.text-center {
-                display: flex;
-                justify-content: center;
-                align-items: center;
             }
             
             .card-header {
@@ -218,7 +209,6 @@ if ($incluirTituloSiguiente) {
                 .rounded-title {
                     -webkit-print-color-adjust: exact;
                     print-color-adjust: exact;
-                    white-space: nowrap;  /* Reforzar en impresión */
                 }
             }
         </style>
