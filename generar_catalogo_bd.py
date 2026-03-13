@@ -300,7 +300,7 @@ class GeneradorCatalogoConBD:
             # Generar cada página
             for num_pag in range(1, paginas_necesarias + 1):
                 # Obtener escala óptima
-                escala = await self.obtener_escala_optima(dpto.id, num_pag)
+                escala = await self.obtener_escala_optima(dpto.id, num_pag, dpto.first_prod)
                 
                 # Generar página
                 archivo = await self.generar_pagina(dpto.id, num_pag, escala, dpto.first_prod)
