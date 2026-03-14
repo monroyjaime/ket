@@ -213,7 +213,7 @@ def main():
         'port': 5432,
         'database': 'ketdb',
         'user': 'ketadmin',
-        'password': 'ColocarPasswordAqui'  # ← ACTUALIZAR CONTRASEÑA
+        'password': 'LondonTown'
     }
     
     base_url = "https://ketelectropartes.com/catalogo/indexDpto5X5Continuo.php"
