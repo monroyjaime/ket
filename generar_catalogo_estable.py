@@ -99,13 +99,20 @@ class GeneradorCatalogoBaseBD:
     
     async def generar_pagina(self, dpto_id, num_pagina, escala):
         """Genera una página PDF"""
-        archivo = os.path.join(self.carpeta_salida, f"temp_{dpto_id}_{num_pagina}.pdf")
-        
+        # archivo = os.path.join(self.carpeta_salida, f"temp_{dpto_id}_{num_pagina}.pdf")
+        import uuid
+        archivo = os.path.join(self.carpeta_salida, f"temp_{dpto_id}_{num_pagina}_{uuid.uuid4().hex[:8]}.pdf")
         async with async_playwright() as p:
             browser = await p.chromium.launch(headless=True)
             page = await browser.new_page()
             
             url = f"{self.base_url}?dpto_id={dpto_id}&page_num={num_pagina}&role_num=-1"
+            print(f"      🌐 CARGANDO URL: {url}")
+            # Opcional: guardar el HTML para depuración
+            html_content = await page.content()
+            with open(f"/tmp/debug_{dpto_id}_{num_pagina}.html", "w") as f:
+                f.write(html_content)
+                
             await page.goto(url, wait_until="networkidle", timeout=30000)
             
             await page.pdf(
