@@ -58,46 +58,9 @@ class GeneradorCatalogoBaseBD:
             return resultados
     
     async def obtener_escala_optima(self, dpto_id, num_pagina):
-        """Encuentra la escala óptima para una página (mínimo 0.45)"""
-        async with async_playwright() as p:
-            browser = await p.chromium.launch(headless=True)
-            page = await browser.new_page()
-            
-
-
-            url = f"{self.base_url}?dpto_id={dpto_id}&page_num={num_pagina}&role_num=-1"
-            await page.goto(url, wait_until="networkidle")
-            
-            # Escalas a probar - AHORA CON MÍNIMO 0.45
-            escalas = [0.5, 0.48, 0.45, 0.42, 0.40]  # Eliminamos escalas menores # Agregamos 0.42 y 0.40
-            
-            for escala in escalas:
-                pdf_data = await page.pdf(
-                    format="Letter",
-                    scale=escala,
-                    print_background=True,
-                    margin={"top": "10mm", "bottom": "10mm", "left": "10mm", "right": "10mm"}
-                )
-                
-                temp = "temp_scale_test.pdf"
-                with open(temp, "wb") as f:
-                    f.write(pdf_data)
-                
-                with open(temp, "rb") as f:
-                    reader = PyPDF2.PdfReader(f)
-                    paginas = len(reader.pages)
-                
-                os.remove(temp)
-                
-                if paginas == 1:
-                    await browser.close()
-                    return escala
-            
-            # Si ninguna escala de las probadas da 1 página, usar la mínima
-            await browser.close()
-            return 0.40
+        return 0.40
     
-    async def generar_pagina(self, dpto_id, num_pagina, escala):
+    async def generar_pagina(self, dpto_id, num_pagina):
         """Genera una página PDF"""
         # archivo = os.path.join(self.carpeta_salida, f"temp_{dpto_id}_{num_pagina}.pdf")
         import uuid
@@ -118,7 +81,7 @@ class GeneradorCatalogoBaseBD:
             await page.pdf(
                 path=archivo,
                 format="Letter",
-                scale=escala,
+                scale=0.40,
                 print_background=True,
                 margin={"top": "10mm", "bottom": "10mm", "left": "10mm", "right": "10mm"}
             )
