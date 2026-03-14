@@ -69,7 +69,7 @@ class GeneradorCatalogoBaseBD:
             await page.goto(url, wait_until="networkidle")
             
             # Escalas a probar - AHORA CON MÍNIMO 0.45
-            escalas = [0.5, 0.48, 0.45]  # Eliminamos escalas menores
+            escalas = [0.5, 0.48, 0.45, 0.42, 0.40]  # Eliminamos escalas menores # Agregamos 0.42 y 0.40
             
             for escala in escalas:
                 pdf_data = await page.pdf(
@@ -95,7 +95,7 @@ class GeneradorCatalogoBaseBD:
             
             # Si ninguna escala de las probadas da 1 página, usar la mínima
             await browser.close()
-            return 0.45
+            return 0.40
     
     async def generar_pagina(self, dpto_id, num_pagina, escala):
         """Genera una página PDF"""
