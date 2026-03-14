@@ -135,7 +135,7 @@ class GeneradorCatalogoBaseBD:
                     escala = 0.48
                 else:
                     escala = await self.obtener_escala_optima(dpto['id'], num_pag)
-                archivo = await self.generar_pagina(dpto['id'], num_pag, escala)
+                archivo = await self.generar_pagina(dpto['id'], num_pag)
                 paginas_generadas.append(archivo)
                 
                 print(f"    Página {num_pag}/{paginas_necesarias} generada (escala: {escala:.2f})")
