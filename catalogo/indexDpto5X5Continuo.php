@@ -34,61 +34,69 @@ if ($totalProductos <= $productosPrimeraPagina) {
     $numPagesDpto = 1 + ceil($productosRestantes / $productosPorPagina);
 }
 
-// Calcular cuántos productos mostrar en ESTA página según firstProd
-$productosRestantesVisibles = $totalProductos - ($firstProd - 1);
-
+// Calcular offset y límite según la página y firstProd
 if ($pageNum == 1 && $firstProd == 1) {
     // Página 1 normal: título + hasta 20 productos
-    $limit = min(20, $productosRestantesVisibles);
+    $limit = 20;
+    $offset = 0;
+} elseif ($pageNum == 1 && $firstProd > 1) {
+    // Primera página sin título: hasta 25 productos desde firstProd
+    $limit = 25;
+    $offset = $firstProd - 1;
 } else {
-    // Páginas siguientes o primera página sin título: hasta 25 productos
-    $limit = min(25, $productosRestantesVisibles);
+    // Páginas siguientes: 25 productos
+    $limit = 25;
+    $offset = ($firstProd == 1 ? 20 : 0) + (($pageNum - 2) * 25);
 }
 
-// Consulta principal con OFFSET (firstProd-1) y LIMIT
-$query  = "SELECT id, code, name, photo_url, cost_max, unit, current_stock FROM productos ";
-$query .= "WHERE show='t' AND dpto_id=".$dptoId." AND photo_url != 'empty.jpg' AND cost_max > 0 ";
-$query .= "ORDER BY orden, code ";
-$query .= "OFFSET ".($firstProd - 1)." LIMIT ".$limit;
-
-$consult1 = $db->consultas($query);
-$productVals = array();
-$numProducts = 0;
-
-foreach ($consult1 as $value){
-    $productVal = new stdClass();
-    $productVal->id = $value->id;
-    $productVal->code = $value->code;
-    $productVal->desc = $value->name;
-    $productVal->url = $value->photo_url;
-    $productVal->unit = $value->unit;
-    $productVal->current_stock = $value->current_stock;
-    $productVal->cost = floatval($value->cost_max);
-    $productVal->cost_80 = floatval($value->cost_max)*.8;
-
-    $productVals[] = $productVal;
-    $numProducts++;
+// Asegurar que no nos pasamos del total
+if ($offset >= $totalProductos) {
+    $productVals = array();
+    $numProducts = 0;
+} else {
+    // Ajustar límite si nos pasamos
+    if ($offset + $limit > $totalProductos) {
+        $limit = $totalProductos - $offset;
+    }
+    
+    $query = "SELECT id, code, name, photo_url, cost_max FROM productos ";
+    $query .= "WHERE show='t' AND dpto_id=".$dptoId." AND photo_url != 'empty.jpg' AND cost_max > 0 ";
+    $query .= "ORDER BY orden, code ";
+    $query .= "LIMIT ".$limit." OFFSET ".$offset;
+    
+    $consult1 = $db->consultas($query);
+    $productVals = array();
+    $numProducts = 0;
+    
+    foreach ($consult1 as $value){
+        $productVal = new stdClass();
+        $productVal->id = $value->id;
+        $productVal->code = $value->code;
+        $productVal->desc = $value->name;
+        $productVal->url = $value->photo_url;
+        $productVal->cost = floatval($value->cost_max);
+        $productVal->cost_80 = floatval($value->cost_max)*.8;
+        
+        $productVals[] = $productVal;
+        $numProducts++;
+    }
 }
 
-// Determinar si debemos incluir título del siguiente departamento
+// Determinar si debemos incluir título del siguiente departamento (solo para fusión)
 $incluirTituloSiguiente = false;
 $nombreSiguiente = '';
 $idSiguiente = 0;
 
 if ($fusionMode && $pageNum == $numPagesDpto) {
     // Estamos en la última página de este departamento
-    // Verificar cuántos productos tiene esta página
     $productosEnEstaPagina = $numProducts;
     
-    // Si hay espacio para al menos 2 filas (10 productos), podemos agregar título del siguiente
-    if ($productosEnEstaPagina <= 15) { // 3 filas o menos
-        if (isset($_GET['next_dpto_id'])) {
-            $idSiguiente = intval($_GET['next_dpto_id']);
-            $consultNext = $db->consultas("SELECT name FROM departamentos WHERE id=".$idSiguiente);
-            foreach ($consultNext as $nextValue){
-                $nombreSiguiente = $nextValue->name;
-                $incluirTituloSiguiente = true;
-            }
+    if ($productosEnEstaPagina <= 15 && isset($_GET['next_dpto_id'])) {
+        $idSiguiente = intval($_GET['next_dpto_id']);
+        $consultNext = $db->consultas("SELECT name FROM departamentos WHERE id=".$idSiguiente);
+        foreach ($consultNext as $nextValue){
+            $nombreSiguiente = $nextValue->name;
+            $incluirTituloSiguiente = true;
         }
     }
 }
@@ -105,7 +113,7 @@ if ($pageNum == 1 && $firstProd == 1) {
     $tags .= '</div>';
 }
 
-// Siempre mostrar productos (el offset ya está aplicado)
+// Productos (siempre en grid)
 if ($numProducts > 0) {
     $tags .= '<div class="row row-cols-1 row-cols-sm-5 g-5 justify-content-center">';
     
@@ -149,8 +157,8 @@ if ($incluirTituloSiguiente) {
         <title>Catálogo Continuo</title>
         <link rel="Shortcut Icon" href="../favicon.ico" type="image/x-icon" />
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet">
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">  
-        <link rel="stylesheet" href="css/non-responsive.css">  
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+        <link rel="stylesheet" href="css/non-responsive.css">
         <style>
             @import url('https://fonts.googleapis.com/css2?family=Varela+Round&display=swap');
             
@@ -169,6 +177,8 @@ if ($incluirTituloSiguiente) {
                 white-space: nowrap;
                 overflow: hidden;
                 text-overflow: ellipsis;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
             }
             
             .card-header {
@@ -199,16 +209,13 @@ if ($incluirTituloSiguiente) {
                 height: 100px;
                 object-fit: contain;
                 background-color: white;
+                padding: 2px;
             }
             
             @media print {
                 body { 
                     margin: 0; 
                     padding: 0; 
-                }
-                .rounded-title {
-                    -webkit-print-color-adjust: exact;
-                    print-color-adjust: exact;
                 }
             }
         </style>
