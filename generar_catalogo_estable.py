@@ -58,15 +58,18 @@ class GeneradorCatalogoBaseBD:
             return resultados
     
     async def obtener_escala_optima(self, dpto_id, num_pagina):
-        """Encuentra la escala óptima para una página"""
+        """Encuentra la escala óptima para una página (mínimo 0.45)"""
         async with async_playwright() as p:
             browser = await p.chromium.launch(headless=True)
             page = await browser.new_page()
             
+
+
             url = f"{self.base_url}?dpto_id={dpto_id}&page_num={num_pagina}&role_num=-1"
             await page.goto(url, wait_until="networkidle")
             
-            escalas = [0.5, 0.45, 0.4, 0.35, 0.3]
+            # Escalas a probar - AHORA CON MÍNIMO 0.45
+            escalas = [0.5, 0.48, 0.45]  # Eliminamos escalas menores
             
             for escala in escalas:
                 pdf_data = await page.pdf(
@@ -90,8 +93,9 @@ class GeneradorCatalogoBaseBD:
                     await browser.close()
                     return escala
             
+            # Si ninguna escala de las probadas da 1 página, usar la mínima
             await browser.close()
-            return 0.3
+            return 0.45
     
     async def generar_pagina(self, dpto_id, num_pagina, escala):
         """Genera una página PDF"""
@@ -156,6 +160,11 @@ class GeneradorCatalogoBaseBD:
                 escala = await self.obtener_escala_optima(dpto['id'], num_pag)
                 
                 # Generar página
+                if num_pag == 1 and dpto['num_productos'] > 15:
+                    # Página con título y muchos productos, usar escala ligeramente menor
+                    escala = 0.48
+                else:
+                    escala = await self.obtener_escala_optima(dpto['id'], num_pag)
                 archivo = await self.generar_pagina(dpto['id'], num_pag, escala)
                 paginas_generadas.append(archivo)
                 
