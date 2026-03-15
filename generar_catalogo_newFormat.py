@@ -84,16 +84,16 @@ class GeneradorCatalogoNewFormat:
     def calcular_paginas_departamento(self, num_productos, first_prod):
         """
         Calcula páginas según nuevo formato:
-        - Con título: 36 productos (4x9)
-        - Sin título: 40 productos (4x10)
+        - Con título: 28 productos (4x7)
+        - Sin título: 32 productos (4x8)
         """
         if first_prod == 1:
-            if num_productos <= 36:
+            if num_productos <= 28:
                 return 1
             else:
-                return 1 + ((num_productos - 36 + 39) // 40)
+                return 1 + ((num_productos - 28 + 31) // 32)
         else:
-            return (num_productos + 39) // 40
+            return (num_productos + 31) // 32
     
     async def generar_catalogo(self):
         """Genera el catálogo completo con el nuevo formato"""
@@ -135,9 +135,9 @@ class GeneradorCatalogoNewFormat:
                 paginas_generadas.append(archivo)
                 
                 if num_pag == 1 and dpto['first_prod'] == 1:
-                    prod_pag = min(36, dpto['num_productos'])
+                    prod_pag = min(28, dpto['num_productos'])
                 else:
-                    prod_pag = min(40, dpto['num_productos'] - (36 if num_pag > 1 else 0))
+                    prod_pag = min(32, dpto['num_productos'] - (28 if num_pag > 1 else 0))
                 
                 print(f"    Página {num_pag}/{paginas_necesarias}: {prod_pag} productos")
         
