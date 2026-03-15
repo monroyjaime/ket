@@ -5,9 +5,10 @@ require_once("../php/dbcat.php");
 $dptoId = isset($_GET['dpto_id']) ? intval($_GET['dpto_id']) : 101;
 $pageNum = isset($_GET['page_num']) ? intval($_GET['page_num']) : 1;
 $cols = isset($_GET['cols']) ? intval($_GET['cols']) : 4;
-$rows = isset($_GET['rows']) ? intval($_GET['rows']) : 6;
+$rows = isset($_GET['rows']) ? intval($_GET['rows']) : 10;
 $layout = isset($_GET['layout']) ? $_GET['layout'] : 'derecha';
 $sinTitulo = isset($_GET['sin_titulo']) ? true : false;
+
 $db = new DB();
 
 // Obtener información del departamento
@@ -24,6 +25,10 @@ $query  = "SELECT code, name, photo_url FROM productos WHERE show='t' AND dpto_i
 $query .= $dptoId." AND photo_url != 'empty.jpg' AND cost_max > 0 ORDER BY orden, code LIMIT ".($cols * $rows);
 $consult1 = $db->consultas($query);
 
+// Calcular total de productos para paginación (simulado)
+$totalProductos = count($consult1) * 3; // Simulamos más páginas
+$totalPaginas = ceil($totalProductos / ($cols * $rows));
+
 ?>
 <!DOCTYPE html>
 <html>
@@ -35,22 +40,47 @@ $consult1 = $db->consultas($query);
     <style>
         body { 
             background-color: #FFF; 
-            padding: 20px; 
+            margin: 0;
+            padding: 0;
             font-family: 'Segoe UI', Arial, sans-serif; 
         }
         
+        /* Encabezado con logo */
+        .header {
+            background-color: #FFF;
+            padding: 10px 15px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .logo {
+            max-height: 40px;
+            width: auto;
+        }
+        
+        .pagination-info {
+            text-align: right;
+            font-size: 0.9rem;
+            color: #666;
+        }
+        
+        /* Título del departamento */
         .rounded-title {
             background-color: #003272;
             color: #FFF;
             border-radius: 30px;
             padding: 1rem 2rem;
-            margin: 0 auto 2rem auto;
+            margin: 1rem auto;
             display: inline-block;
-            font-size: 2rem;
+            font-size: 1.8rem;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
             max-width: 90%;
+        }
+        
+        /* Grid de productos */
+        .products-grid {
+            padding: 0 15px;
         }
         
         .card {
@@ -66,14 +96,14 @@ $consult1 = $db->consultas($query);
             color: white !important;
             font-weight: bold;
             text-align: center;
-            padding: 8px;
-            font-size: 0.9rem;
+            padding: 6px;
+            font-size: 0.85rem;
             border-bottom: none;
         }
         
         .layout-derecha .row {
             margin: 0;
-            min-height: 120px;  /* Aumentado para foto más grande */
+            min-height: 120px;
         }
         
         .layout-derecha .col-5 {
@@ -88,25 +118,21 @@ $consult1 = $db->consultas($query);
             background-color: #f8f9fa;
             display: flex;
             align-items: center;
-            font-size: 0.8rem;
-            line-height: 1.3;
+            font-size: 0.75rem;
+            line-height: 1.2;
             word-wrap: break-word;
-            overflow: hidden;
+            overflow-y: auto;
+            max-height: 110px;
         }
         
         .layout-derecha img {
-            max-height: 110px;  /* Aumentado de 90px a 110px */
+            max-height: 110px;
             width: auto;
             max-width: 100%;
             object-fit: contain;
         }
         
-        /* Garantizar que el texto nunca se desborde */
-        .layout-derecha .col-7 {
-            max-height: 110px;
-            overflow-y: auto;  /* Scroll solo si es necesario */
-        }
-        
+        /* Debug info */
         .debug-info {
             position: fixed;
             top: 10px;
@@ -125,9 +151,7 @@ $consult1 = $db->consultas($query);
             margin: 0 3px;
         }
         
-        /* Para impresión */
         @media print {
-            body { padding: 0; }
             .debug-info { display: none; }
             .card { break-inside: avoid; }
         }
@@ -135,23 +159,36 @@ $consult1 = $db->consultas($query);
 </head>
 <body>
     <div class="debug-info">
-        <strong>Layout Optimizado</strong><br>
-        Columnas: <?php echo $cols; ?><br>
-        Filas: <?php echo $rows; ?><br>
-        Productos/página: <?php echo $cols * $rows; ?><br>
-        <a href="?dpto_id=<?php echo $dptoId; ?>&cols=4&rows=6&layout=derecha">4x6</a> |
-        <a href="?dpto_id=<?php echo $dptoId; ?>&cols=5&rows=5&layout=derecha">5x5</a> |
-        <a href="?dpto_id=<?php echo $dptoId; ?>&cols=4&rows=5&layout=derecha">4x5</a> |
-        <a href="?dpto_id=<?php echo $dptoId; ?>&cols=3&rows=7&layout=derecha">3x7</a>
+        <strong>Layout Test</strong><br>
+        Grid: <?php echo $cols.'x'.$rows; ?><br>
+        Productos: <?php echo $cols * $rows; ?><br>
+        Título: <?php echo $sinTitulo ? 'No' : 'Sí'; ?><br>
+        <a href="?dpto_id=<?php echo $dptoId; ?>&cols=4&rows=10&layout=derecha">4x10 c/título</a><br>
+        <a href="?dpto_id=<?php echo $dptoId; ?>&cols=4&rows=11&layout=derecha&sin_titulo=1">4x11 s/título</a><br>
+        <a href="?dpto_id=<?php echo $dptoId; ?>&cols=4&rows=12&layout=derecha&sin_titulo=1">4x12 s/título</a>
     </div>
 
+    <!-- Encabezado con logo -->
+    <div class="header">
+        <div class="row align-items-center">
+            <div class="col-6">
+                <img src="../catalogo/images/logo.png" class="logo" alt="KET">
+            </div>
+            <div class="col-6 pagination-info">
+                Pág. <?php echo $pageNum; ?> / <?php echo $totalPaginas; ?>
+            </div>
+        </div>
+    </div>
+
+    <!-- Título del departamento (opcional) -->
     <?php if (!$sinTitulo): ?>
     <div class="text-center">
         <h1 class="rounded-title"><?php echo $currCatName; ?></h1>
     </div>
     <?php endif; ?>
 
-    <div class="container-fluid">
+    <!-- Grid de productos -->
+    <div class="products-grid">
         <div class="row row-cols-1 row-cols-sm-<?php echo $cols; ?> g-3 justify-content-center">
             <?php foreach ($consult1 as $producto): 
                 $imgUrl = $currCatImgRoute . $producto->photo_url;
@@ -160,7 +197,6 @@ $consult1 = $db->consultas($query);
                 <div class="card layout-<?php echo $layout; ?>">
                     <div class="card-header"><?php echo $producto->code; ?></div>
                     
-                    <?php if ($layout == 'derecha'): ?>
                     <div class="row g-0">
                         <div class="col-5 text-center">
                             <img src="<?php echo $imgUrl; ?>" alt="<?php echo $producto->code; ?>">
@@ -169,12 +205,6 @@ $consult1 = $db->consultas($query);
                             <?php echo $producto->name; ?>
                         </div>
                     </div>
-                    <?php else: ?>
-                    <img src="<?php echo $imgUrl; ?>" class="card-img-top" alt="<?php echo $producto->code; ?>" style="height: 110px; object-fit: contain; padding: 5px;">
-                    <div class="card-body text-center" style="background-color: #f8f9fa;">
-                        <?php echo $producto->name; ?>
-                    </div>
-                    <?php endif; ?>
                 </div>
             </div>
             <?php endforeach; ?>
