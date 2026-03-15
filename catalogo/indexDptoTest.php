@@ -33,7 +33,11 @@ $consult1 = $db->consultas($query);
     <title>Test Layout - <?php echo $cols.'x'.$rows; ?></title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        body { background-color: #FFF; padding: 20px; font-family: 'Segoe UI', Arial, sans-serif; }
+        body { 
+            background-color: #FFF; 
+            padding: 20px; 
+            font-family: 'Segoe UI', Arial, sans-serif; 
+        }
         
         .rounded-title {
             background-color: #003272;
@@ -69,30 +73,38 @@ $consult1 = $db->consultas($query);
         
         .layout-derecha .row {
             margin: 0;
-            min-height: 100px;
+            min-height: 120px;  /* Aumentado para foto más grande */
         }
         
         .layout-derecha .col-5 {
-            padding: 5px;
+            padding: 8px;
             display: flex;
             align-items: center;
             justify-content: center;
         }
         
         .layout-derecha .col-7 {
-            padding: 8px;
-            background-color: #f8f9fa;  /* Gris muy claro en lugar de verde */
+            padding: 10px;
+            background-color: #f8f9fa;
             display: flex;
             align-items: center;
             font-size: 0.8rem;
             line-height: 1.3;
+            word-wrap: break-word;
+            overflow: hidden;
         }
         
         .layout-derecha img {
-            max-height: 90px;
+            max-height: 110px;  /* Aumentado de 90px a 110px */
             width: auto;
             max-width: 100%;
             object-fit: contain;
+        }
+        
+        /* Garantizar que el texto nunca se desborde */
+        .layout-derecha .col-7 {
+            max-height: 110px;
+            overflow-y: auto;  /* Scroll solo si es necesario */
         }
         
         .debug-info {
@@ -112,19 +124,25 @@ $consult1 = $db->consultas($query);
             text-decoration: none;
             margin: 0 3px;
         }
+        
+        /* Para impresión */
+        @media print {
+            body { padding: 0; }
+            .debug-info { display: none; }
+            .card { break-inside: avoid; }
+        }
     </style>
 </head>
 <body>
     <div class="debug-info">
-        <strong>Layout Test</strong><br>
+        <strong>Layout Optimizado</strong><br>
         Columnas: <?php echo $cols; ?><br>
         Filas: <?php echo $rows; ?><br>
-        Layout: <?php echo $layout; ?><br>
-        Productos: <?php echo count($consult1); ?><br>
-        <a href="?dpto_id=<?php echo $dptoId; ?>&cols=3&rows=6&layout=derecha">3x6</a> |
-        <a href="?dpto_id=<?php echo $dptoId; ?>&cols=4&rows=5&layout=derecha">4x5</a> |
+        Productos/página: <?php echo $cols * $rows; ?><br>
         <a href="?dpto_id=<?php echo $dptoId; ?>&cols=4&rows=6&layout=derecha">4x6</a> |
-        <a href="?dpto_id=<?php echo $dptoId; ?>&cols=5&rows=5&layout=derecha">5x5</a>
+        <a href="?dpto_id=<?php echo $dptoId; ?>&cols=5&rows=5&layout=derecha">5x5</a> |
+        <a href="?dpto_id=<?php echo $dptoId; ?>&cols=4&rows=5&layout=derecha">4x5</a> |
+        <a href="?dpto_id=<?php echo $dptoId; ?>&cols=3&rows=7&layout=derecha">3x7</a>
     </div>
 
     <div class="text-center">
@@ -150,7 +168,7 @@ $consult1 = $db->consultas($query);
                         </div>
                     </div>
                     <?php else: ?>
-                    <img src="<?php echo $imgUrl; ?>" class="card-img-top" alt="<?php echo $producto->code; ?>" style="height: 100px; object-fit: contain; padding: 5px;">
+                    <img src="<?php echo $imgUrl; ?>" class="card-img-top" alt="<?php echo $producto->code; ?>" style="height: 110px; object-fit: contain; padding: 5px;">
                     <div class="card-body text-center" style="background-color: #f8f9fa;">
                         <?php echo $producto->name; ?>
                     </div>
