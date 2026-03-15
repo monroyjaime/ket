@@ -100,28 +100,21 @@ class GeneradorCatalogoBaseBD:
                 print(f"      ⚠️ 0.50 da {paginas} páginas, usando 0.40")
                 return 0.40
     
-    async def generar_pagina(self, dpto_id, num_pagina):
-        """Genera una página PDF"""
-        # archivo = os.path.join(self.carpeta_salida, f"temp_{dpto_id}_{num_pagina}.pdf")
-        import uuid
-        archivo = os.path.join(self.carpeta_salida, f"temp_{dpto_id}_{num_pagina}_{uuid.uuid4().hex[:8]}.pdf")
+    async def generar_pagina(self, dpto_id, num_pagina, escala=0.50):
+        """Genera una página PDF con la escala especificada"""
+        archivo = os.path.join(self.carpeta_salida, f"temp_{dpto_id}_{num_pagina}.pdf")
+        
         async with async_playwright() as p:
             browser = await p.chromium.launch(headless=True)
             page = await browser.new_page()
             
             url = f"{self.base_url}?dpto_id={dpto_id}&page_num={num_pagina}&role_num=-1"
-            print(f"      🌐 CARGANDO URL: {url}")
-            # Opcional: guardar el HTML para depuración
-            html_content = await page.content()
-            with open(f"/tmp/debug_{dpto_id}_{num_pagina}.html", "w") as f:
-                f.write(html_content)
-                
             await page.goto(url, wait_until="networkidle", timeout=30000)
             
             await page.pdf(
                 path=archivo,
                 format="Letter",
-                scale=0.40,
+                scale=escala,  # Usar la escala recibida
                 print_background=True,
                 margin={"top": "10mm", "bottom": "10mm", "left": "10mm", "right": "10mm"}
             )
@@ -178,12 +171,11 @@ class GeneradorCatalogoBaseBD:
                 # Obtener escala (0.50 o 0.40)
                 escala = await self.obtener_escala_optima(dpto['id'], num_pag)
                 
-                # Generar página
+                # Generar página PASANDO LA ESCALA
                 archivo = await self.generar_pagina(dpto['id'], num_pag, escala)
                 paginas_generadas.append(archivo)
                 
                 print(f"    Página {num_pag}/{paginas_necesarias} generada ({productos_en_pagina} productos, escala: {escala:.2f})")
-        
         # Combinar todas las páginas
         print(f"\n📚 Combinando {len(paginas_generadas)} páginas...")
         
