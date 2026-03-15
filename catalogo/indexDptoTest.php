@@ -48,18 +48,18 @@ $totalPaginas = ceil($totalProductos / ($cols * $rows));
         /* Encabezado con logo */
         .header {
             background-color: #FFF;
-            padding: 10px 15px;
+            padding: 15px 20px;
             border-bottom: 1px solid #eee;
         }
         
         .logo {
-            max-height: 40px;
+            max-height: 60px;
             width: auto;
         }
         
         .pagination-info {
             text-align: right;
-            font-size: 0.9rem;
+            font-size: 1rem;
             color: #666;
         }
         
