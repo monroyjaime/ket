@@ -156,9 +156,9 @@ $tags .= '</div>';
             color: #FFF;
             border-radius: 30px;
             padding: 0.8rem 2rem;
-            margin: 0.5rem auto 1rem auto;
+            margin: 0.6rem auto 1.5rem auto;
             display: inline-block;
-            font-size: 24pt;
+            font-size: 20pt;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
@@ -204,19 +204,20 @@ $tags .= '</div>';
         }
         
         .col-7 {
-            padding: 6px;
+            padding: 4px;
             background-color: #f8f9fa;
             display: flex;
             align-items: center;
-            font-size: 8.5pt;
+            font-size: 7.5pt;
             line-height: 1.2;
             word-wrap: break-word;
             overflow-y: auto;
-            max-height: 95px;
+            max-height: none;
+            min-height: 80px;
         }
         
         img {
-            max-height: 85px;
+            max-height: 120px;
             width: auto;
             max-width: 100%;
             object-fit: contain;
