@@ -7,7 +7,7 @@ $pageNum = isset($_GET['page_num']) ? intval($_GET['page_num']) : 1;
 $cols = isset($_GET['cols']) ? intval($_GET['cols']) : 4;
 $rows = isset($_GET['rows']) ? intval($_GET['rows']) : 6;
 $layout = isset($_GET['layout']) ? $_GET['layout'] : 'derecha';
-
+$sinTitulo = isset($_GET['sin_titulo']) ? true : false;
 $db = new DB();
 
 // Obtener información del departamento
@@ -145,9 +145,11 @@ $consult1 = $db->consultas($query);
         <a href="?dpto_id=<?php echo $dptoId; ?>&cols=3&rows=7&layout=derecha">3x7</a>
     </div>
 
+    <?php if (!$sinTitulo): ?>
     <div class="text-center">
         <h1 class="rounded-title"><?php echo $currCatName; ?></h1>
     </div>
+    <?php endif; ?>
 
     <div class="container-fluid">
         <div class="row row-cols-1 row-cols-sm-<?php echo $cols; ?> g-3 justify-content-center">
