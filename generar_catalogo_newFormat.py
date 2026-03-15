@@ -71,7 +71,7 @@ class GeneradorCatalogoNewFormat:
             await page.pdf(
                 path=archivo,
                 format="Letter",
-                scale=0.85,
+                scale=0.95,
                 print_background=True,
                 tagged=True,
                 margin={"top": "5.5mm", "bottom": "5.5mm", "left": "10mm", "right": "10mm"}
