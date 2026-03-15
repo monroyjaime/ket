@@ -21,8 +21,8 @@ foreach ($consult as $value){
 // CONFIGURACIÓN FIJA DEL NUEVO FORMATO
 // ============================================
 $cols = 4;
-$rowsConTitulo = 7;
-$rowsSinTitulo = 8;
+$rowsConTitulo = 6;
+$rowsSinTitulo = 7;
 $productosPorPagina = ($pageNum == 1 && $firstProd == 1) ? $cols * $rowsConTitulo : $cols * $rowsSinTitulo;
 
 // Obtener TOTAL de productos
