@@ -32,11 +32,12 @@ class GeneradorCatalogoBaseBD:
                     num, 
                     catalogo_orden as orden,
                     catalogo_num_prod as num_productos,
+                    catalogo_first_prod as first_prod,  /* ← AGREGAR ESTA LÍNEA */
                     img_route
                 FROM departamentos 
                 WHERE num = %s 
-                  AND catalogo_orden > 0
-                  AND catalogo_num_prod > 0
+                AND catalogo_orden > 0
+                AND catalogo_num_prod > 0
                 ORDER BY catalogo_orden
             """
             
@@ -53,7 +54,7 @@ class GeneradorCatalogoBaseBD:
             
             print(f"  📋 Departamentos encontrados: {len(resultados)}")
             for r in resultados:
-                print(f"    - Orden {r['orden']}: {r['nombre'][:50]}... ({r['num_productos']} productos)")
+                print(f"    - Orden {r['orden']}: {r['nombre'][:50]}... ({r['num_productos']} productos, first_prod={r['first_prod']})")
             
             return resultados
     
