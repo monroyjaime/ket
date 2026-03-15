@@ -57,8 +57,47 @@ class GeneradorCatalogoBaseBD:
             
             return resultados
     
-    async def obtener_escala_optima(self, dpto_id, num_pagina):
-        return 0.40
+    async def obtener_escala_optima(self, dpto_id, num_pagina, total_productos_pagina=None):
+        """
+        Escala simplificada:
+        - 0.50 para la mayoría
+        - 0.40 solo si es necesario (cuando 0.50 da 2 páginas)
+        """
+        async with async_playwright() as p:
+            browser = await p.chromium.launch(headless=True)
+            page = await browser.new_page()
+            
+            url = f"{self.base_url}?dpto_id={dpto_id}&page_num={num_pagina}&role_num=-1"
+            await page.goto(url, wait_until="networkidle")
+            
+            # Probar primero con 0.50
+            pdf_data = await page.pdf(
+                format="Letter",
+                scale=0.50,
+                print_background=True,
+                margin={"top": "10mm", "bottom": "10mm", "left": "10mm", "right": "10mm"}
+            )
+            
+            temp = "temp_scale_test.pdf"
+            with open(temp, "wb") as f:
+                f.write(pdf_data)
+            
+            with open(temp, "rb") as f:
+                reader = PyPDF2.PdfReader(f)
+                paginas = len(reader.pages)
+            
+            os.remove(temp)
+            
+            await browser.close()
+            
+            # Si 0.50 da 1 página, úsalo
+            if paginas == 1:
+                print(f"      ✅ Usando escala 0.50 (cabe en 1 página)")
+                return 0.50
+            else:
+                # Si no, usa 0.40
+                print(f"      ⚠️ 0.50 da {paginas} páginas, usando 0.40")
+                return 0.40
     
     async def generar_pagina(self, dpto_id, num_pagina):
         """Genera una página PDF"""
@@ -126,19 +165,23 @@ class GeneradorCatalogoBaseBD:
             
             # Generar cada página del departamento
             for num_pag in range(1, paginas_necesarias + 1):
-                # Obtener escala óptima
+                # Calcular cuántos productos tiene esta página (solo para información)
+                if num_pag == 1:
+                    if dpto['first_prod'] == 1:
+                        productos_en_pagina = min(20, dpto['num_productos'])
+                    else:
+                        productos_en_pagina = min(25, dpto['num_productos'] - (dpto['first_prod'] - 1))
+                else:
+                    productos_en_pagina = min(25, dpto['num_productos'] - (20 + (num_pag - 2) * 25))
+                
+                # Obtener escala (0.50 o 0.40)
                 escala = await self.obtener_escala_optima(dpto['id'], num_pag)
                 
                 # Generar página
-                if num_pag == 1 and dpto['num_productos'] > 15:
-                    # Página con título y muchos productos, usar escala ligeramente menor
-                    escala = 0.48
-                else:
-                    escala = await self.obtener_escala_optima(dpto['id'], num_pag)
-                archivo = await self.generar_pagina(dpto['id'], num_pag)
+                archivo = await self.generar_pagina(dpto['id'], num_pag, escala)
                 paginas_generadas.append(archivo)
                 
-                print(f"    Página {num_pag}/{paginas_necesarias} generada (escala: {escala:.2f})")
+                print(f"    Página {num_pag}/{paginas_necesarias} generada ({productos_en_pagina} productos, escala: {escala:.2f})")
         
         # Combinar todas las páginas
         print(f"\n📚 Combinando {len(paginas_generadas)} páginas...")
