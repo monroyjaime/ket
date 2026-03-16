@@ -41,6 +41,15 @@ $totalProductos = $consultTotal[0]->total;
 // Calcular offset para esta página
 $offset = ($firstProd - 1) + (($pageNum - 1) * $productosPorPagina);
 
+// Después de calcular $offset
+error_log("=== OFFSET DEBUG ===");
+error_log("dpto_id: " . $dptoId);
+error_log("page_num: " . $pageNum);
+error_log("first_prod: " . $firstProd);
+error_log("productosPorPagina: " . $productosPorPagina);
+error_log("offset calculado: " . $offset);
+error_log("query: " . $query);
+
 // Obtener productos para esta página
 $query = "SELECT code, name, photo_url, cost_max FROM productos ";
 $query .= "WHERE show='t' AND dpto_id=".$dptoId." AND photo_url != 'empty.jpg' AND cost_max > 0 ";
