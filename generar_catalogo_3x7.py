@@ -149,33 +149,19 @@ class GeneradorCatalogo3x7:
                     fin = min(21, dpto['num_productos']) - 1
                 else:
                     if dpto['first_prod'] == 1:
-                        if num_pag == 2:
-                            inicio = 21
-                            fin = min(21 + 24, dpto['num_productos']) - 1
-                        else:
-                            inicio = 21 + (24 * (num_pag - 2))
-                            fin = min(inicio + 24, dpto['num_productos']) - 1
+                        inicio = 21 + (24 * (num_pag - 2))
+                        fin = min(inicio + 24, dpto['num_productos']) - 1
                     else:
                         inicio = (dpto['first_prod'] - 1) + (24 * (num_pag - 1))
                         fin = min(inicio + 24, dpto['num_productos']) - 1
                 
                 if inicio <= fin:
                     prod_pag = fin - inicio + 1
-                    
-                    archivo = await self.generar_pagina(
-                        dpto['id'], 
-                        num_pag, 
-                        dpto['first_prod'],
-                        pagina_global,
-                        total_paginas_global
-                    )
-                    paginas_generadas.append(archivo)
-                    
-                    print(f"    Página {num_pag}/{paginas_necesarias} (global {pagina_global}/{total_paginas_global}): {prod_pag} productos")
-                    
-                    pagina_global += 1
+                    # Generar página normalmente
                 else:
                     print(f"    ⚠️ Página {num_pag} sin productos - NO GENERADA")
+                    # IMPORTANTE: No aumentar pagina_global si no se genera
+                    continue
         
         print(f"\n📚 Combinando {len(paginas_generadas)} páginas...")
         
