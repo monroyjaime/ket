@@ -65,7 +65,9 @@ class GeneradorCatalogo3x9:
             if num_productos <= 24:
                 return 1
             else:
-                return 1 + ((num_productos - 24 + 26) // 27)
+                # CORRECCIÓN: (num_productos - 24) productos restantes
+                restantes = num_productos - 24
+                return 1 + ((restantes + 26) // 27)
         else:
             return (num_productos + 26) // 27
     
@@ -147,10 +149,19 @@ class GeneradorCatalogo3x9:
             
             for num_pag in range(1, paginas_necesarias + 1):
                 # Calcular productos en esta página
+                # Calcular productos en esta página correctamente
                 if num_pag == 1 and dpto['first_prod'] == 1:
                     prod_pag = min(24, dpto['num_productos'])
                 else:
-                    prod_pag = min(27, dpto['num_productos'] - (24 if num_pag > 1 else 0))
+                    if dpto['first_prod'] == 1:
+                        # Caso normal: después de primera página
+                        if num_pag == 2:
+                            prod_pag = min(27, dpto['num_productos'] - 24)
+                        else:
+                            prod_pag = min(27, dpto['num_productos'] - 24 - (27 * (num_pag - 2)))
+                    else:
+                        # Caso con first_prod > 1
+                        prod_pag = min(27, dpto['num_productos'] - (27 * (num_pag - 1)) - (dpto['first_prod'] - 1))
                 
                 archivo = await self.generar_pagina(
                     dpto['id'], 

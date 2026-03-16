@@ -153,18 +153,22 @@ $tags .= '</div>';
             color: #333;
         }
         
+        /* TÍTULO - VERSIÓN MEJORADA */
         .rounded-title {
             background-color: #003272;
             color: #FFF;
             border-radius: 30px;
-            padding: 0.6rem 1.5rem;
+            padding: 0.5rem 1rem;
             margin: 0.5rem auto 1rem auto;
             display: inline-block;
-            font-size: 20pt;
+            font-size: 16pt;           /* Reducido para títulos largos */
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
-            max-width: 90%;
+            max-width: 100%;            /* Ocupa todo el ancho disponible */
+            width: auto;                /* Se ajusta al contenido */
+            min-width: 300px;           /* Ancho mínimo para títulos cortos */
+            line-height: 1.2;
         }
         
         .products-grid {
