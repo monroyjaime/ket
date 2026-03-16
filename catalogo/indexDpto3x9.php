@@ -5,6 +5,8 @@ $role = isset($_GET['role_num']) ? intval($_GET['role_num']) : -1;
 $dptoId = isset($_GET['dpto_id']) ? intval($_GET['dpto_id']) : 1;
 $pageNum = isset($_GET['page_num']) ? intval($_GET['page_num']) : 1;
 $firstProd = isset($_GET['first_prod']) ? intval($_GET['first_prod']) : 1;
+$pageGlobal = isset($_GET['page_global']) ? intval($_GET['page_global']) : 1;
+$totalPaginasGlobal = isset($_GET['total_paginas']) ? intval($_GET['total_paginas']) : 1;
 
 $db = new DB();
 
@@ -21,22 +23,14 @@ foreach ($consult as $value){
 // CONFIGURACIÓN - 3 COLUMNAS
 // ============================================
 $cols = 3;
-$rowsConTitulo = 9;   // 3x9 = 27 productos con título
-$rowsSinTitulo = 10;   // 3x10 = 30 productos sin título
+$rowsConTitulo = 8;   // 3x8 = 24 productos con título
+$rowsSinTitulo = 9;    // 3x9 = 27 productos sin título
 $productosPorPagina = ($pageNum == 1 && $firstProd == 1) ? $cols * $rowsConTitulo : $cols * $rowsSinTitulo;
 
 // Obtener TOTAL de productos
 $queryTotal = "SELECT COUNT(*) as total FROM productos WHERE show='t' AND dpto_id=".$dptoId." AND photo_url != 'empty.jpg' AND cost_max > 0";
 $consultTotal = $db->consultas($queryTotal);
 $totalProductos = $consultTotal[0]->total;
-
-// Calcular número de páginas
-if ($totalProductos <= $cols * $rowsConTitulo) {
-    $numPages = 1;
-} else {
-    $productosRestantes = $totalProductos - ($cols * $rowsConTitulo);
-    $numPages = 1 + ceil($productosRestantes / ($cols * $rowsSinTitulo));
-}
 
 // Calcular offset para esta página
 $offset = ($firstProd - 1) + (($pageNum - 1) * $productosPorPagina);
@@ -60,7 +54,7 @@ function formatearDescripcion($texto) {
 $tags = '';
 
 // ============================================
-// ENCABEZADO CON LOGO
+// ENCABEZADO CON LOGO (USA NUMERACIÓN GLOBAL)
 // ============================================
 $tags .= '<div class="header">';
 $tags .= '<div class="row align-items-center">';
@@ -68,7 +62,7 @@ $tags .= '<div class="col-6">';
 $tags .= '<img src="../catalogo/images/logo.png" class="logo" alt="KET">';
 $tags .= '</div>';
 $tags .= '<div class="col-6 pagination-info">';
-$tags .= 'Pág. '.$pageNum.' / '.$numPages;
+$tags .= 'Pág. '.$pageGlobal.' / '.$totalPaginasGlobal;
 $tags .= '</div>';
 $tags .= '</div>';
 $tags .= '</div>';
@@ -97,7 +91,7 @@ foreach ($consult1 as $producto) {
             $tags .= '</div>';
         }
         $fila_actual++;
-        $tags .= '<div class="row g-2" data-group="fila_'.$fila_actual.'" style="page-break-inside: avoid; margin-bottom: 5px;">';
+        $tags .= '<div class="row g-2 justify-content-center" data-group="fila_'.$fila_actual.'" style="page-break-inside: avoid; margin-bottom: 5px;">';
     }
     
     // Card del producto
@@ -108,11 +102,9 @@ foreach ($consult1 as $producto) {
     $tags .= '<div class="card">';
     $tags .= '<div class="card-header">'.$producto->code.'</div>';
     $tags .= '<div class="row g-0">';
-    // Foto: 40% del ancho
     $tags .= '<div class="col-5 text-center img-container">';
     $tags .= '<img src="'.$imgUrl.'" alt="'.$producto->code.'">';
     $tags .= '</div>';
-    // Descripción: 60% del ancho
     $tags .= '<div class="col-7">';
     $tags .= $descripcion;
     $tags .= '</div>';
@@ -136,7 +128,7 @@ $tags .= '</div>';
 <head>
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Catálogo KET 3x9</title>
+    <title>Catálogo KET 3x8/3x9</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         body { 
@@ -236,7 +228,7 @@ $tags .= '</div>';
             padding: 4px;
             display: flex;
             align-items: center;
-            font-size: 6.5pt;
+            font-size: 7.5pt;
             line-height: 1.2;
             background-color: #f8f9fa;
             word-wrap: break-word;
