@@ -8,6 +8,17 @@ $firstProd = isset($_GET['first_prod']) ? intval($_GET['first_prod']) : 1;
 $pageGlobal = isset($_GET['page_global']) ? intval($_GET['page_global']) : 1;
 $totalPaginasGlobal = isset($_GET['total_paginas']) ? intval($_GET['total_paginas']) : 1;
 
+error_log("=== DEBUG PHP ===");
+error_log("dpto_id: " . $dptoId);
+error_log("page_num: " . $pageNum);
+error_log("first_prod: " . $firstProd);
+error_log("page_global: " . $pageGlobal);
+error_log("total_paginas: " . $totalPaginasGlobal);
+error_log("productosPorPagina: " . $productosPorPagina);
+error_log("offset: " . $offset);
+error_log("query: " . $query);
+error_log("num productos encontrados: " . count($consult1));
+
 $db = new DB();
 
 // Obtener información del departamento
