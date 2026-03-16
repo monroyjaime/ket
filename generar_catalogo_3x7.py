@@ -21,6 +21,29 @@ class GeneradorCatalogo3x7:
         self.conn = psycopg2.connect(**conn_params, cursor_factory=RealDictCursor)
         self.conn.autocommit = True
     
+    def resetear_first_prod(self):
+        """Resetea first_prod a 1 para todos los departamentos de la línea"""
+        with self.conn.cursor() as cur:
+            if self.limite:
+                # Si hay límite, solo resetear hasta ese orden
+                cur.execute("""
+                    UPDATE departamentos 
+                    SET catalogo_first_prod = 1 
+                    WHERE num = %s 
+                      AND catalogo_orden > 0
+                      AND catalogo_orden <= %s
+                """, (self.linea_num, self.limite))
+            else:
+                # Resetear todos los de la línea
+                cur.execute("""
+                    UPDATE departamentos 
+                    SET catalogo_first_prod = 1 
+                    WHERE num = %s AND catalogo_orden > 0
+                """, (self.linea_num,))
+            
+            print(f"  🔄 First_prod reseteados: {cur.rowcount} departamentos")
+            self.conn.commit()
+    
     def obtener_departamentos_de_bd(self):
         """Obtiene los departamentos directamente de la BD"""
         with self.conn.cursor() as cur:
@@ -51,7 +74,7 @@ class GeneradorCatalogo3x7:
             
             print(f"  📋 Departamentos encontrados: {len(resultados)}")
             for r in resultados:
-                print(f"    - Orden {r['orden']}: {r['nombre'][:50]}... ({r['num_productos']} productos)")
+                print(f"    - Orden {r['orden']}: {r['nombre'][:50]}... ({r['num_productos']} productos, first_prod={r['first_prod']})")
             
             return resultados
     
@@ -66,7 +89,8 @@ class GeneradorCatalogo3x7:
                 return 1
             else:
                 restantes = num_productos - 21
-                return 1 + ((restantes + 23) // 24)
+                paginas_extra = (restantes + 23) // 24
+                return 1 + paginas_extra
         else:
             return (num_productos + 23) // 24
     
@@ -86,7 +110,7 @@ class GeneradorCatalogo3x7:
             await page.pdf(
                 path=archivo,
                 format="Letter",
-                scale=0.80,              # ESCALA MÁS GRANDE
+                scale=0.95,
                 print_background=True,
                 tagged=True,
                 margin={"top": "5.5mm", "bottom": "5.5mm", "left": "10mm", "right": "10mm"}
@@ -102,6 +126,11 @@ class GeneradorCatalogo3x7:
         print(f"🚀 GENERANDO CATÁLOGO {self.nombre_linea.upper()} (3X7/3X8 - FOTO GRANDE)")
         print(f"{'='*60}")
         
+        # ============================================
+        # PASO 0: RESETEAR FIRST_PROD
+        # ============================================
+        self.resetear_first_prod()
+        
         print(f"\n📡 Leyendo departamentos de BD...")
         departamentos = self.obtener_departamentos_de_bd()
         
@@ -109,7 +138,9 @@ class GeneradorCatalogo3x7:
             print(f"❌ No hay departamentos")
             return
         
-        # Calcular páginas totales
+        # ============================================
+        # PASO 1: Calcular páginas totales
+        # ============================================
         paginas_por_departamento = []
         total_paginas_global = 0
         
@@ -126,7 +157,9 @@ class GeneradorCatalogo3x7:
         
         print(f"\n📊 Total páginas del catálogo: {total_paginas_global}")
         
-        # Generar páginas
+        # ============================================
+        # PASO 2: Generar páginas con numeración global
+        # ============================================
         paginas_generadas = []
         total_productos = 0
         pagina_global = 1
@@ -157,13 +190,28 @@ class GeneradorCatalogo3x7:
                 
                 if inicio <= fin:
                     prod_pag = fin - inicio + 1
-                    # Generar página normalmente
+                    
+                    archivo = await self.generar_pagina(
+                        dpto['id'], 
+                        num_pag, 
+                        dpto['first_prod'],
+                        pagina_global,
+                        total_paginas_global
+                    )
+                    paginas_generadas.append(archivo)
+                    
+                    print(f"    Página {num_pag}/{paginas_necesarias} (global {pagina_global}/{total_paginas_global}): {prod_pag} productos")
+                    
+                    pagina_global += 1
                 else:
                     print(f"    ⚠️ Página {num_pag} sin productos - NO GENERADA")
-                    # IMPORTANTE: No aumentar pagina_global si no se genera
-                    continue
+                    # No incrementamos pagina_global
         
         print(f"\n📚 Combinando {len(paginas_generadas)} páginas...")
+        
+        if not paginas_generadas:
+            print("❌ No se generó ninguna página")
+            return
         
         merger = PyPDF2.PdfMerger()
         for archivo in paginas_generadas:
@@ -207,7 +255,7 @@ def main():
         'port': 5432,
         'database': 'ketdb',
         'user': 'ketadmin',
-        'password': 'LondonTown'
+        'password': 'ColocarPasswordAqui'
     }
     
     base_url = "https://ketelectropartes.com/catalogo/indexDpto3x7.php"
