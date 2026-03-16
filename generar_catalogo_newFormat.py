@@ -185,7 +185,7 @@ def main():
         'port': 5432,
         'database': 'ketdb',
         'user': 'ketadmin',
-        'password': 'ColocarPasswordAqui'
+        'password': 'LondonTown'
     }
     
     base_url = "https://ketelectropartes.com/catalogo/indexDpto4X9.php"
