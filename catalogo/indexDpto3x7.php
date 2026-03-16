@@ -39,7 +39,7 @@ $consultTotal = $db->consultas($queryTotal);
 $totalProductos = $consultTotal[0]->total;
 
 // Calcular offset para esta página
-Calcular offset para esta página - VERSIÓN CORREGIDA
+//Calcular offset para esta página - VERSIÓN CORREGIDA
 if ($pageNum == 1) {
     $offset = ($firstProd - 1);
 } else {
