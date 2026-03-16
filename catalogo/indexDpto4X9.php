@@ -18,11 +18,11 @@ foreach ($consult as $value){
 }
 
 // ============================================
-// CONFIGURACIÓN FIJA DEL NUEVO FORMATO
+// CONFIGURACIÓN FIJA - VERSIÓN OPTIMIZADA
 // ============================================
 $cols = 4;
-$rowsConTitulo = 6;
-$rowsSinTitulo = 7;
+$rowsConTitulo = 7;   // 4x7 = 28 productos con título
+$rowsSinTitulo = 8;    // 4x8 = 32 productos sin título
 $productosPorPagina = ($pageNum == 1 && $firstProd == 1) ? $cols * $rowsConTitulo : $cols * $rowsSinTitulo;
 
 // Obtener TOTAL de productos
@@ -48,6 +48,13 @@ $query .= "ORDER BY orden, code ";
 $query .= "LIMIT ".$productosPorPagina." OFFSET ".$offset;
 
 $consult1 = $db->consultas($query);
+
+// Función para convertir texto a minúsculas con primera letra mayúscula
+function formatearDescripcion($texto) {
+    $texto = mb_strtolower($texto, 'UTF-8');
+    $texto = ucfirst($texto);
+    return $texto;
+}
 
 // Generar HTML
 $tags = '';
@@ -95,6 +102,7 @@ foreach ($consult1 as $producto) {
     
     // Card del producto
     $imgUrl = $currCatImgRoute . $producto->photo_url;
+    $descripcion = formatearDescripcion($producto->name);
     
     $tags .= '<div class="col">';
     $tags .= '<div class="card">';
@@ -104,7 +112,7 @@ foreach ($consult1 as $producto) {
     $tags .= '<img src="'.$imgUrl.'" alt="'.$producto->code.'">';
     $tags .= '</div>';
     $tags .= '<div class="col-7">';
-    $tags .= $producto->name;
+    $tags .= $descripcion;
     $tags .= '</div>';
     $tags .= '</div>';
     $tags .= '</div>';
@@ -126,7 +134,7 @@ $tags .= '</div>';
 <head>
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Catálogo KET 4x9</title>
+    <title>Catálogo KET 4x9 Optimizado</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         body { 
@@ -155,8 +163,8 @@ $tags .= '</div>';
             background-color: #003272;
             color: #FFF;
             border-radius: 30px;
-            padding: 0.8rem 2rem;
-            margin: 0.6rem auto 1.5rem auto;
+            padding: 0.6rem 1.5rem;
+            margin: 0.5rem auto 1rem auto;
             display: inline-block;
             font-size: 20pt;
             white-space: nowrap;
@@ -187,37 +195,41 @@ $tags .= '</div>';
             font-weight: bold;
             text-align: center;
             padding: 4px;
-            font-size: 10pt;
+            font-size: 9pt;
             border-bottom: none;
         }
         
         .row.g-0 {
             margin: 0;
-            min-height: 95px;
+            min-height: 100px;
         }
         
-        .col-5 {
+        .col-5, .col-7 {
             padding: 4px;
             display: flex;
             align-items: center;
+        }
+        
+        .col-5 {
             justify-content: center;
         }
         
         .col-7 {
-            padding: 4px;
-            background-color: #f8f9fa;
-            display: flex;
-            align-items: center;
-            font-size: 7.5pt;
+            font-size: 6.5pt;
             line-height: 1.2;
+            background-color: #f8f9fa;
             word-wrap: break-word;
             overflow-y: auto;
-            max-height: none;
-            min-height: 80px;
+            max-height: 100px;
+            text-transform: lowercase; /* Respaldo */
+        }
+        
+        .col-7::first-letter {
+            text-transform: uppercase; /* Primera letra mayúscula */
         }
         
         img {
-            max-height: 120px;
+            max-height: 90px;
             width: auto;
             max-width: 100%;
             object-fit: contain;

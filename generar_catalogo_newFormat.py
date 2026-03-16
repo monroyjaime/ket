@@ -56,7 +56,7 @@ class GeneradorCatalogoNewFormat:
             return resultados
     
     async def generar_pagina(self, dpto_id, num_pagina, first_prod):
-        """Genera una página PDF con escala fija 0.55"""
+        """Genera una página PDF con escala fija 0.85"""
         archivo = os.path.join(self.carpeta_salida, f"temp_{dpto_id}_{num_pagina}.pdf")
         
         async with async_playwright() as p:
@@ -83,22 +83,22 @@ class GeneradorCatalogoNewFormat:
     
     def calcular_paginas_departamento(self, num_productos, first_prod):
         """
-        Calcula páginas según nuevo formato:
-        - Con título: 24 productos (4x6)
-        - Sin título: 28 productos (4x7)
+        Calcula páginas según formato optimizado:
+        - Con título: 28 productos (4x7)
+        - Sin título: 32 productos (4x8)
         """
         if first_prod == 1:
-            if num_productos <= 24:
+            if num_productos <= 28:
                 return 1
             else:
-                return 1 + ((num_productos - 24 + 27) // 28)
+                return 1 + ((num_productos - 28 + 31) // 32)
         else:
-            return (num_productos + 27) // 28
+            return (num_productos + 31) // 32
     
     async def generar_catalogo(self):
-        """Genera el catálogo completo con el nuevo formato"""
+        """Genera el catálogo completo con el formato optimizado"""
         print(f"\n{'='*60}")
-        print(f"🚀 GENERANDO CATÁLOGO {self.nombre_linea.upper()} (4X9)")
+        print(f"🚀 GENERANDO CATÁLOGO {self.nombre_linea.upper()} (4X7/4X8 OPTIMIZADO)")
         print(f"{'='*60}")
         
         print(f"\n📡 Leyendo departamentos de BD...")
@@ -135,9 +135,9 @@ class GeneradorCatalogoNewFormat:
                 paginas_generadas.append(archivo)
                 
                 if num_pag == 1 and dpto['first_prod'] == 1:
-                    prod_pag = min(24, dpto['num_productos'])
+                    prod_pag = min(28, dpto['num_productos'])
                 else:
-                    prod_pag = min(28, dpto['num_productos'] - (24 if num_pag > 1 else 0))
+                    prod_pag = min(32, dpto['num_productos'] - (28 if num_pag > 1 else 0))
                 
                 print(f"    Página {num_pag}/{paginas_necesarias}: {prod_pag} productos")
         
@@ -149,7 +149,7 @@ class GeneradorCatalogoNewFormat:
         
         output_filename = os.path.join(
             self.carpeta_salida, 
-            f"catalogo_{self.nombre_linea.lower()}_4x9.pdf"
+            f"catalogo_{self.nombre_linea.lower()}_4x9_optimizado.pdf"
         )
         
         merger.write(output_filename)
@@ -164,6 +164,8 @@ class GeneradorCatalogoNewFormat:
         print(f"\n✅ Catálogo generado: {output_filename}")
         print(f"📄 Total páginas: {len(paginas_generadas)}")
         print(f"📦 Total productos: {total_productos}")
+        print(f"📊 Formato: 4x7 (28 prod) con título, 4x8 (32 prod) sin título")
+        print(f"📏 Escala: 0.85 | Márgenes: 5.5mm/10mm")
         
         return output_filename
     
@@ -172,7 +174,7 @@ class GeneradorCatalogoNewFormat:
             self.conn.close()
 
 def main():
-    parser = argparse.ArgumentParser(description='Generador de catálogos KET - Formato 4x9')
+    parser = argparse.ArgumentParser(description='Generador de catálogos KET - Formato Optimizado')
     parser.add_argument('--linea', type=str, choices=['A', 'F'], required=True)
     parser.add_argument('--limite', type=int, default=None)
     
@@ -183,18 +185,19 @@ def main():
         'port': 5432,
         'database': 'ketdb',
         'user': 'ketadmin',
-        'password': 'LondonTown'
+        'password': 'ColocarPasswordAqui'
     }
     
     base_url = "https://ketelectropartes.com/catalogo/indexDpto4X9.php"
     
     print(f"\n{'='*60}")
-    print(f"🔧 CONFIGURACIÓN NUEVO FORMATO 4X9")
+    print(f"🔧 CONFIGURACIÓN FINAL OPTIMIZADA")
     print(f"{'='*60}")
     print(f"📁 Línea: {args.linea}")
-    print(f"📁 Grid: 4x9 (con título) / 4x10 (sin título)")
-    print(f"📁 Escala fija: 55%")
+    print(f"📁 Grid: 4x7 (28 prod) con título / 4x8 (32 prod) sin título")
+    print(f"📁 Escala fija: 0.85")
     print(f"📁 Márgenes: 5.5mm sup/inf, 10mm izq/der")
+    print(f"📁 Texto: minúsculas con capitalización")
     
     generador = GeneradorCatalogoNewFormat(args.linea, conn_params, base_url, args.limite)
     asyncio.run(generador.generar_catalogo())
