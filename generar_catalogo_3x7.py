@@ -202,10 +202,11 @@ class GeneradorCatalogo3x7:
                     
                     print(f"    Página {num_pag}/{paginas_necesarias} (global {pagina_global}/{total_paginas_global}): {prod_pag} productos")
                     
-                    pagina_global += 1
+                    pagina_global += 1  # ✅ Solo incrementar si hay productos
                 else:
                     print(f"    ⚠️ Página {num_pag} sin productos - NO GENERADA")
-                    # No incrementamos pagina_global
+                    # 🔴 NO incrementar pagina_global
+                    continue
         
         print(f"\n📚 Combinando {len(paginas_generadas)} páginas...")
         
