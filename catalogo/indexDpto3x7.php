@@ -8,17 +8,6 @@ $firstProd = isset($_GET['first_prod']) ? intval($_GET['first_prod']) : 1;
 $pageGlobal = isset($_GET['page_global']) ? intval($_GET['page_global']) : 1;
 $totalPaginasGlobal = isset($_GET['total_paginas']) ? intval($_GET['total_paginas']) : 1;
 
-error_log("=== DEBUG PHP ===");
-error_log("dpto_id: " . $dptoId);
-error_log("page_num: " . $pageNum);
-error_log("first_prod: " . $firstProd);
-error_log("page_global: " . $pageGlobal);
-error_log("total_paginas: " . $totalPaginasGlobal);
-error_log("productosPorPagina: " . $productosPorPagina);
-error_log("offset: " . $offset);
-error_log("query: " . $query);
-error_log("num productos encontrados: " . count($consult1));
-
 $db = new DB();
 
 // Obtener información del departamento
@@ -36,9 +25,15 @@ foreach ($consult as $value){
 $cols = 3;
 $rowsConTitulo = 7;   // 3x7 = 21 productos con título
 $rowsSinTitulo = 8;    // 3x8 = 24 productos sin título
-$productosPorPagina = ($pageNum == 1 && $firstProd == 1) ? $cols * $rowsConTitulo : $cols * $rowsSinTitulo;
 
-// Obtener TOTAL de productos
+// Calcular productos por página SEGÚN el caso
+if ($pageNum == 1 && $firstProd == 1) {
+    $productosPorPagina = $cols * $rowsConTitulo;  // 21 productos
+} else {
+    $productosPorPagina = $cols * $rowsSinTitulo;  // 24 productos
+}
+
+// Obtener TOTAL de productos (para cálculos de páginas, aunque no se usa directamente aquí)
 $queryTotal = "SELECT COUNT(*) as total FROM productos WHERE show='t' AND dpto_id=".$dptoId." AND photo_url != 'empty.jpg' AND cost_max > 0";
 $consultTotal = $db->consultas($queryTotal);
 $totalProductos = $consultTotal[0]->total;
@@ -53,6 +48,7 @@ $query .= "ORDER BY orden, code ";
 $query .= "LIMIT ".$productosPorPagina." OFFSET ".$offset;
 
 $consult1 = $db->consultas($query);
+$numProducts = count($consult1);  // ✅ AHORA SÍ, $consult1 ya está definida
 
 // Función para formatear descripción
 function formatearDescripcion($texto) {
@@ -90,50 +86,55 @@ if ($pageNum == 1 && $firstProd == 1) {
 // ============================================
 // PRODUCTOS - CON FILAS AGRUPADAS
 // ============================================
-$tags .= '<div class="products-grid">';
-
-$fila_actual = 0;
-$index = 0;
-
-foreach ($consult1 as $producto) {
-    // Inicio de nueva fila cada 3 productos
-    if ($index % $cols == 0) {
-        if ($index > 0) {
-            $tags .= '</div>';
+if ($numProducts > 0) {
+    $tags .= '<div class="products-grid">';
+    
+    $fila_actual = 0;
+    $index = 0;
+    
+    foreach ($consult1 as $producto) {
+        // Inicio de nueva fila cada 3 productos
+        if ($index % $cols == 0) {
+            if ($index > 0) {
+                $tags .= '</div>';
+            }
+            $fila_actual++;
+            $tags .= '<div class="row g-2 justify-content-center" data-group="fila_'.$fila_actual.'" style="page-break-inside: avoid; margin-bottom: 5px;">';
         }
-        $fila_actual++;
-        $tags .= '<div class="row g-2 justify-content-center" data-group="fila_'.$fila_actual.'" style="page-break-inside: avoid; margin-bottom: 5px;">';
+        
+        // Card del producto
+        $imgUrl = $currCatImgRoute . $producto->photo_url;
+        $descripcion = formatearDescripcion($producto->name);
+        
+        $tags .= '<div class="col">';
+        $tags .= '<div class="card">';
+        $tags .= '<div class="card-header">'.$producto->code.'</div>';
+        $tags .= '<div class="row g-0">';
+        // Foto: 50% ancho
+        $tags .= '<div class="col-6 text-center img-container">';
+        $tags .= '<img src="'.$imgUrl.'" alt="'.$producto->code.'">';
+        $tags .= '</div>';
+        // Descripción: 50% ancho
+        $tags .= '<div class="col-6 texto">';
+        $tags .= $descripcion;
+        $tags .= '</div>';
+        $tags .= '</div>';
+        $tags .= '</div>';
+        $tags .= '</div>';
+        
+        $index++;
     }
     
-    // Card del producto
-    $imgUrl = $currCatImgRoute . $producto->photo_url;
-    $descripcion = formatearDescripcion($producto->name);
+    // Cerrar última fila si hay productos
+    if ($index > 0) {
+        $tags .= '</div>';
+    }
     
-    $tags .= '<div class="col">';
-    $tags .= '<div class="card">';
-    $tags .= '<div class="card-header">'.$producto->code.'</div>';
-    $tags .= '<div class="row g-0">';
-    // Foto: 50% ancho
-    $tags .= '<div class="col-6 text-center img-container">';
-    $tags .= '<img src="'.$imgUrl.'" alt="'.$producto->code.'">';
     $tags .= '</div>';
-    // Descripción: 50% ancho
-    $tags .= '<div class="col-6 texto">';
-    $tags .= $descripcion;
-    $tags .= '</div>';
-    $tags .= '</div>';
-    $tags .= '</div>';
-    $tags .= '</div>';
-    
-    $index++;
+} else {
+    // Esto no debería pasar, pero por si acaso
+    $tags .= '<p>No hay productos en esta página</p>';
 }
-
-// Cerrar última fila si hay productos
-if ($index > 0) {
-    $tags .= '</div>';
-}
-
-$tags .= '</div>';
 
 ?>
 <!DOCTYPE html>
@@ -218,7 +219,7 @@ $tags .= '</div>';
         
         .row.g-0 {
             margin: 0;
-            min-height: 110px;  /* Un poco más alto para foto grande */
+            min-height: 110px;
         }
         
         /* Foto: 50% ancho */
