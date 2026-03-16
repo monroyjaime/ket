@@ -86,7 +86,7 @@ class GeneradorCatalogo3x7:
             await page.pdf(
                 path=archivo,
                 format="Letter",
-                scale=0.90,              # ESCALA MÁS GRANDE
+                scale=0.85,              # ESCALA MÁS GRANDE
                 print_background=True,
                 tagged=True,
                 margin={"top": "5.5mm", "bottom": "5.5mm", "left": "10mm", "right": "10mm"}
