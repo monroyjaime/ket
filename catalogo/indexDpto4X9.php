@@ -108,10 +108,10 @@ foreach ($consult1 as $producto) {
     $tags .= '<div class="card">';
     $tags .= '<div class="card-header">'.$producto->code.'</div>';
     $tags .= '<div class="row g-0">';
-    $tags .= '<div class="col-5 text-center">';
+    $tags .= '<div class="col-6 text-center">';
     $tags .= '<img src="'.$imgUrl.'" alt="'.$producto->code.'">';
     $tags .= '</div>';
-    $tags .= '<div class="col-7">';
+    $tags .= '<div class="col-6">';
     $tags .= $descripcion;
     $tags .= '</div>';
     $tags .= '</div>';
@@ -204,13 +204,13 @@ $tags .= '</div>';
             min-height: 100px;
         }
         
-        .col-5, .col-7 {
+        .col-6 {
             padding: 4px;
             display: flex;
             align-items: center;
         }
         
-        .col-5 {
+        .col-6:first-child  {
             justify-content: center;
         }
         
