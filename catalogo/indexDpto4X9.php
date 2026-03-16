@@ -49,7 +49,7 @@ $query .= "LIMIT ".$productosPorPagina." OFFSET ".$offset;
 
 $consult1 = $db->consultas($query);
 
-// Función para convertir texto a minúsculas con primera letra mayúscula
+// Función para formatear descripción (minúsculas con primera mayúscula)
 function formatearDescripcion($texto) {
     $texto = mb_strtolower($texto, 'UTF-8');
     $texto = ucfirst($texto);
@@ -108,10 +108,12 @@ foreach ($consult1 as $producto) {
     $tags .= '<div class="card">';
     $tags .= '<div class="card-header">'.$producto->code.'</div>';
     $tags .= '<div class="row g-0">';
-    $tags .= '<div class="col-6 text-center">';
+    // Foto: 5/12 del ancho (41.7%) - SIN altura fija
+    $tags .= '<div class="col-5 text-center img-container">';
     $tags .= '<img src="'.$imgUrl.'" alt="'.$producto->code.'">';
     $tags .= '</div>';
-    $tags .= '<div class="col-6">';
+    // Descripción: 7/12 del ancho (58.3%)
+    $tags .= '<div class="col-7">';
     $tags .= $descripcion;
     $tags .= '</div>';
     $tags .= '</div>';
@@ -201,38 +203,42 @@ $tags .= '</div>';
         
         .row.g-0 {
             margin: 0;
-            min-height: 100px;
+            min-height: 90px;  /* Altura mínima para consistencia */
         }
         
-        .col-6 {
+        /* Contenedor de la imagen - 41.7% ancho */
+        .img-container {
+            padding: 2px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #fff;
+        }
+        
+        /* Imagen - ocupa todo el ancho disponible */
+        .img-container img {
+            width: 100%;
+            height: auto;
+            max-height: none;
+            object-fit: contain;
+        }
+        
+        /* Contenedor del texto - 58.3% ancho */
+        .col-7 {
             padding: 4px;
             display: flex;
             align-items: center;
-        }
-        
-        .col-6:first-child  {
-            justify-content: center;
-        }
-        
-        .col-7 {
             font-size: 6.5pt;
             line-height: 1.2;
             background-color: #f8f9fa;
             word-wrap: break-word;
             overflow-y: auto;
-            max-height: 100px;
-            text-transform: lowercase; /* Respaldo */
+            max-height: 90px;  /* Misma altura que el contenedor de imagen */
         }
         
+        /* Primera letra mayúscula (respaldo) */
         .col-7::first-letter {
-            text-transform: uppercase; /* Primera letra mayúscula */
-        }
-        
-        img {
-            max-height: 90px;
-            width: auto;
-            max-width: 100%;
-            object-fit: contain;
+            text-transform: uppercase;
         }
         
         @media print {
