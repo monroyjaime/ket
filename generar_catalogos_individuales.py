@@ -9,7 +9,7 @@ from datetime import datetime
 class GeneradorCatalogosIndividuales:
     def __init__(self, conn_params):
         self.conn_params = conn_params
-        self.script_base = "generar_catalogo_3x7.py"
+        self.script_base = "/home/jaime/catalogo_ket/generar_catalogo_3x7.py"
         self.carpeta_base = "/var/www/html/pdfs"
         self.log_file = "generacion_catalogos.log"
         
