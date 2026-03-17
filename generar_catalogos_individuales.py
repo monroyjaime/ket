@@ -49,13 +49,21 @@ class GeneradorCatalogosIndividuales:
         
         return dptos_por_linea
     
-    def log(self, mensaje):
-        """Escribe en archivo de log y consola"""
+    def log(self, mensaje, **kwargs):
+        """Escribe en archivo de log y consola, acepta argumentos de print"""
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        linea = f"[{timestamp}] {mensaje}"
-        print(linea)
-        with open(self.log_file, 'a', encoding='utf-8') as f:
-            f.write(linea + '\n')
+        
+        # Para prints sin salto de línea (end="")
+        if kwargs.get('end') == '':
+            linea = f"[{timestamp}] {mensaje}"
+            print(linea, end='')
+            with open(self.log_file, 'a', encoding='utf-8') as f:
+                f.write(linea)
+        else:
+            linea = f"[{timestamp}] {mensaje}"
+            print(linea)
+            with open(self.log_file, 'a', encoding='utf-8') as f:
+                f.write(linea + '\n')
     
     async def generar_catalogo_departamento(self, dpto_id, linea):
         """Genera el catálogo para un departamento específico"""
