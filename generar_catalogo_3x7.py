@@ -115,6 +115,32 @@ class GeneradorCatalogo3x7:
             cur.execute(query, (codigos,))
             return cur.fetchall()
     
+    async def generar_pagina(self, dpto_id, num_pagina, first_prod, pagina_global, total_paginas):
+        """Genera una página PDF con escala fija 0.95 (foto más grande)"""
+        archivo = os.path.join(self.carpeta_salida, f"temp_{dpto_id}_{num_pagina}.pdf")
+        
+        async with async_playwright() as p:
+            browser = await p.chromium.launch(headless=True)
+            page = await browser.new_page()
+            
+            url = f"{self.base_url}?dpto_id={dpto_id}&page_num={num_pagina}&role_num=-1&first_prod={first_prod}&page_global={pagina_global}&total_paginas={total_paginas}"
+            print(f"      🌐 Cargando: {url}")
+            
+            await page.goto(url, wait_until="networkidle", timeout=30000)
+            
+            await page.pdf(
+                path=archivo,
+                format="Letter",
+                scale=0.95,
+                print_background=True,
+                tagged=True,
+                margin={"top": "5.5mm", "bottom": "5.5mm", "left": "10mm", "right": "10mm"}
+            )
+            
+            await browser.close()
+        
+        return archivo
+
     async def generar_pagina_productos_especificos(self, productos, pagina_global, total_paginas):
         """Genera una página con productos específicos (agrupados por dpto)"""
         archivo = os.path.join(self.carpeta_salida, f"temp_especial_{pagina_global}.pdf")
