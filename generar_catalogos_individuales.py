@@ -272,7 +272,7 @@ async def main():
         'port': 5432,
         'database': 'ketdb',
         'user': 'ketadmin',
-        'password': 'ColocarPasswordAqui'
+        'password': 'LondonTown'
     }
     
     generador = GeneradorCatalogosIndividuales(conn_params)
