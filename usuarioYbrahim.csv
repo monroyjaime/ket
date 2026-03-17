@@ -1,0 +1,2 @@
+num;short_name;full_name;email;cel_num;client;admin;salt;psw;rol;direct_login;do_pedido;vendedor;show_all_ped;only_with_stock;do_presupuesto;show_all_pres;do_update_db
+45;Ybrahin;Ybrahin Arabia;ybrahinarabia@gmail.com;424-3359297;1255;f;9084;2c2fb9efd4b8a1f837bf47004a49ce45;3;1;f;30;f;f;f;f;f
