@@ -241,10 +241,116 @@ class GeneradorCatalogo3x7:
             return output_filename
     
     async def generar_catalogo_linea(self, departamentos):
-        """Lógica existente para generar catálogo por departamentos"""
-        # (Mismo código que antes, pero usando los departamentos pasados)
-        # ... (código de generación normal) ...
-        pass
+        """Genera catálogo para una lista de departamentos (reutiliza lógica existente)"""
+        
+        if not departamentos:
+            print("❌ No hay departamentos para procesar")
+            return
+        
+        # ============================================
+        # Calcular páginas totales
+        # ============================================
+        paginas_por_departamento = []
+        total_paginas_global = 0
+        
+        for dpto in departamentos:
+            paginas_necesarias = self.calcular_paginas_departamento(
+                dpto['num_productos'], dpto['first_prod']
+            )
+            paginas_por_departamento.append({
+                'dpto': dpto,
+                'paginas': paginas_necesarias,
+                'inicio': total_paginas_global + 1
+            })
+            total_paginas_global += paginas_necesarias
+        
+        print(f"\n📊 Total páginas del catálogo: {total_paginas_global}")
+        
+        # ============================================
+        # Generar páginas
+        # ============================================
+        paginas_generadas = []
+        total_productos = 0
+        pagina_global = 1
+        
+        for item in paginas_por_departamento:
+            dpto = item['dpto']
+            paginas_necesarias = item['paginas']
+            
+            print(f"\n📦 Procesando {dpto['nombre']} (ID: {dpto['id']})")
+            print(f"  📊 Productos totales: {dpto['num_productos']}")
+            print(f"  🎯 first_prod: {dpto['first_prod']}")
+            print(f"  📄 Páginas: {paginas_necesarias} (global: {item['inicio']}-{item['inicio']+paginas_necesarias-1})")
+            
+            total_productos += dpto['num_productos']
+            
+            for num_pag in range(1, paginas_necesarias + 1):
+                # Calcular offset
+                if num_pag == 1:
+                    offset = dpto['first_prod'] - 1
+                else:
+                    offset = (dpto['first_prod'] - 1) + 21 + ((num_pag - 2) * 24)
+                
+                # Calcular productos en esta página
+                if num_pag == 1 and dpto['first_prod'] == 1:
+                    prod_pag = min(21, dpto['num_productos'])
+                else:
+                    if dpto['first_prod'] == 1:
+                        if num_pag == 2:
+                            prod_pag = min(24, dpto['num_productos'] - 21)
+                        else:
+                            prod_pag = min(24, dpto['num_productos'] - 21 - (24 * (num_pag - 2)))
+                    else:
+                        prod_pag = min(24, dpto['num_productos'] - (24 * (num_pag - 1)) - (dpto['first_prod'] - 1))
+                
+                archivo = await self.generar_pagina(
+                    dpto['id'], 
+                    num_pag, 
+                    dpto['first_prod'],
+                    pagina_global,
+                    total_paginas_global
+                )
+                paginas_generadas.append(archivo)
+                
+                print(f"    Página {num_pag}/{paginas_necesarias} (global {pagina_global}/{total_paginas_global}): {prod_pag} productos")
+                
+                pagina_global += 1
+        
+        # Combinar páginas
+        print(f"\n📚 Combinando {len(paginas_generadas)} páginas...")
+        
+        merger = PyPDF2.PdfMerger()
+        for archivo in paginas_generadas:
+            merger.append(archivo)
+        
+        # Nombre del archivo según el modo
+        if self.linea:
+            sufijo = f"linea_{self.linea}"
+        elif self.dptos:
+            sufijo = f"dptos_{'_'.join(map(str, self.dptos))}"
+        else:
+            sufijo = "personalizado"
+        
+        output_filename = os.path.join(
+            self.carpeta_salida, 
+            f"catalogo_{sufijo}.pdf"
+        )
+        
+        merger.write(output_filename)
+        merger.close()
+        
+        # Limpiar temporales
+        for archivo in paginas_generadas:
+            try:
+                os.remove(archivo)
+            except:
+                pass
+        
+        print(f"\n✅ Catálogo generado: {output_filename}")
+        print(f"📄 Total páginas: {len(paginas_generadas)}")
+        print(f"📦 Total productos: {total_productos}")
+        
+        return output_filename
 
 def main():
     parser = argparse.ArgumentParser(description='Generador de catálogos KET - Modos flexibles')
