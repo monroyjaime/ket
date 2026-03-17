@@ -21,6 +21,22 @@ class GeneradorCatalogo3x7:
         # Conexión a PostgreSQL
         self.conn = psycopg2.connect(**conn_params, cursor_factory=RealDictCursor)
         self.conn.autocommit = True
+
+    def calcular_paginas_departamento(self, num_productos, first_prod):
+        """
+        Calcula páginas para formato con foto grande:
+        - Con título: 21 productos (3x7)
+        - Sin título: 24 productos (3x8)
+        """
+        if first_prod == 1:
+            if num_productos <= 21:
+                return 1
+            else:
+                restantes = num_productos - 21
+                paginas_extra = (restantes + 23) // 24
+                return 1 + paginas_extra
+        else:
+            return (num_productos + 23) // 24    
     
     def resetear_first_prod(self, dpto_ids=None):
         """Resetea first_prod a 1 para los departamentos especificados"""
