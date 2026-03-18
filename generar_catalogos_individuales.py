@@ -75,7 +75,7 @@ class GeneradorCatalogosIndividuales:
         ]
         
         self.log(f"  🚀 Generando departamento {dpto_id} ({linea})...")
-        
+        self.log(f"     📋 Comando: {' '.join(comando)}")  cd ../
         try:
             # Ejecutar el comando
             proceso = subprocess.run(
@@ -84,7 +84,12 @@ class GeneradorCatalogosIndividuales:
                 text=True,
                 timeout=300  # 5 minutos máximo por departamento
             )
-            
+             # Mostrar toda la salida para depurar
+            if proceso.stdout:
+                self.log(f"     📤 STDOUT: {proceso.stdout[:200]}")
+            if proceso.stderr:
+                self.log(f"     ⚠️ STDERR: {proceso.stderr[:200]}")
+                
             if proceso.returncode == 0:
                 self.log(f"    ✅ {dpto_id} generado correctamente")
                 return True
