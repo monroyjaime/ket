@@ -441,6 +441,11 @@ class GeneradorCatalogo3x7:
                 destino = os.path.join(carpeta_destino, nombre_final)
                 shutil.move(archivo_temporal, destino)
                 print(f"📁 Archivo guardado en: {destino}")
+                # 🔴 NUEVO: Verificar que realmente se guardó
+                if os.path.exists(destino):
+                    print(f"   ✅ Confirmado: {destino}")
+                else:
+                    print(f"   ❌ Error: No se pudo guardar en {destino}")
                 return destino
             
             return None
