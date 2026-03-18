@@ -369,34 +369,98 @@ class GeneradorCatalogo3x7:
     async def generar_catalogo(self):
         """Genera el catálogo según el modo seleccionado"""
         print(f"\n{'='*60}")
-        if self.linea:
-            print(f"🚀 GENERANDO CATÁLOGO {self.nombre_linea.upper()} (LÍNEA COMPLETA)")
-        elif self.dptos:
-            print(f"🚀 GENERANDO CATÁLOGO PERSONALIZADO ({len(self.dptos)} DEPARTAMENTOS)")
-            self.resetear_first_prod(self.dptos)
-            departamentos = self.obtener_departamentos_por_ids(self.dptos)
-            return await self._procesar_y_guardar(departamentos, modo_dptos=True)
-        elif self.productos:
-            print(f"🚀 GENERANDO CATÁLOGO DE PRODUCTOS ESPECÍFICOS ({len(self.productos)} PRODUCTOS)")
-        print(f"{'='*60}")
-        print(f"🎚️ Calidad: {self.calidad}")
         
-        # Obtener datos según el modo
-        if self.linea:
+        # ============================================
+        # MODO 1: LÍNEA COMPLETA
+        # ============================================
+        if self.linea and not self.dptos and not self.productos:
+            print(f"🚀 GENERANDO CATÁLOGO {self.nombre_linea.upper()} (LÍNEA COMPLETA)")
+            print(f"{'='*60}")
+            print(f"🎚️ Calidad: {self.calidad}")
+            
             self.resetear_first_prod()
             departamentos = self.obtener_departamentos_por_linea()
-            return await self._procesar_y_guardar(departamentos)
+            
+            if not departamentos:
+                print("❌ No hay departamentos para procesar")
+                return None
+            
+            archivo_temporal = await self.generar_catalogo_linea(departamentos)
+            
+            if archivo_temporal and os.path.exists(archivo_temporal):
+                carpeta_destino = f"{self.carpeta_base}/catalogo_{self.nombre_linea.lower()}"
+                os.makedirs(carpeta_destino, exist_ok=True)
+                
+                nombre_final = f"catalogo_linea_{self.linea}.pdf"
+                destino = os.path.join(carpeta_destino, nombre_final)
+                
+                shutil.move(archivo_temporal, destino)
+                print(f"📁 Archivo guardado en: {destino}")
+                return destino
+            
+            return None
         
-        elif self.dptos:
+        # ============================================
+        # MODO 2: DEPARTAMENTOS ESPECÍFICOS
+        # ============================================
+        elif self.dptos and not self.linea and not self.productos:
+            print(f"🚀 GENERANDO CATÁLOGO DE DEPARTAMENTOS ESPECÍFICOS")
+            print(f"{'='*60}")
+            print(f"📋 IDs: {self.dptos}")
+            print(f"🎚️ Calidad: {self.calidad}")
+            
             self.resetear_first_prod(self.dptos)
             departamentos = self.obtener_departamentos_por_ids(self.dptos)
-            return await self._procesar_y_guardar(departamentos)
-        
-        elif self.productos:
-            productos = self.obtener_productos_por_codigos(self.productos)
-            print(f"\n📦 Productos encontrados: {len(productos)}")
             
-            # Organizar productos en páginas
+            if not departamentos:
+                print("❌ No se encontraron departamentos con esos IDs")
+                return None
+            
+            archivo_temporal = await self.generar_catalogo_linea(departamentos)
+            
+            if archivo_temporal and os.path.exists(archivo_temporal):
+                # Determinar carpeta según los departamentos
+                if len(departamentos) == 1:
+                    # Un solo departamento - usar su línea
+                    dpto = departamentos[0]
+                    if dpto['num'] == 1:
+                        carpeta_destino = f"{self.carpeta_base}/catalogo_automotriz"
+                    else:
+                        carpeta_destino = f"{self.carpeta_base}/catalogo_ferretero"
+                else:
+                    # Múltiples departamentos - carpeta personalizada
+                    carpeta_destino = f"{self.carpeta_base}/catalogo_personalizado"
+                
+                os.makedirs(carpeta_destino, exist_ok=True)
+                
+                if len(self.dptos) == 1:
+                    nombre_final = f"catalogo_dptos_{self.dptos[0]}.pdf"
+                else:
+                    nombre_final = f"catalogo_dptos_{'_'.join(map(str, self.dptos))}.pdf"
+                
+                destino = os.path.join(carpeta_destino, nombre_final)
+                shutil.move(archivo_temporal, destino)
+                print(f"📁 Archivo guardado en: {destino}")
+                return destino
+            
+            return None
+        
+        # ============================================
+        # MODO 3: PRODUCTOS ESPECÍFICOS
+        # ============================================
+        elif self.productos:
+            print(f"🚀 GENERANDO CATÁLOGO DE PRODUCTOS ESPECÍFICOS")
+            print(f"{'='*60}")
+            print(f"📋 Códigos: {len(self.productos)} productos")
+            print(f"🎚️ Calidad: {self.calidad}")
+            
+            productos = self.obtener_productos_por_codigos(self.productos)
+            print(f"📦 Productos encontrados: {len(productos)}")
+            
+            if not productos:
+                print("❌ No se encontraron productos con esos códigos")
+                return None
+            
             paginas = self.organizar_productos_especiales(productos)
             total_paginas = len(paginas)
             print(f"📄 Total páginas: {total_paginas}")
@@ -415,7 +479,6 @@ class GeneradorCatalogo3x7:
                 print(f"  Página {pagina_global}/{total_paginas} generada")
                 pagina_global += 1
             
-            # Combinar páginas
             merger = PyPDF2.PdfMerger()
             for archivo in paginas_generadas:
                 merger.append(archivo)
@@ -424,10 +487,18 @@ class GeneradorCatalogo3x7:
             merger.write(output_filename)
             merger.close()
             
-            print(f"\n✅ Catálogo de productos generado temporalmente: {output_filename}")
-            return output_filename
+            carpeta_destino = f"{self.carpeta_base}/catalogo_personalizado"
+            os.makedirs(carpeta_destino, exist_ok=True)
+            
+            destino = os.path.join(carpeta_destino, "catalogo_productos.pdf")
+            shutil.move(output_filename, destino)
+            print(f"📁 Archivo guardado en: {destino}")
+            
+            return destino
         
-        return None
+        else:
+            print("❌ Modo no válido")
+            return None
     
     async def _procesar_y_guardar(self, departamentos):
         """Procesa departamentos y guarda el PDF en la ubicación correcta"""
