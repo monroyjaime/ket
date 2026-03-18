@@ -367,12 +367,12 @@ class GeneradorCatalogo3x7:
         return output_filename
     
     async def generar_catalogo(self):
-        print(f"🔴 DEBUG - Modo: linea={self.linea}, dptos={self.dptos}, productos={self.productos}")
         """Genera el catálogo según el modo seleccionado"""
+        print(f"\n🔴 DEBUG - Modo: linea={self.linea}, dptos={self.dptos}, productos={self.productos}")
         print(f"\n{'='*60}")
         
         # ============================================
-        # MODO 1: LÍNEA COMPLETA ...
+        # MODO 1: LÍNEA COMPLETA
         # ============================================
         if self.linea and not self.dptos and not self.productos:
             print(f"🚀 GENERANDO CATÁLOGO {self.nombre_linea.upper()} (LÍNEA COMPLETA)")
@@ -400,6 +400,12 @@ class GeneradorCatalogo3x7:
                 
                 shutil.move(archivo_temporal, destino)
                 print(f"📁 Archivo guardado en: {destino}")
+                
+                if os.path.exists(destino):
+                    print(f"   ✅ Confirmado: {destino}")
+                else:
+                    print(f"   ❌ Error: No se pudo guardar en {destino}")
+                
                 return destino
             
             return None
@@ -443,13 +449,18 @@ class GeneradorCatalogo3x7:
                     nombre_final = f"catalogo_dptos_{'_'.join(map(str, self.dptos))}.pdf"
                 
                 destino = os.path.join(carpeta_destino, nombre_final)
+                
+                print(f"🔴 DEBUG - Intentando guardar en: {destino}")
+                print(f"   Archivo temporal existe: {os.path.exists(archivo_temporal)}")
+                
                 shutil.move(archivo_temporal, destino)
                 print(f"📁 Archivo guardado en: {destino}")
-                # 🔴 NUEVO: Verificar que realmente se guardó
+                
                 if os.path.exists(destino):
                     print(f"   ✅ Confirmado: {destino}")
                 else:
                     print(f"   ❌ Error: No se pudo guardar en {destino}")
+                
                 return destino
             
             return None
@@ -500,60 +511,23 @@ class GeneradorCatalogo3x7:
             os.makedirs(carpeta_destino, exist_ok=True)
             
             destino = os.path.join(carpeta_destino, "catalogo_productos.pdf")
+            
+            print(f"🔴 DEBUG - Intentando guardar en: {destino}")
+            print(f"   Archivo temporal existe: {os.path.exists(output_filename)}")
+            
             shutil.move(output_filename, destino)
             print(f"📁 Archivo guardado en: {destino}")
+            
+            if os.path.exists(destino):
+                print(f"   ✅ Confirmado: {destino}")
+            else:
+                print(f"   ❌ Error: No se pudo guardar en {destino}")
             
             return destino
         
         else:
             print("❌ Modo no válido")
             return None
-    
-    async def _procesar_y_guardar(self, departamentos):
-        """Procesa departamentos y guarda el PDF en la ubicación correcta"""
-        
-        # 🔴 Detectar si es un solo departamento
-        es_un_solo_dpto = len(departamentos) == 1 and self.dptos and len(self.dptos) == 1
-        
-        if es_un_solo_dpto:
-            dpto = departamentos[0]
-            # Forzar la línea según el departamento real
-            linea_real = 'A' if dpto['num'] == 1 else 'F'
-            print(f"  🔧 Modo departamento único: forzando línea {linea_real}")
-            linea_original = self.linea
-            self.linea = linea_real
-        
-        archivo_temporal = await self.generar_catalogo_linea(departamentos)
-        
-        if es_un_solo_dpto:
-            self.linea = linea_original  # Restauramos
-        
-        if archivo_temporal and os.path.exists(archivo_temporal):
-            # Determinar carpeta destino
-            if self.linea == 'A':
-                carpeta_destino = f"{self.carpeta_base}/catalogo_automotriz"
-            elif self.linea == 'F':
-                carpeta_destino = f"{self.carpeta_base}/catalogo_ferretero"
-            else:
-                carpeta_destino = f"{self.carpeta_base}/catalogo_personalizado"
-            
-            os.makedirs(carpeta_destino, exist_ok=True)
-            
-            # Nombre final
-            if self.dptos and len(self.dptos) == 1:
-                nombre_final = f"catalogo_dptos_{self.dptos[0]}.pdf"
-            elif self.linea:
-                nombre_final = f"catalogo_linea_{self.linea}.pdf"
-            else:
-                nombre_final = os.path.basename(archivo_temporal)
-            
-            destino = os.path.join(carpeta_destino, nombre_final)
-            shutil.move(archivo_temporal, destino)
-            print(f"📁 Archivo guardado en: {destino}")
-            
-            return destino
-        
-        return None
     
     def __del__(self):
         if hasattr(self, 'conn'):

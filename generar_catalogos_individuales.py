@@ -5,7 +5,7 @@ import argparse
 import psycopg2
 from psycopg2.extras import RealDictCursor
 from datetime import datetime
-# just a comment
+
 class GeneradorCatalogosIndividuales:
     def __init__(self, conn_params):
         self.conn_params = conn_params
@@ -107,6 +107,7 @@ class GeneradorCatalogosIndividuales:
         
         total_generados = 0
         total_fallidos = 0
+        fallidos_lista = []
         
         # Procesar Automotriz
         self.log("\n" + "=" * 60)
@@ -122,6 +123,7 @@ class GeneradorCatalogosIndividuales:
                 await asyncio.sleep(2)
             else:
                 total_fallidos += 1
+                fallidos_lista.append(f"A:{dpto_id}")
         
         # Procesar Ferretero
         self.log("\n" + "=" * 60)
@@ -137,6 +139,7 @@ class GeneradorCatalogosIndividuales:
                 await asyncio.sleep(2)
             else:
                 total_fallidos += 1
+                fallidos_lista.append(f"F:{dpto_id}")
         
         # Resumen final
         self.log("\n" + "=" * 80)
@@ -144,6 +147,8 @@ class GeneradorCatalogosIndividuales:
         self.log("=" * 80)
         self.log(f"✅ Generados correctamente: {total_generados}")
         self.log(f"❌ Fallidos: {total_fallidos}")
+        if fallidos_lista:
+            self.log(f"📋 IDs fallidos: {', '.join(fallidos_lista)}")
         self.log(f"🎚️ Calidad usada: {calidad}")
         self.log("=" * 80)
         
