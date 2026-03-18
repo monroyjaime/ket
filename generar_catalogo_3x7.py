@@ -373,6 +373,9 @@ class GeneradorCatalogo3x7:
             print(f"🚀 GENERANDO CATÁLOGO {self.nombre_linea.upper()} (LÍNEA COMPLETA)")
         elif self.dptos:
             print(f"🚀 GENERANDO CATÁLOGO PERSONALIZADO ({len(self.dptos)} DEPARTAMENTOS)")
+            self.resetear_first_prod(self.dptos)
+            departamentos = self.obtener_departamentos_por_ids(self.dptos)
+            return await self._procesar_y_guardar(departamentos, modo_dptos=True)
         elif self.productos:
             print(f"🚀 GENERANDO CATÁLOGO DE PRODUCTOS ESPECÍFICOS ({len(self.productos)} PRODUCTOS)")
         print(f"{'='*60}")
@@ -426,13 +429,20 @@ class GeneradorCatalogo3x7:
         
         return None
     
-    async def _procesar_y_guardar(self, departamentos):
+    async def _procesar_y_guardar(self, departamentos, modo_dptos=False):
         """Procesa departamentos y guarda el PDF en la ubicación correcta"""
         archivo_temporal = await self.generar_catalogo_linea(departamentos)
         
         if archivo_temporal and os.path.exists(archivo_temporal):
-            # Determinar carpeta destino según la línea
-            if self.linea == 'A':
+            # Determinar carpeta destino según el modo
+            if modo_dptos and len(departamentos) == 1:
+                # Si es un solo departamento, usar su línea real
+                dpto = departamentos[0]
+                if dpto['num'] == 1:
+                    carpeta_destino = f"{self.carpeta_base}/catalogo_automotriz"
+                else:
+                    carpeta_destino = f"{self.carpeta_base}/catalogo_ferretero"
+            elif self.linea == 'A':
                 carpeta_destino = f"{self.carpeta_base}/catalogo_automotriz"
             elif self.linea == 'F':
                 carpeta_destino = f"{self.carpeta_base}/catalogo_ferretero"
@@ -441,7 +451,7 @@ class GeneradorCatalogo3x7:
             
             os.makedirs(carpeta_destino, exist_ok=True)
             
-            # Nombre final
+            # Nombre final (igual que antes)
             if self.dptos and len(self.dptos) == 1:
                 nombre_final = f"catalogo_dptos_{self.dptos[0]}.pdf"
             elif self.linea:
@@ -450,8 +460,6 @@ class GeneradorCatalogo3x7:
                 nombre_final = os.path.basename(archivo_temporal)
             
             destino = os.path.join(carpeta_destino, nombre_final)
-            
-            # Mover archivo
             shutil.move(archivo_temporal, destino)
             print(f"📁 Archivo guardado en: {destino}")
             
