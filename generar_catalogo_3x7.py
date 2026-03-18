@@ -372,7 +372,7 @@ class GeneradorCatalogo3x7:
         print(f"\n{'='*60}")
         
         # ============================================
-        # MODO 1: LÍNEA COMPLETA
+        # MODO 1: LÍNEA COMPLETA ...
         # ============================================
         if self.linea and not self.dptos and not self.productos:
             print(f"🚀 GENERANDO CATÁLOGO {self.nombre_linea.upper()} (LÍNEA COMPLETA)")
