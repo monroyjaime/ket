@@ -5,38 +5,39 @@ import os
 import argparse
 import psycopg2
 from psycopg2.extras import RealDictCursor
+import shutil
 
 class GeneradorCatalogo3x7:
-    def __init__(self, linea=None, dptos=None, productos=None, conn_params=None, base_url=None, carpeta_salida="/var/www/html/pdfs"):
+    def __init__(self, linea=None, dptos=None, productos=None, conn_params=None, 
+                 base_url=None, calidad="borrador", carpeta_salida="/var/www/html/pdfs"):
         self.linea = linea
-        self.linea_num = 1 if linea == 'A' else 2 if linea else None
-        self.dptos = dptos  # Lista de IDs de departamentos
-        self.productos = productos  # Lista de códigos de producto
-        self.prefijo = 'A' if linea == 'A' else 'F' if linea else 'GEN'
-        self.nombre_linea = 'Automotriz' if linea == 'A' else 'Ferretero' if linea else 'Personalizado'
+        self.dptos = dptos
+        self.productos = productos
+        self.calidad = calidad  # 'borrador' o 'impresion'
         self.base_url = base_url
-        self.carpeta_salida = os.path.join(carpeta_salida, f"catalogo_{self.nombre_linea.lower()}")
-        os.makedirs(self.carpeta_salida, exist_ok=True)
+        self.carpeta_base = carpeta_salida
+        
+        # Determinar la línea si tenemos dptos
+        if dptos and not linea:
+            with psycopg2.connect(**conn_params, cursor_factory=RealDictCursor) as conn:
+                with conn.cursor() as cur:
+                    cur.execute("SELECT num FROM departamentos WHERE id = %s", (dptos[0],))
+                    result = cur.fetchone()
+                    if result:
+                        self.linea_num = result['num']
+                        self.linea = 'A' if self.linea_num == 1 else 'F'
+                    else:
+                        self.linea_num = None
+                        self.linea = None
+        else:
+            self.linea_num = 1 if linea == 'A' else 2 if linea else None
+        
+        self.prefijo = 'A' if self.linea == 'A' else 'F' if self.linea else 'GEN'
+        self.nombre_linea = 'Automotriz' if self.linea == 'A' else 'Ferretero' if self.linea else 'Personalizado'
         
         # Conexión a PostgreSQL
         self.conn = psycopg2.connect(**conn_params, cursor_factory=RealDictCursor)
         self.conn.autocommit = True
-
-    def calcular_paginas_departamento(self, num_productos, first_prod):
-        """
-        Calcula páginas para formato con foto grande:
-        - Con título: 21 productos (3x7)
-        - Sin título: 24 productos (3x8)
-        """
-        if first_prod == 1:
-            if num_productos <= 21:
-                return 1
-            else:
-                restantes = num_productos - 21
-                paginas_extra = (restantes + 23) // 24
-                return 1 + paginas_extra
-        else:
-            return (num_productos + 23) // 24    
     
     def resetear_first_prod(self, dpto_ids=None):
         """Resetea first_prod a 1 para los departamentos especificados"""
@@ -51,6 +52,26 @@ class GeneradorCatalogo3x7:
             else:
                 print("  ⚠️ No se reseteó ningún first_prod")
             self.conn.commit()
+    
+    def obtener_departamentos_por_ids(self, dpto_ids):
+        """Obtiene departamentos específicos por sus IDs"""
+        with self.conn.cursor() as cur:
+            query = """
+                SELECT 
+                    id, 
+                    name as nombre, 
+                    num, 
+                    catalogo_orden as orden,
+                    catalogo_num_prod as num_productos,
+                    catalogo_first_prod as first_prod,
+                    img_route
+                FROM departamentos 
+                WHERE id = ANY(%s)
+                  AND catalogo_num_prod > 0
+                ORDER BY id
+            """
+            cur.execute(query, (dpto_ids,))
+            return cur.fetchall()
     
     def obtener_departamentos_por_linea(self):
         """Obtiene departamentos por línea (modo tradicional)"""
@@ -71,26 +92,6 @@ class GeneradorCatalogo3x7:
                 ORDER BY catalogo_orden
             """
             cur.execute(query, (self.linea_num,))
-            return cur.fetchall()
-    
-    def obtener_departamentos_por_ids(self, dpto_ids):
-        """Obtiene departamentos específicos por sus IDs"""
-        with self.conn.cursor() as cur:
-            query = """
-                SELECT 
-                    id, 
-                    name as nombre, 
-                    num, 
-                    catalogo_orden as orden,
-                    catalogo_num_prod as num_productos,
-                    catalogo_first_prod as first_prod,
-                    img_route
-                FROM departamentos 
-                WHERE id = ANY(%s)
-                  AND catalogo_num_prod > 0
-                ORDER BY id
-            """
-            cur.execute(query, (dpto_ids,))
             return cur.fetchall()
     
     def obtener_productos_por_codigos(self, codigos):
@@ -115,59 +116,21 @@ class GeneradorCatalogo3x7:
             cur.execute(query, (codigos,))
             return cur.fetchall()
     
-    async def generar_pagina(self, dpto_id, num_pagina, first_prod, pagina_global, total_paginas):
-        """Genera una página PDF con escala fija 0.95 (foto más grande)"""
-        archivo = os.path.join(self.carpeta_salida, f"temp_{dpto_id}_{num_pagina}.pdf")
-        
-        async with async_playwright() as p:
-            browser = await p.chromium.launch(headless=True)
-            page = await browser.new_page()
-            
-            url = f"{self.base_url}?dpto_id={dpto_id}&page_num={num_pagina}&role_num=-1&first_prod={first_prod}&page_global={pagina_global}&total_paginas={total_paginas}"
-            print(f"      🌐 Cargando: {url}")
-            
-            await page.goto(url, wait_until="networkidle", timeout=30000)
-            
-            await page.pdf(
-                path=archivo,
-                format="Letter",
-                scale=0.80,
-                print_background=True,
-                tagged=True,
-                margin={"top": "5.5mm", "bottom": "5.5mm", "left": "10mm", "right": "10mm"}
-            )
-            
-            await browser.close()
-        
-        return archivo
-
-    async def generar_pagina_productos_especificos(self, productos, pagina_global, total_paginas):
-        """Genera una página con productos específicos (agrupados por dpto)"""
-        archivo = os.path.join(self.carpeta_salida, f"temp_especial_{pagina_global}.pdf")
-        
-        # Construir URL con los códigos de producto
-        codigos_str = ','.join([p['code'] for p in productos])
-        url = f"{self.base_url}?modo=especial&codigos={codigos_str}&page_global={pagina_global}&total_paginas={total_paginas}"
-        
-        async with async_playwright() as p:
-            browser = await p.chromium.launch(headless=True)
-            page = await browser.new_page()
-            
-            print(f"      🌐 Cargando productos especiales: {url[:100]}...")
-            await page.goto(url, wait_until="networkidle", timeout=30000)
-            
-            await page.pdf(
-                path=archivo,
-                format="Letter",
-                scale=0.80,
-                print_background=True,
-                tagged=True,
-                margin={"top": "5.5mm", "bottom": "5.5mm", "left": "10mm", "right": "10mm"}
-            )
-            
-            await browser.close()
-        
-        return archivo
+    def calcular_paginas_departamento(self, num_productos, first_prod):
+        """
+        Calcula páginas para formato con foto grande:
+        - Con título: 21 productos (3x7)
+        - Sin título: 24 productos (3x8)
+        """
+        if first_prod == 1:
+            if num_productos <= 21:
+                return 1
+            else:
+                restantes = num_productos - 21
+                paginas_extra = (restantes + 23) // 24
+                return 1 + paginas_extra
+        else:
+            return (num_productos + 23) // 24
     
     def organizar_productos_especiales(self, productos):
         """
@@ -221,77 +184,92 @@ class GeneradorCatalogo3x7:
         
         return paginas
     
-    async def generar_catalogo(self):
-        """Genera el catálogo según el modo seleccionado"""
-        print(f"\n{'='*60}")
-        if self.linea:
-            print(f"🚀 GENERANDO CATÁLOGO {self.nombre_linea.upper()} (LÍNEA COMPLETA)")
-        elif self.dptos:
-            print(f"🚀 GENERANDO CATÁLOGO PERSONALIZADO ({len(self.dptos)} DEPARTAMENTOS)")
-        elif self.productos:
-            print(f"🚀 GENERANDO CATÁLOGO DE PRODUCTOS ESPECÍFICOS ({len(self.productos)} PRODUCTOS)")
-        print(f"{'='*60}")
+    async def generar_pagina_productos_especificos(self, productos, pagina_global, total_paginas):
+        """Genera una página con productos específicos (agrupados por dpto)"""
+        archivo = os.path.join("/tmp", f"temp_especial_{pagina_global}.pdf")
         
-        # Obtener datos según el modo
-        if self.linea:
-            self.resetear_first_prod()
-            departamentos = self.obtener_departamentos_por_linea()
-            # Usar la lógica existente para líneas completas...
-            return await self.generar_catalogo_linea(departamentos)
+        # Construir URL con los códigos de producto
+        codigos_str = ','.join([p['code'] for p in productos])
+        url = f"{self.base_url}?modo=especial&codigos={codigos_str}&page_global={pagina_global}&total_paginas={total_paginas}"
         
-        elif self.dptos:
-            self.resetear_first_prod(self.dptos)
-            departamentos = self.obtener_departamentos_por_ids(self.dptos)
-            return await self.generar_catalogo_linea(departamentos)
-        
-        elif self.productos:
-            productos = self.obtener_productos_por_codigos(self.productos)
-            print(f"\n📦 Productos encontrados: {len(productos)}")
-            
-            # Organizar productos en páginas
-            paginas = self.organizar_productos_especiales(productos)
-            total_paginas = len(paginas)
-            print(f"📄 Total páginas: {total_paginas}")
-            
-            paginas_generadas = []
-            pagina_global = 1
-            
-            for pagina in paginas:
-                archivo = await self.generar_pagina_productos_especificos(
-                    [item for item in pagina if item['tipo'] == 'producto'],
-                    pagina_global,
-                    total_paginas
+        async with async_playwright() as p:
+            # Configurar Chromium según la calidad
+            if self.calidad == "borrador":
+                browser = await p.chromium.launch(
+                    headless=True,
+                    args=['--disable-pdf-tagging']
                 )
-                paginas_generadas.append(archivo)
-                print(f"  Página {pagina_global}/{total_paginas} generada")
-                pagina_global += 1
+            else:
+                browser = await p.chromium.launch(headless=True)
             
-            # Combinar páginas
-            output_filename = os.path.join(
-                self.carpeta_salida, 
-                f"catalogo_productos_especiales.pdf"
-            )
+            page = await browser.new_page()
             
-            merger = PyPDF2.PdfMerger()
-            for archivo in paginas_generadas:
-                merger.append(archivo)
+            print(f"      🌐 Cargando productos especiales: {url[:100]}...")
+            await page.goto(url, wait_until="networkidle", timeout=30000)
             
-            merger.write(output_filename)
-            merger.close()
+            pdf_options = {
+                "path": archivo,
+                "format": "Letter",
+                "scale": 0.85,
+                "print_background": True,
+                "margin": {"top": "5.5mm", "bottom": "5.5mm", "left": "10mm", "right": "10mm"}
+            }
             
-            print(f"\n✅ Catálogo de productos generado: {output_filename}")
-            return output_filename
+            if self.calidad == "impresion":
+                pdf_options["tagged"] = True
+                pdf_options["prefer_css_page_size"] = True
+            
+            await page.pdf(**pdf_options)
+            await browser.close()
+        
+        return archivo
+    
+    async def generar_pagina(self, dpto_id, num_pagina, first_prod, pagina_global, total_paginas):
+        """Genera una página PDF con calidad ajustable"""
+        archivo = os.path.join("/tmp", f"temp_{dpto_id}_{num_pagina}_{pagina_global}.pdf")
+        
+        async with async_playwright() as p:
+            # Configurar Chromium según la calidad
+            if self.calidad == "borrador":
+                browser = await p.chromium.launch(
+                    headless=True,
+                    args=['--disable-pdf-tagging']
+                )
+            else:
+                browser = await p.chromium.launch(headless=True)
+            
+            page = await browser.new_page()
+            
+            url = f"{self.base_url}?dpto_id={dpto_id}&page_num={num_pagina}&role_num=-1&first_prod={first_prod}&page_global={pagina_global}&total_paginas={total_paginas}"
+            print(f"      🌐 Cargando: {url}")
+            
+            await page.goto(url, wait_until="networkidle", timeout=30000)
+            
+            pdf_options = {
+                "path": archivo,
+                "format": "Letter",
+                "scale": 0.85,
+                "print_background": True,
+                "margin": {"top": "5.5mm", "bottom": "5.5mm", "left": "10mm", "right": "10mm"}
+            }
+            
+            if self.calidad == "impresion":
+                pdf_options["tagged"] = True
+                pdf_options["prefer_css_page_size"] = True
+            
+            await page.pdf(**pdf_options)
+            await browser.close()
+        
+        return archivo
     
     async def generar_catalogo_linea(self, departamentos):
-        """Genera catálogo para una lista de departamentos (reutiliza lógica existente)"""
+        """Genera catálogo para una lista de departamentos"""
         
         if not departamentos:
             print("❌ No hay departamentos para procesar")
-            return
+            return None
         
-        # ============================================
         # Calcular páginas totales
-        # ============================================
         paginas_por_departamento = []
         total_paginas_global = 0
         
@@ -308,9 +286,7 @@ class GeneradorCatalogo3x7:
         
         print(f"\n📊 Total páginas del catálogo: {total_paginas_global}")
         
-        # ============================================
         # Generar páginas
-        # ============================================
         paginas_generadas = []
         total_productos = 0
         pagina_global = 1
@@ -327,13 +303,16 @@ class GeneradorCatalogo3x7:
             total_productos += dpto['num_productos']
             
             for num_pag in range(1, paginas_necesarias + 1):
-                # Calcular offset
-                if num_pag == 1:
-                    offset = dpto['first_prod'] - 1
-                else:
-                    offset = (dpto['first_prod'] - 1) + 21 + ((num_pag - 2) * 24)
+                archivo = await self.generar_pagina(
+                    dpto['id'], 
+                    num_pag, 
+                    dpto['first_prod'],
+                    pagina_global,
+                    total_paginas_global
+                )
+                paginas_generadas.append(archivo)
                 
-                # Calcular productos en esta página
+                # Calcular productos en esta página (solo para info)
                 if num_pag == 1 and dpto['first_prod'] == 1:
                     prod_pag = min(21, dpto['num_productos'])
                 else:
@@ -344,15 +323,6 @@ class GeneradorCatalogo3x7:
                             prod_pag = min(24, dpto['num_productos'] - 21 - (24 * (num_pag - 2)))
                     else:
                         prod_pag = min(24, dpto['num_productos'] - (24 * (num_pag - 1)) - (dpto['first_prod'] - 1))
-                
-                archivo = await self.generar_pagina(
-                    dpto['id'], 
-                    num_pag, 
-                    dpto['first_prod'],
-                    pagina_global,
-                    total_paginas_global
-                )
-                paginas_generadas.append(archivo)
                 
                 print(f"    Página {num_pag}/{paginas_necesarias} (global {pagina_global}/{total_paginas_global}): {prod_pag} productos")
                 
@@ -368,16 +338,17 @@ class GeneradorCatalogo3x7:
         # Nombre del archivo según el modo
         if self.linea:
             sufijo = f"linea_{self.linea}"
+            nombre_archivo = f"catalogo_{sufijo}.pdf"
         elif self.dptos:
-            sufijo = f"dptos_{'_'.join(map(str, self.dptos))}"
+            if len(self.dptos) == 1:
+                nombre_archivo = f"catalogo_dptos_{self.dptos[0]}.pdf"
+            else:
+                sufijo = f"dptos_{'_'.join(map(str, self.dptos))}"
+                nombre_archivo = f"catalogo_{sufijo}.pdf"
         else:
-            sufijo = "personalizado"
+            nombre_archivo = "catalogo_personalizado.pdf"
         
-        output_filename = os.path.join(
-            self.carpeta_salida, 
-            f"catalogo_{sufijo}.pdf"
-        )
-        
+        output_filename = os.path.join("/tmp", nombre_archivo)
         merger.write(output_filename)
         merger.close()
         
@@ -388,22 +359,122 @@ class GeneradorCatalogo3x7:
             except:
                 pass
         
-        print(f"\n✅ Catálogo generado: {output_filename}")
+        print(f"\n✅ Catálogo generado temporalmente: {output_filename}")
         print(f"📄 Total páginas: {len(paginas_generadas)}")
         print(f"📦 Total productos: {total_productos}")
+        print(f"🎚️ Calidad: {self.calidad}")
         
         return output_filename
+    
+    async def generar_catalogo(self):
+        """Genera el catálogo según el modo seleccionado"""
+        print(f"\n{'='*60}")
+        if self.linea:
+            print(f"🚀 GENERANDO CATÁLOGO {self.nombre_linea.upper()} (LÍNEA COMPLETA)")
+        elif self.dptos:
+            print(f"🚀 GENERANDO CATÁLOGO PERSONALIZADO ({len(self.dptos)} DEPARTAMENTOS)")
+        elif self.productos:
+            print(f"🚀 GENERANDO CATÁLOGO DE PRODUCTOS ESPECÍFICOS ({len(self.productos)} PRODUCTOS)")
+        print(f"{'='*60}")
+        print(f"🎚️ Calidad: {self.calidad}")
+        
+        # Obtener datos según el modo
+        if self.linea:
+            self.resetear_first_prod()
+            departamentos = self.obtener_departamentos_por_linea()
+            return await self._procesar_y_guardar(departamentos)
+        
+        elif self.dptos:
+            self.resetear_first_prod(self.dptos)
+            departamentos = self.obtener_departamentos_por_ids(self.dptos)
+            return await self._procesar_y_guardar(departamentos)
+        
+        elif self.productos:
+            productos = self.obtener_productos_por_codigos(self.productos)
+            print(f"\n📦 Productos encontrados: {len(productos)}")
+            
+            # Organizar productos en páginas
+            paginas = self.organizar_productos_especiales(productos)
+            total_paginas = len(paginas)
+            print(f"📄 Total páginas: {total_paginas}")
+            
+            paginas_generadas = []
+            pagina_global = 1
+            
+            for pagina in paginas:
+                productos_pagina = [item for item in pagina if item['tipo'] == 'producto']
+                archivo = await self.generar_pagina_productos_especificos(
+                    productos_pagina,
+                    pagina_global,
+                    total_paginas
+                )
+                paginas_generadas.append(archivo)
+                print(f"  Página {pagina_global}/{total_paginas} generada")
+                pagina_global += 1
+            
+            # Combinar páginas
+            merger = PyPDF2.PdfMerger()
+            for archivo in paginas_generadas:
+                merger.append(archivo)
+            
+            output_filename = os.path.join("/tmp", "catalogo_productos_especiales.pdf")
+            merger.write(output_filename)
+            merger.close()
+            
+            print(f"\n✅ Catálogo de productos generado temporalmente: {output_filename}")
+            return output_filename
+        
+        return None
+    
+    async def _procesar_y_guardar(self, departamentos):
+        """Procesa departamentos y guarda el PDF en la ubicación correcta"""
+        archivo_temporal = await self.generar_catalogo_linea(departamentos)
+        
+        if archivo_temporal and os.path.exists(archivo_temporal):
+            # Determinar carpeta destino según la línea
+            if self.linea == 'A':
+                carpeta_destino = f"{self.carpeta_base}/catalogo_automotriz"
+            elif self.linea == 'F':
+                carpeta_destino = f"{self.carpeta_base}/catalogo_ferretero"
+            else:
+                carpeta_destino = f"{self.carpeta_base}/catalogo_personalizado"
+            
+            os.makedirs(carpeta_destino, exist_ok=True)
+            
+            # Nombre final
+            if self.dptos and len(self.dptos) == 1:
+                nombre_final = f"catalogo_dptos_{self.dptos[0]}.pdf"
+            elif self.linea:
+                nombre_final = f"catalogo_linea_{self.linea}.pdf"
+            else:
+                nombre_final = os.path.basename(archivo_temporal)
+            
+            destino = os.path.join(carpeta_destino, nombre_final)
+            
+            # Mover archivo
+            shutil.move(archivo_temporal, destino)
+            print(f"📁 Archivo guardado en: {destino}")
+            
+            return destino
+        
+        return None
+    
+    def __del__(self):
+        if hasattr(self, 'conn'):
+            self.conn.close()
 
 def main():
     parser = argparse.ArgumentParser(description='Generador de catálogos KET - Modos flexibles')
     
-    # Grupo exclusivo: solo uno de estos puede usarse
+    # Grupo exclusivo
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument('--linea', type=str, choices=['A', 'F'], help='Línea completa (A o F)')
-    group.add_argument('--dptos', type=str, help='Lista de IDs de departamentos separados por coma (ej: 101,103,105)')
-    group.add_argument('--productos', type=str, help='Lista de códigos de producto separados por coma (ej: SW09C187,GA000-05)')
+    group.add_argument('--dptos', type=str, help='Lista de IDs de departamentos separados por coma')
+    group.add_argument('--productos', type=str, help='Lista de códigos de producto separados por coma')
     
-    parser.add_argument('--limite', type=int, default=None, help='Límite de departamentos (solo con --linea)')
+    parser.add_argument('--limite', type=int, default=None, help='Límite de departamentos')
+    parser.add_argument('--calidad', type=str, choices=['borrador', 'impresion'], default='borrador',
+                       help='Calidad del PDF: borrador (menor peso) o impresion (máxima calidad)')
     
     args = parser.parse_args()
     
@@ -412,7 +483,7 @@ def main():
         'port': 5432,
         'database': 'ketdb',
         'user': 'ketadmin',
-        'password': 'LondonTown'
+        'password': 'ColocarPasswordAqui'
     }
     
     base_url = "https://ketelectropartes.com/catalogo/indexDpto3x7.php"
@@ -434,7 +505,8 @@ def main():
         dptos=dptos,
         productos=productos,
         conn_params=conn_params,
-        base_url=base_url
+        base_url=base_url,
+        calidad=args.calidad
     )
     
     asyncio.run(generador.generar_catalogo())
