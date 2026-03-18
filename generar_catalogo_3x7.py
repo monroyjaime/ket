@@ -367,6 +367,7 @@ class GeneradorCatalogo3x7:
         return output_filename
     
     async def generar_catalogo(self):
+        print(f"🔴 DEBUG - Modo: linea={self.linea}, dptos={self.dptos}, productos={self.productos}")
         """Genera el catálogo según el modo seleccionado"""
         print(f"\n{'='*60}")
         
@@ -393,6 +394,9 @@ class GeneradorCatalogo3x7:
                 
                 nombre_final = f"catalogo_linea_{self.linea}.pdf"
                 destino = os.path.join(carpeta_destino, nombre_final)
+
+                print(f"🔴 DEBUG - Intentando guardar en: {destino}")
+                print(f"   Archivo temporal existe: {os.path.exists(archivo_temporal)}")
                 
                 shutil.move(archivo_temporal, destino)
                 print(f"📁 Archivo guardado en: {destino}")
