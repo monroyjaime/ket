@@ -5,7 +5,7 @@ import argparse
 import psycopg2
 from psycopg2.extras import RealDictCursor
 from datetime import datetime
-
+# just a comment
 class GeneradorCatalogosIndividuales:
     def __init__(self, conn_params):
         self.conn_params = conn_params
