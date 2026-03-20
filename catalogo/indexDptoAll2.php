@@ -40,12 +40,20 @@ foreach ($consult as $value){
     $currCatImgRoute = $value->img_route;
 }
 
-$tags = '<div class="col text-center">';
+$tags = '<div class="col text-center d-flex justify-content-center align-items-center gap-3">';
 
-$tags .=    '<h2>Catalogo de '.$currCatName;
+// Titulo con nombre del departamento
+$tags .=    '<h2 class="mb-0">Catálogo de '.$currCatName.'</h2>';
+
+// Icono PDF - enlace al catalogo individual del departamento
+$ruta_pdf = $line == 1 ? "/pdfs/catalogo_automotriz/catalogo_dptos_{$dptoId}.pdf" : "/pdfs/catalogo_ferretero/catalogo_dptos_{$dptoId}.pdf";
+$tags .=    '<a href="'.$ruta_pdf.'" target="_blank" title="Ver catálogo en PDF">';
+$tags .=        '<i class="bi bi-file-pdf-fill" style="font-size: 1.8rem; color: #dc3545;"></i>';
+$tags .=    '</a>';
+
 $tags .= '</div>';
 
-$tags .=    '<div class="row row-cols-1 row-cols-sm-4 g-4 ">';
+$tags .=    '<div class="row row-cols-1 row-cols-sm-4 g-4 mt-2">';
 
 $query  = "SELECT id,code,name,photo_url,".$strTipoPrecio." AS precio,unit,current_stock FROM productos WHERE show='t' AND dpto_id=";
 $query .= $dptoId." AND photo_url != 'empty.jpg' AND ".$strTipoPrecio." > 0 ORDER BY orden,code";
@@ -112,6 +120,24 @@ $tags .=    '</div>';
             .icon-dark-blue{
                 color: #003272;
             }
+            .d-flex {
+                display: flex;
+            }
+            .justify-content-center {
+                justify-content: center;
+            }
+            .align-items-center {
+                align-items: center;
+            }
+            .gap-3 {
+                gap: 1rem;
+            }
+            .mb-0 {
+                margin-bottom: 0;
+            }
+            .mt-2 {
+                margin-top: 0.5rem;
+            }
         </style>
 	</head>
 
@@ -163,4 +189,4 @@ $tags .=    '</div>';
 
 </body>
 
-</html>	
+</html>
