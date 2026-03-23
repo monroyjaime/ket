@@ -187,7 +187,7 @@ class GeneradorCatalogo3x7:
     
     async def generar_pagina_productos_especificos(self, productos, pagina_global, total_paginas):
         """Genera una página con productos específicos (agrupados por dpto)"""
-        archivo = os.path.join("self.temp_dir", f"temp_especial_{pagina_global}.pdf")
+        archivo = os.path.join(self.temp_dir, f"temp_especial_{pagina_global}.pdf")
         
         # Construir URL con los códigos de producto
         codigos_str = ','.join([p['code'] for p in productos])
@@ -227,7 +227,7 @@ class GeneradorCatalogo3x7:
     
     async def generar_pagina(self, dpto_id, num_pagina, first_prod, pagina_global, total_paginas):
         """Genera una página PDF con calidad ajustable"""
-        archivo = os.path.join("self.temp_dir", f"temp_{dpto_id}_{num_pagina}_{pagina_global}.pdf")
+        archivo = os.path.join(self.temp_dir, f"temp_{dpto_id}_{num_pagina}_{pagina_global}.pdf")
         
         async with async_playwright() as p:
             # Configurar Chromium según la calidad
@@ -349,7 +349,7 @@ class GeneradorCatalogo3x7:
         else:
             nombre_archivo = "catalogo_personalizado.pdf"
         
-        output_filename = os.path.join("self.temp_dir", nombre_archivo)
+        output_filename = os.path.join(self.temp_dir, nombre_archivo)
         merger.write(output_filename)
         merger.close()
         
@@ -518,7 +518,7 @@ class GeneradorCatalogo3x7:
             for archivo in paginas_generadas:
                 merger.append(archivo)
             
-            output_filename = os.path.join("self.temp_dir", "catalogo_productos_especiales.pdf")
+            output_filename = os.path.join(self.temp_dir, "catalogo_productos_especiales.pdf")
             merger.write(output_filename)
             merger.close()
             
