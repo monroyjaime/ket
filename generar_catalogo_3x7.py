@@ -389,9 +389,17 @@ class GeneradorCatalogo3x7:
             archivo_temporal = await self.generar_catalogo_linea(departamentos)
             
             if archivo_temporal and os.path.exists(archivo_temporal):
-                carpeta_destino = f"{self.carpeta_base}/catalogo_{self.nombre_linea.lower()}"
-                os.makedirs(carpeta_destino, exist_ok=True)
+                # Carpeta base
+                carpeta_base = f"{self.carpeta_base}/catalogo_{self.nombre_linea.lower()}"
                 
+                # Si es calidad impresión, usar subcarpeta print
+                if self.calidad == "impresion":
+                    carpeta_destino = os.path.join(carpeta_base, "print")
+                else:
+                    carpeta_destino = carpeta_base
+
+                os.makedirs(carpeta_destino, exist_ok=True)   
+
                 nombre_final = f"catalogo_linea_{self.linea}.pdf"
                 destino = os.path.join(carpeta_destino, nombre_final)
 
@@ -434,13 +442,19 @@ class GeneradorCatalogo3x7:
                     # Un solo departamento - usar su línea
                     dpto = departamentos[0]
                     if dpto['num'] == 1:
-                        carpeta_destino = f"{self.carpeta_base}/catalogo_automotriz"
+                        carpeta_base = f"{self.carpeta_base}/catalogo_automotriz"
                     else:
-                        carpeta_destino = f"{self.carpeta_base}/catalogo_ferretero"
+                        carpeta_base = f"{self.carpeta_base}/catalogo_ferretero"
                 else:
                     # Múltiples departamentos - carpeta personalizada
-                    carpeta_destino = f"{self.carpeta_base}/catalogo_personalizado"
-                
+                    carpeta_base = f"{self.carpeta_base}/catalogo_personalizado"
+                    
+                # Si es calidad impresión, usar subcarpeta print
+                if self.calidad == "impresion":
+                    carpeta_destino = os.path.join(carpeta_base, "print")
+                else:
+                    carpeta_destino = carpeta_base
+
                 os.makedirs(carpeta_destino, exist_ok=True)
                 
                 if len(self.dptos) == 1:
@@ -507,7 +521,14 @@ class GeneradorCatalogo3x7:
             merger.write(output_filename)
             merger.close()
             
-            carpeta_destino = f"{self.carpeta_base}/catalogo_personalizado"
+            carpeta_base = f"{self.carpeta_base}/catalogo_personalizado"
+    
+            # Si es calidad impresión, usar subcarpeta print
+            if self.calidad == "impresion":
+                carpeta_destino = os.path.join(carpeta_base, "print")
+            else:
+                carpeta_destino = carpeta_base
+
             os.makedirs(carpeta_destino, exist_ok=True)
             
             destino = os.path.join(carpeta_destino, "catalogo_productos.pdf")
