@@ -564,8 +564,8 @@ def main():
     group.add_argument('--productos', type=str, help='Lista de códigos de producto separados por coma')
     
     parser.add_argument('--limite', type=int, default=None, help='Límite de departamentos')
-    parser.add_argument('--calidad', type=str, choices=['borrador', 'impresion'], default='borrador',
-                       help='Calidad del PDF: borrador (menor peso) o impresion (máxima calidad)')
+    parser.add_argument('--calidad', type=str, choices=['web', 'impresion'], default='web',
+                       help='Calidad del PDF: web (comprimido) o impresion (máxima calidad)')
     
     args = parser.parse_args()
     
