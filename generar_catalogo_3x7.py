@@ -17,6 +17,7 @@ class GeneradorCatalogo3x7:
         self.base_url = base_url
         self.carpeta_base = carpeta_salida
         self.temp_dir = "/home/jaime/catalogo_ket/tmp"
+        os.makedirs(self.temp_dir, exist_ok=True)
         # Determinar la línea si tenemos dptos
         if dptos and not linea:
             with psycopg2.connect(**conn_params, cursor_factory=RealDictCursor) as conn:
