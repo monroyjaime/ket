@@ -1,10 +1,10 @@
 <?php
-// API para generar un PDF de un departamento específico
+// API para generar un PDF de un departamento especifico
 header('Content-Type: application/json');
 
-// Verificar que se recibió el ID
+// Verificar que se recibio el ID
 if (!isset($_POST['dpto_id'])) {
-    echo json_encode(['success' => false, 'error' => 'No se especificó departamento']);
+    echo json_encode(['success' => false, 'error' => 'No se especifico departamento']);
     exit;
 }
 
@@ -29,7 +29,7 @@ exec($comando, $output, $return_code);
 
 // Verificar resultado
 if ($return_code === 0) {
-    // Buscar el tamaño del archivo generado
+    // Buscar el tamano del archivo generado
     $ruta_pdf_auto = "/var/www/html/pdfs/catalogo_automotriz/catalogo_dptos_{$dpto_id}.pdf";
     $ruta_pdf_ferre = "/var/www/html/pdfs/catalogo_ferretero/catalogo_dptos_{$dpto_id}.pdf";
     
