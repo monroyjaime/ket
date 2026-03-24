@@ -85,6 +85,57 @@ foreach ($departamentos as $d) {
         .badge-ferretero {
             background-color: #037C79;
         }
+        
+        /* Boton flotante de resultado */
+        .result-banner {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: #28a745;
+            color: white;
+            padding: 15px 25px;
+            border-radius: 50px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            display: none;
+            align-items: center;
+            gap: 15px;
+            z-index: 1000;
+            animation: slideIn 0.3s ease-out;
+        }
+        .result-banner a {
+            color: white;
+            text-decoration: none;
+            font-weight: bold;
+            background-color: rgba(255,255,255,0.2);
+            padding: 8px 16px;
+            border-radius: 30px;
+            transition: all 0.2s;
+        }
+        .result-banner a:hover {
+            background-color: rgba(255,255,255,0.3);
+            color: white;
+        }
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        .btn-close-result {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+            padding: 0 5px;
+        }
+        .btn-close-result:hover {
+            color: #ddd;
+        }
     </style>
 </head>
 <body>
@@ -174,9 +225,19 @@ foreach ($departamentos as $d) {
             </div>
         </div>
     </div>
+    
+    <!-- Banner flotante de resultados -->
+    <div id="result-banner" class="result-banner">
+        <i class="bi bi-check-circle-fill" style="font-size: 24px;"></i>
+        <span id="result-text">0 PDFs generados</span>
+        <a id="result-link" href="#" target="_blank">Ver PDFs</a>
+        <button class="btn-close-result" onclick="cerrarBanner()">&times;</button>
+    </div>
 
     <script>
         let procesando = false;
+        let pdfsGenerados = [];
+        let calidadActual = 'web';
         
         // Actualizar contador de seleccionados
         function actualizarContador() {
@@ -196,6 +257,49 @@ foreach ($departamentos as $d) {
         // Limpiar area de log
         function limpiarLog() {
             document.getElementById('log-area').innerHTML = '<div class="log-line info">[SISTEMA] Log limpiado.</div>';
+            pdfsGenerados = [];
+            cerrarBanner();
+        }
+        
+        // Cerrar banner
+        function cerrarBanner() {
+            document.getElementById('result-banner').style.display = 'none';
+        }
+        
+        // Mostrar banner con resultados
+        function mostrarBanner() {
+            var banner = document.getElementById('result-banner');
+            var resultText = document.getElementById('result-text');
+            var resultLink = document.getElementById('result-link');
+            var calidad = document.getElementById('calidad').value;
+            
+            var count = pdfsGenerados.length;
+            
+            if (count === 0) {
+                cerrarBanner();
+                return;
+            }
+            
+            resultText.innerText = count + ' PDF' + (count > 1 ? 's' : '') + ' generado' + (count > 1 ? 's' : '');
+            
+            if (count === 1) {
+                // Un solo PDF, enlace directo
+                resultLink.href = pdfsGenerados[0];
+                resultLink.innerText = 'Ver PDF';
+            } else {
+                // Múltiples PDFs, ir al índice
+                resultLink.href = '/pdfs/index.html';
+                resultLink.innerText = 'Ver todos (' + count + ')';
+            }
+            
+            banner.style.display = 'flex';
+            
+            // Auto-ocultar después de 10 segundos
+            setTimeout(function() {
+                if (banner.style.display === 'flex') {
+                    banner.style.display = 'none';
+                }
+            }, 10000);
         }
         
         // Agregar linea al log
@@ -210,6 +314,13 @@ foreach ($departamentos as $d) {
             div.scrollIntoView({ behavior: 'smooth', block: 'end' });
         }
         
+        // Construir URL del PDF segun departamento y calidad
+        function obtenerUrlPDF(dptoId, linea, calidad) {
+            var carpeta = (linea === 'A') ? 'catalogo_automotriz' : 'catalogo_ferretero';
+            var subcarpeta = (calidad === 'impresion') ? 'print/' : '';
+            return '/pdfs/' + carpeta + '/' + subcarpeta + 'catalogo_dptos_' + dptoId + '.pdf';
+        }
+        
         // Ejecutar actualizacion
         async function ejecutarActualizacion() {
             if (procesando) {
@@ -220,7 +331,11 @@ foreach ($departamentos as $d) {
             var checkboxes = document.querySelectorAll('.dpto-check:checked');
             var seleccionados = [];
             for (var i = 0; i < checkboxes.length; i++) {
-                seleccionados.push(checkboxes[i].value);
+                seleccionados.push({
+                    id: checkboxes[i].value,
+                    linea: checkboxes[i].dataset.linea,
+                    nombre: checkboxes[i].dataset.nombre
+                });
             }
             
             if (seleccionados.length === 0) {
@@ -229,6 +344,8 @@ foreach ($departamentos as $d) {
             }
             
             var calidad = document.getElementById('calidad').value;
+            calidadActual = calidad;
+            pdfsGenerados = [];
             procesando = true;
             var btn = document.getElementById('btn-actualizar');
             btn.disabled = true;
@@ -240,15 +357,12 @@ foreach ($departamentos as $d) {
             
             // Procesar uno por uno
             for (var i = 0; i < seleccionados.length; i++) {
-                var dptoId = seleccionados[i];
-                var dptoElement = document.querySelector('.dpto-check[value="' + dptoId + '"]');
-                var dptoNombre = dptoElement ? dptoElement.closest('.dpto-checkbox').querySelector('label').innerText : 'ID ' + dptoId;
-                
-                agregarLog('[' + (i+1) + '/' + seleccionados.length + '] Procesando: ' + dptoNombre + ' (ID: ' + dptoId + ')...', 'proc');
+                var dpto = seleccionados[i];
+                agregarLog('[' + (i+1) + '/' + seleccionados.length + '] Procesando: ' + dpto.nombre + ' (ID: ' + dpto.id + ')...', 'proc');
                 
                 try {
                     var formData = new URLSearchParams();
-                    formData.append('dpto_id', dptoId);
+                    formData.append('dpto_id', dpto.id);
                     formData.append('calidad', calidad);
                     
                     var response = await fetch('actualizar_catalogo_api.php', {
@@ -260,12 +374,15 @@ foreach ($departamentos as $d) {
                     var data = await response.json();
                     
                     if (data.success) {
-                        agregarLog('  OK ' + dptoNombre + ' - PDF generado correctamente (' + (data.tamano || '?') + ' KB)', 'ok');
+                        agregarLog('  OK ' + dpto.nombre + ' - PDF generado correctamente (' + (data.tamano || '?') + ' KB)', 'ok');
+                        // Agregar URL del PDF a la lista
+                        var urlPdf = obtenerUrlPDF(dpto.id, dpto.linea, calidad);
+                        pdfsGenerados.push(urlPdf);
                     } else {
-                        agregarLog('  ERROR ' + dptoNombre + ' - Error: ' + (data.error || 'Desconocido'), 'error');
+                        agregarLog('  ERROR ' + dpto.nombre + ' - Error: ' + (data.error || 'Desconocido'), 'error');
                     }
                 } catch (error) {
-                    agregarLog('  ERROR ' + dptoNombre + ' - Error de conexion: ' + error.message, 'error');
+                    agregarLog('  ERROR ' + dpto.nombre + ' - Error de conexion: ' + error.message, 'error');
                 }
                 
                 // Pequena pausa entre solicitudes
@@ -274,7 +391,10 @@ foreach ($departamentos as $d) {
             
             agregarLog('========================================', 'info');
             agregarLog('PROCESO COMPLETADO - ' + seleccionados.length + ' departamentos procesados', 'ok');
-            agregarLog('Los PDFs estan disponibles en: https://ketelectropartes.com/pdfs/index.html', 'info');
+            agregarLog('PDFs generados: ' + pdfsGenerados.length, 'ok');
+            
+            // Mostrar banner con resultados
+            mostrarBanner();
             
             procesando = false;
             btn.disabled = false;
