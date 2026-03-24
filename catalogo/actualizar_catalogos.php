@@ -43,7 +43,7 @@ foreach ($departamentos as $d) {
         /* Barra superior estilo página principal */
         .top-bar {
             background-color: #DDD;
-            padding: 5px 10px;
+            padding: 0px 10px;
         }
         
         .top-bar .row {
