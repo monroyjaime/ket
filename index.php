@@ -178,6 +178,12 @@ foreach ($consult as $value)
                 $icon_admin  .=                    '<h5 class="d-inline ms-2">Actualizar DB.</h5>';
                 $icon_admin  .=                '</a>';
                 $icon_admin  .=        '</li>';
+
+                $icon_admin  .=        '<li>';
+                $icon_admin  .=                '<a href="https://ketelectropartes.com/catalogo/actualizar_catalogos.php" class="btn-link text-decoration-none text-dark p-2 rounded hover-bg-light d-block" id="btnsMenu">';
+                $icon_admin  .=                    '<h5 class="d-inline ms-2">Actualizar PDFs.</h5>';
+                $icon_admin  .=                '</a>';
+                $icon_admin  .=        '</li>';
               }
               
               $icon_admin  .=    '</ul>';
