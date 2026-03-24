@@ -34,7 +34,7 @@ foreach ($departamentos as $d) {
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
     <style>
         body {
-            background-color: #FFF;
+            background-color: #DDD;
             margin: 0;
             padding: 0;
             font-family: 'Segoe UI', Arial, sans-serif;
@@ -42,7 +42,7 @@ foreach ($departamentos as $d) {
         
         /* Barra superior estilo página principal */
         .top-bar {
-            background-color: #99b9d7;
+            background-color: #DDD;
             padding: 10px 15px;
         }
         
