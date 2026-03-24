@@ -64,7 +64,7 @@ foreach ($departamentos as $d) {
         /* Título centrado sobre franja verde agua */
         .title-banner {
             background-color: #037c79;
-            padding: 0px 0;
+            padding: 5px 0;
             text-align: center;
             margin-bottom: 30px;
         }
