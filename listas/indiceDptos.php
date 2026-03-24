@@ -226,7 +226,7 @@ $total_general = $total_auto + $total_ferre;
     <div class="top-bar">
         <div class="row">
             <div class="col text-start">
-                <a href="../catalogo/index.php" class="back-icon" title="Volver al inicio">
+                <a href="index.php" class="back-icon" title="Volver al inicio">
                     <i class="bi bi-arrow-left-circle-fill"></i>
                 </a>
             </div>
