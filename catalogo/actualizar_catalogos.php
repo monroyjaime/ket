@@ -27,34 +27,96 @@ foreach ($departamentos as $d) {
 <html>
 <head>
     <meta charset="utf-8"/>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Actualizar Catalogos KET</title>
+    <meta name="viewport" content="initial-scale=1, maximum-scale=1">
+    <title>Actualizar Catálogos KET</title>
+    <link rel="Shortcut Icon" href="../favicon.ico" type="image/x-icon" />
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
     <style>
         body {
-            background-color: #f5f5f5;
-            padding: 20px;
+            background-color: #FFF;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Arial, sans-serif;
         }
+        
+        /* Barra superior estilo página principal */
+        .top-bar {
+            background-color: #99b9d7;
+            padding: 10px 15px;
+        }
+        
+        .top-bar .row {
+            align-items: center;
+        }
+        
+        .top-bar .back-icon {
+            font-size: 25px;
+            color: #003272;
+            text-decoration: none;
+        }
+        
+        .top-bar .logo-mini {
+            max-height: 40px;
+            width: auto;
+        }
+        
+        /* Título centrado sobre franja verde agua */
+        .title-banner {
+            background-color: #0CC;
+            padding: 20px 0;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .title-banner h1 {
+            color: white;
+            margin: 0;
+            font-size: 1.8rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+        }
+        
+        .title-banner h1 i {
+            font-size: 2rem;
+        }
+        
         .card {
             margin-bottom: 20px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            border: none;
+            border-radius: 8px;
         }
+        
         .card-header {
             background-color: #003272;
             color: white;
             font-weight: bold;
+            border-radius: 8px 8px 0 0 !important;
         }
+        
         .card-header.ferretero {
             background-color: #037C79;
         }
+        
         .dpto-checkbox {
-            margin: 5px 0;
+            margin: 8px 0;
+            padding: 5px;
+            border-bottom: 1px solid #eee;
         }
+        
         .dpto-checkbox label {
-            margin-left: 5px;
+            margin-left: 8px;
             cursor: pointer;
+            font-weight: 500;
         }
+        
+        .dpto-checkbox small {
+            color: #666;
+        }
+        
         .log-area {
             background-color: #1e1e1e;
             color: #d4d4d4;
@@ -65,23 +127,28 @@ foreach ($departamentos as $d) {
             padding: 10px;
             border-radius: 5px;
         }
+        
         .log-line {
             font-family: monospace;
             margin: 0;
             padding: 2px 0;
             border-bottom: 1px solid #333;
         }
+        
         .log-line.info { color: #9cdcfe; }
         .log-line.ok { color: #6a9955; }
         .log-line.error { color: #f48771; }
         .log-line.proc { color: #ce9178; }
+        
         .selected-count {
             font-size: 0.9em;
             margin-left: 10px;
         }
+        
         .badge-automotriz {
             background-color: #003272;
         }
+        
         .badge-ferretero {
             background-color: #037C79;
         }
@@ -102,6 +169,7 @@ foreach ($departamentos as $d) {
             z-index: 1000;
             animation: slideIn 0.3s ease-out;
         }
+        
         .result-banner a {
             color: white;
             text-decoration: none;
@@ -111,10 +179,12 @@ foreach ($departamentos as $d) {
             border-radius: 30px;
             transition: all 0.2s;
         }
+        
         .result-banner a:hover {
             background-color: rgba(255,255,255,0.3);
             color: white;
         }
+        
         @keyframes slideIn {
             from {
                 transform: translateX(100%);
@@ -125,6 +195,7 @@ foreach ($departamentos as $d) {
                 opacity: 1;
             }
         }
+        
         .btn-close-result {
             background: none;
             border: none;
@@ -133,33 +204,64 @@ foreach ($departamentos as $d) {
             cursor: pointer;
             padding: 0 5px;
         }
+        
         .btn-close-result:hover {
             color: #ddd;
+        }
+        
+        .btn-primary {
+            background-color: #003272;
+            border: none;
+            padding: 10px;
+            font-weight: bold;
+        }
+        
+        .btn-primary:hover {
+            background-color: #037C79;
+        }
+        
+        .form-select:focus {
+            border-color: #037C79;
+            box-shadow: 0 0 0 0.2rem rgba(3, 124, 121, 0.25);
         }
     </style>
 </head>
 <body>
-    <div class="container-fluid">
+    <!-- Barra superior estilo página principal -->
+    <div class="top-bar">
         <div class="row">
-            <div class="col-12">
-                <h1 class="mb-4">
-                    <i class="bi bi-file-pdf-fill text-danger"></i> 
-                    Actualizar Catalogos KET
-                </h1>
+            <div class="col text-start">
+                <a href="index.php" class="back-icon" title="Volver al inicio">
+                    <i class="bi bi-arrow-left-circle-fill"></i>
+                </a>
+            </div>
+            <div class="col text-end">
+                <img src="../catalogo/images/logoMini.png" class="logo-mini" alt="KET" />
             </div>
         </div>
+    </div>
+    
+    <!-- Título centrado sobre franja verde agua -->
+    <div class="title-banner">
+        <h1>
+            <i class="bi bi-file-pdf-fill"></i>
+            Actualizar Catálogos KET
+            <i class="bi bi-file-pdf-fill"></i>
+        </h1>
+    </div>
 
+    <div class="container-fluid px-4">
         <div class="row">
-            <!-- Panel de seleccion -->
+            <!-- Panel de selección -->
             <div class="col-md-4">
                 <div class="card">
                     <div class="card-header">
-                        <i class="bi bi-check2-square"></i> Seleccion de Departamentos
+                        <i class="bi bi-check2-square"></i> Selección de Departamentos
                         <button type="button" class="btn btn-sm btn-light float-end" onclick="toggleAll(true)">Seleccionar Todos</button>
                         <button type="button" class="btn btn-sm btn-light float-end me-2" onclick="toggleAll(false)">Deseleccionar Todos</button>
                     </div>
                     <div class="card-body" style="max-height: 500px; overflow-y: auto;">
-                        <h5 class="text-primary">Automotriz <span class="badge badge-automotriz"><?php echo count($automotriz); ?></span></h5>
+                        <h5 class="text-primary">🔧 Automotriz <span class="badge badge-automotriz"><?php echo count($automotriz); ?></span></h5>
                         <div id="lista-automotriz">
                             <?php foreach ($automotriz as $d): ?>
                             <div class="dpto-checkbox">
@@ -172,7 +274,7 @@ foreach ($departamentos as $d) {
                         
                         <hr>
                         
-                        <h5 class="text-success">Ferretera <span class="badge badge-ferretero"><?php echo count($ferretera); ?></span></h5>
+                        <h5 class="text-success">🔩 Ferretera <span class="badge badge-ferretero"><?php echo count($ferretera); ?></span></h5>
                         <div id="lista-ferretera">
                             <?php foreach ($ferretera as $d): ?>
                             <div class="dpto-checkbox">
@@ -193,8 +295,8 @@ foreach ($departamentos as $d) {
                         <div class="mb-3">
                             <label class="form-label">Calidad del PDF</label>
                             <select id="calidad" class="form-select">
-                                <option value="web">Web (comprimido, para visualizacion)</option>
-                                <option value="impresion">Impresion (maxima calidad)</option>
+                                <option value="web">Web (comprimido, para visualización)</option>
+                                <option value="impresion">Impresión (máxima calidad)</option>
                             </select>
                         </div>
                         <button type="button" id="btn-actualizar" class="btn btn-primary w-100" onclick="ejecutarActualizacion()">
@@ -207,18 +309,18 @@ foreach ($departamentos as $d) {
                 </div>
             </div>
             
-            <!-- Area de log -->
+            <!-- Área de log -->
             <div class="col-md-8">
                 <div class="card">
                     <div class="card-header">
-                        <i class="bi bi-terminal"></i> Log de Actualizacion
+                        <i class="bi bi-terminal"></i> Log de Actualización
                         <button type="button" class="btn btn-sm btn-secondary float-end" onclick="limpiarLog()">
                             <i class="bi bi-trash"></i> Limpiar
                         </button>
                     </div>
                     <div class="card-body">
                         <div id="log-area" class="log-area">
-                            <div class="log-line info">[SISTEMA] Esperando accion...</div>
+                            <div class="log-line info">[SISTEMA] Esperando acción...</div>
                         </div>
                     </div>
                 </div>
@@ -239,13 +341,11 @@ foreach ($departamentos as $d) {
         let pdfsGenerados = [];
         let calidadActual = 'web';
         
-        // Actualizar contador de seleccionados
         function actualizarContador() {
             var seleccionados = document.querySelectorAll('.dpto-check:checked').length;
             document.getElementById('selected-count').innerText = seleccionados + ' departamento(s) seleccionado(s)';
         }
         
-        // Seleccionar/deseleccionar todos
         function toggleAll(seleccionar) {
             var checkboxes = document.querySelectorAll('.dpto-check');
             for (var i = 0; i < checkboxes.length; i++) {
@@ -254,19 +354,16 @@ foreach ($departamentos as $d) {
             actualizarContador();
         }
         
-        // Limpiar area de log
         function limpiarLog() {
             document.getElementById('log-area').innerHTML = '<div class="log-line info">[SISTEMA] Log limpiado.</div>';
             pdfsGenerados = [];
             cerrarBanner();
         }
         
-        // Cerrar banner
         function cerrarBanner() {
             document.getElementById('result-banner').style.display = 'none';
         }
         
-        // Mostrar banner con resultados
         function mostrarBanner() {
             var banner = document.getElementById('result-banner');
             var resultText = document.getElementById('result-text');
@@ -283,18 +380,15 @@ foreach ($departamentos as $d) {
             resultText.innerText = count + ' PDF' + (count > 1 ? 's' : '') + ' generado' + (count > 1 ? 's' : '');
             
             if (count === 1) {
-                // Un solo PDF, enlace directo
                 resultLink.href = pdfsGenerados[0];
                 resultLink.innerText = 'Ver PDF';
             } else {
-                // Múltiples PDFs, ir al índice
                 resultLink.href = '/pdfs/index.html';
                 resultLink.innerText = 'Ver todos (' + count + ')';
             }
             
             banner.style.display = 'flex';
             
-            // Auto-ocultar después de 10 segundos
             setTimeout(function() {
                 if (banner.style.display === 'flex') {
                     banner.style.display = 'none';
@@ -302,7 +396,6 @@ foreach ($departamentos as $d) {
             }, 10000);
         }
         
-        // Agregar linea al log
         function agregarLog(mensaje, tipo) {
             if (tipo === undefined) tipo = 'info';
             var logArea = document.getElementById('log-area');
@@ -314,17 +407,15 @@ foreach ($departamentos as $d) {
             div.scrollIntoView({ behavior: 'smooth', block: 'end' });
         }
         
-        // Construir URL del PDF segun departamento y calidad
         function obtenerUrlPDF(dptoId, linea, calidad) {
             var carpeta = (linea === 'A') ? 'catalogo_automotriz' : 'catalogo_ferretero';
             var subcarpeta = (calidad === 'impresion') ? 'print/' : '';
             return '/pdfs/' + carpeta + '/' + subcarpeta + 'catalogo_dptos_' + dptoId + '.pdf';
         }
         
-        // Ejecutar actualizacion
         async function ejecutarActualizacion() {
             if (procesando) {
-                agregarLog('Ya hay un proceso en ejecucion. Espere...', 'error');
+                agregarLog('Ya hay un proceso en ejecución. Espere...', 'error');
                 return;
             }
             
@@ -352,10 +443,9 @@ foreach ($departamentos as $d) {
             btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Procesando...';
             
             agregarLog('========================================', 'info');
-            agregarLog('INICIANDO ACTUALIZACION DE ' + seleccionados.length + ' DEPARTAMENTOS', 'info');
-            agregarLog('Calidad: ' + (calidad === 'web' ? 'Web (comprimido)' : 'Impresion (maxima calidad)'), 'info');
+            agregarLog('INICIANDO ACTUALIZACIÓN DE ' + seleccionados.length + ' DEPARTAMENTOS', 'info');
+            agregarLog('Calidad: ' + (calidad === 'web' ? 'Web (comprimido)' : 'Impresión (máxima calidad)'), 'info');
             
-            // Procesar uno por uno
             for (var i = 0; i < seleccionados.length; i++) {
                 var dpto = seleccionados[i];
                 agregarLog('[' + (i+1) + '/' + seleccionados.length + '] Procesando: ' + dpto.nombre + ' (ID: ' + dpto.id + ')...', 'proc');
@@ -374,18 +464,16 @@ foreach ($departamentos as $d) {
                     var data = await response.json();
                     
                     if (data.success) {
-                        agregarLog('  OK ' + dpto.nombre + ' - PDF generado correctamente (' + (data.tamano || '?') + ' KB)', 'ok');
-                        // Agregar URL del PDF a la lista
+                        agregarLog('  ✅ ' + dpto.nombre + ' - PDF generado correctamente (' + (data.tamano || '?') + ' KB)', 'ok');
                         var urlPdf = obtenerUrlPDF(dpto.id, dpto.linea, calidad);
                         pdfsGenerados.push(urlPdf);
                     } else {
-                        agregarLog('  ERROR ' + dpto.nombre + ' - Error: ' + (data.error || 'Desconocido'), 'error');
+                        agregarLog('  ❌ ' + dpto.nombre + ' - Error: ' + (data.error || 'Desconocido'), 'error');
                     }
                 } catch (error) {
-                    agregarLog('  ERROR ' + dpto.nombre + ' - Error de conexion: ' + error.message, 'error');
+                    agregarLog('  ❌ ' + dpto.nombre + ' - Error de conexión: ' + error.message, 'error');
                 }
                 
-                // Pequena pausa entre solicitudes
                 await new Promise(function(r) { setTimeout(r, 500); });
             }
             
@@ -393,7 +481,6 @@ foreach ($departamentos as $d) {
             agregarLog('PROCESO COMPLETADO - ' + seleccionados.length + ' departamentos procesados', 'ok');
             agregarLog('PDFs generados: ' + pdfsGenerados.length, 'ok');
             
-            // Mostrar banner con resultados
             mostrarBanner();
             
             procesando = false;
@@ -401,7 +488,6 @@ foreach ($departamentos as $d) {
             btn.innerHTML = '<i class="bi bi-play-fill"></i> Actualizar Seleccionados';
         }
         
-        // Event listeners
         var checkboxes = document.querySelectorAll('.dpto-check');
         for (var i = 0; i < checkboxes.length; i++) {
             checkboxes[i].addEventListener('change', actualizarContador);
