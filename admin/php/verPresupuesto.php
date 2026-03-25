@@ -384,9 +384,10 @@ try {
 <!-- NUEVO BOTÓN PARA PRECARGAR EN CARRITO -->
     <button class="btn btn-warning" onclick="precargarEnCarrito(<?php echo $presupuesto->idx; ?>)"><i class="bi bi-cart-plus"></i> Usar para Nuevo Presupuesto</button>
             <a href="../presupuestos/index.php" class="btn btn-success">🏠 Ir al Inicio</a>
-            <a href="../presupuestos/presupuestoImages.php?pres_num=<?php echo $presupuesto->idx; ?>" class="btn btn-info">
-                <i class="bi bi-images"></i> Ver Imágenes
-            </a>
+            <!-- Botón para ver PDF de imágenes -->
+            <button type="button" class="btn btn-info" onclick="verPDFImagenes(<?php echo $presupuesto->idx; ?>)">
+                <i class="bi bi-file-pdf-fill"></i> Ver PDF de Imágenes
+            </button>
         </div>
     </div>
 
@@ -450,6 +451,33 @@ try {
             btn.innerHTML = originalText;
             btn.disabled = false;
         });
+    }
+    function verPDFImagenes(presupuestoId) {
+        // Mostrar indicador de carga
+        const btn = event.target.closest('button');
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Generando PDF...';
+        btn.disabled = true;
+        
+        // Llamar al endpoint para generar/obtener PDF
+        fetch(`../../admin/php/generar_presupuesto_pdf.php?presupuesto_id=${presupuestoId}&calidad=web`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Abrir el PDF en una nueva pestaña
+                    window.open(data.pdf_url, '_blank');
+                } else {
+                    alert('Error al generar el PDF: ' + data.error);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error al generar el PDF');
+            })
+            .finally(() => {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            });
     }
     </script>
 </body>
