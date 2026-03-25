@@ -313,19 +313,17 @@ foreach ($consult as $value)
 <div class="top-bar">
     <div class="row align-items-center">
         <div class="col-auto text-start">
-            <a href="index.php" class="back-icon" title="Volver al inicio">
+            <a href="../index.php" class="back-icon" title="Volver al inicio">
                 <i class="bi bi-arrow-left-circle-fill"></i>
             </a>
         </div>
         <div class="col text-center">
-            <div class="nav-buttons" style="display: flex; justify-content: center; gap: 15px;">
-                <a href="indiceDptos.php" class="nav-btn nav-btn-listas" style="padding: 5px 15px; font-size: 0.9rem; font-weight: bold; border-radius: 30px; background-color: #003272; color: white; text-decoration: none; display: inline-flex; align-items: center; gap: 6px;">
-                    <i class="bi bi-list-ul"></i> Ver Listas
-                </a>
-                <a href="../catalogo/indiceDptos.php" class="nav-btn nav-btn-catalogos" style="padding: 5px 15px; font-size: 0.9rem; font-weight: bold; border-radius: 30px; background-color: #037C79; color: white; text-decoration: none; display: inline-flex; align-items: center; gap: 6px;">
-                    <i class="bi bi-images"></i> Ver Catálogos
-                </a>
-            </div>
+            <a href="indiceDptos.php" class="nav-btn nav-btn-listas" style="padding: 5px 15px; font-size: 0.9rem; font-weight: bold; border-radius: 30px; background-color: #003272; color: white; text-decoration: none; display: inline-flex; align-items: center; gap: 6px;">
+                <i class="bi bi-list-ul"></i> Ver Listas
+            </a>
+            <a href="../catalogo/indiceDptos.php" class="nav-btn nav-btn-catalogos" style="padding: 5px 15px; font-size: 0.9rem; font-weight: bold; border-radius: 30px; background-color: #037C79; color: white; text-decoration: none; display: inline-flex; align-items: center; gap: 6px;">
+                <i class="bi bi-images"></i> Ver Catálogos
+            </a>
         </div>
         <div class="col-auto text-end">
             <img src="../catalogo/images/logoMini.png" class="logo-mini" alt="KET" />
