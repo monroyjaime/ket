@@ -215,19 +215,21 @@ foreach ($consult as $value)
         .nav-buttons {
             display: flex !important;
             justify-content: center !important;
-            gap: 15px !important;
+            gap: 10px !important;
+            align-items: center !important;
         }
 
         .nav-btn {
-            padding: 10px 20px !important;
-            font-size: 0.9rem !important;
-            font-weight: 600 !important;
-            border-radius: 8px !important;
+            padding: 6px 14px !important;
+            font-size: 0.85rem !important;
+            font-weight: 500 !important;
+            border-radius: 20px !important;
             display: inline-flex !important;
             align-items: center !important;
-            gap: 8px !important;
+            gap: 6px !important;
             text-decoration: none !important;
             transition: all 0.2s !important;
+            white-space: nowrap !important;
         }
 
         .nav-btn-listas {
@@ -245,15 +247,19 @@ foreach ($consult as $value)
             transform: translateY(-1px) !important;
         }
 
-        /* Móvil: botones más compactos */
+        /* Móvil: más compactos aún */
         @media (max-width: 768px) {
             .nav-btn {
-                padding: 8px 16px !important;
-                font-size: 0.8rem !important;
-                gap: 6px !important;
+                padding: 5px 12px !important;
+                font-size: 0.75rem !important;
+                gap: 4px !important;
+                border-radius: 16px !important;
             }
-        }
-        
+            
+            .nav-btn i {
+                font-size: 0.8rem !important;
+            }
+        }        
         .title-banner {
             background-color: #037c79;
             padding: 7px 0;
