@@ -215,54 +215,47 @@ foreach ($consult as $value)
         .nav-buttons {
             display: flex;
             justify-content: center;
-            gap: 30px;
-            margin: 20px 0;
-            padding: 15px;
-            background-color: #f8f9fa;
-            border-radius: 10px;
-            margin: 20px;
+            gap: 20px;
         }
-        
+
         .nav-btn {
-            padding: 12px 30px;
-            font-size: 1.1rem;
-            font-weight: bold;
-            border-radius: 50px;
+            padding: 8px 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            border-radius: 8px;
             transition: all 0.3s ease;
             text-decoration: none;
             display: inline-flex;
             align-items: center;
-            gap: 10px;
+            gap: 8px;
         }
-        
+
         .nav-btn-listas {
             background-color: #003272;
             color: white;
-            border: 2px solid #003272;
+            border: 1px solid #003272;
         }
-        
+
         .nav-btn-listas:hover {
             background-color: #037C79;
             border-color: #037C79;
             color: white;
-            transform: translateY(-2px);
         }
-        
+
         .nav-btn-catalogos {
             background-color: #037C79;
             color: white;
-            border: 2px solid #037C79;
+            border: 1px solid #037C79;
         }
-        
+
         .nav-btn-catalogos:hover {
             background-color: #003272;
             border-color: #003272;
             color: white;
-            transform: translateY(-2px);
         }
-        
+
         .nav-btn i {
-            font-size: 1.3rem;
+            font-size: 1rem;
         }
         
         .title-banner {
