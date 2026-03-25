@@ -211,55 +211,7 @@ foreach ($consult as $value)
             width: auto;
         }
 
-        /* Botones de navegación */
-        .nav-buttons {
-            display: flex !important;
-            justify-content: center !important;
-            gap: 10px !important;
-            align-items: center !important;
-        }
-
-        .nav-btn {
-            padding: 6px 14px !important;
-            font-size: 0.85rem !important;
-            font-weight: 500 !important;
-            border-radius: 20px !important;
-            display: inline-flex !important;
-            align-items: center !important;
-            gap: 6px !important;
-            text-decoration: none !important;
-            transition: all 0.2s !important;
-            white-space: nowrap !important;
-        }
-
-        .nav-btn-listas {
-            background-color: #003272 !important;
-            color: white !important;
-        }
-
-        .nav-btn-catalogos {
-            background-color: #037C79 !important;
-            color: white !important;
-        }
-
-        .nav-btn:hover {
-            opacity: 0.85 !important;
-            transform: translateY(-1px) !important;
-        }
-
-        /* Móvil: más compactos aún */
-        @media (max-width: 768px) {
-            .nav-btn {
-                padding: 5px 12px !important;
-                font-size: 0.75rem !important;
-                gap: 4px !important;
-                border-radius: 16px !important;
-            }
-            
-            .nav-btn i {
-                font-size: 0.8rem !important;
-            }
-        }        
+             
         .title-banner {
             background-color: #037c79;
             padding: 7px 0;
@@ -312,39 +264,33 @@ foreach ($consult as $value)
                 <i class="bi bi-arrow-left-circle-fill"></i>
             </a>
         </div>
-        <div class="nav-buttons" style="display: flex; justify-content: center; gap: 15px;">
-          <a href="indiceDptos.php" style="
-              padding: 10px 20px;
-              font-size: 0.9rem;
-              font-weight: 600;
-              border-radius: 8px;
-              background-color: #003272;
-              color: white;
-              text-decoration: none;
-              display: inline-flex;
-              align-items: center;
-              gap: 8px;
-              transition: all 0.2s;
-          ">
-              <i class="bi bi-list-ul"></i>
-              <span>Ver Listas</span>
-          </a>
-          <a href="../catalogo/indiceDptos.php" style="
-              padding: 10px 20px;
-              font-size: 0.9rem;
-              font-weight: 600;
-              border-radius: 8px;
-              background-color: #037C79;
-              color: white;
-              text-decoration: none;
-              display: inline-flex;
-              align-items: center;
-              gap: 8px;
-              transition: all 0.2s;
-          ">
-              <i class="bi bi-images"></i>
-              <span>Ver Catálogos</span>
-          </a>
+        <div style="display: flex; justify-content: center; gap: 12px; align-items: center;">
+            <a href="indiceDptos.php" style="
+                background-color: #003272;
+                color: white;
+                padding: 5px 12px;
+                border-radius: 20px;
+                font-size: 0.8rem;
+                text-decoration: none;
+                display: inline-flex;
+                align-items: center;
+                gap: 5px;
+            ">
+                <i class="bi bi-list-ul"></i> Listas
+            </a>
+            <a href="../catalogo/indiceDptos.php" style="
+                background-color: #037C79;
+                color: white;
+                padding: 5px 12px;
+                border-radius: 20px;
+                font-size: 0.8rem;
+                text-decoration: none;
+                display: inline-flex;
+                align-items: center;
+                gap: 5px;
+            ">
+                <i class="bi bi-images"></i> Catálogos
+            </a>
         </div>
 
         <div class="col-auto text-end">
