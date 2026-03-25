@@ -257,14 +257,18 @@ foreach ($consult as $value)
 <body>
 
 <!-- Barra superior -->
-<div class="top-bar">
-    <div class="row align-items-center">
-        <div class="col-auto text-start">
-            <a href="../index.php" class="back-icon" title="Volver al inicio">
+<!-- Barra superior -->
+<div class="top-bar" style="background-color: #DDD; padding: 8px 10px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px;">
+        <!-- Flecha izquierda -->
+        <div style="flex-shrink: 0;">
+            <a href="index.php" style="color: #003272; font-size: 24px; text-decoration: none;">
                 <i class="bi bi-arrow-left-circle-fill"></i>
             </a>
         </div>
-        <div style="display: flex; justify-content: center; gap: 12px; align-items: center;">
+        
+        <!-- Botones centrados (ocupan el espacio disponible) -->
+        <div style="display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; flex: 1;">
             <a href="indiceDptos.php" style="
                 background-color: #003272;
                 color: white;
@@ -275,6 +279,7 @@ foreach ($consult as $value)
                 display: inline-flex;
                 align-items: center;
                 gap: 5px;
+                white-space: nowrap;
             ">
                 <i class="bi bi-list-ul"></i> Listas
             </a>
@@ -288,13 +293,15 @@ foreach ($consult as $value)
                 display: inline-flex;
                 align-items: center;
                 gap: 5px;
+                white-space: nowrap;
             ">
                 <i class="bi bi-images"></i> Catálogos
             </a>
         </div>
-
-        <div class="col-auto text-end">
-            <img src="../catalogo/images/logoMini.png" class="logo-mini" alt="KET" />
+        
+        <!-- Logo derecho -->
+        <div style="flex-shrink: 0;">
+            <img src="../catalogo/images/logoMini.png" style="max-height: 35px; width: auto;" alt="KET" />
         </div>
     </div>
 </div>
