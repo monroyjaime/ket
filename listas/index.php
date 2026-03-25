@@ -257,6 +257,34 @@ foreach ($consult as $value)
         .nav-btn i {
             font-size: 1rem;
         }
+
+        /* Versión móvil - solo íconos */
+        @media (max-width: 768px) {
+            .nav-buttons {
+                gap: 10px;
+            }
+            
+            .nav-btn {
+                padding: 8px 12px;
+                border-radius: 50%;
+                aspect-ratio: 1 / 1;
+                justify-content: center;
+            }
+            
+            .nav-btn span {
+                display: none;
+            }
+            
+            .nav-btn i {
+                font-size: 1.2rem;
+                margin: 0;
+            }
+            
+            .nav-btn-listas, .nav-btn-catalogos {
+                width: 40px;
+                height: 40px;
+            }
+        }
         
         .title-banner {
             background-color: #037c79;
@@ -312,10 +340,10 @@ foreach ($consult as $value)
         </div>
         <div class="col text-center">
             <a href="indiceDptos.php" class="nav-btn nav-btn-listas" style="padding: 5px 15px; font-size: 0.9rem; font-weight: bold; border-radius: 30px; background-color: #003272; color: white; text-decoration: none; display: inline-flex; align-items: center; gap: 6px;">
-                <i class="bi bi-list-ul"></i> Ver Listas
+                <i class="bi bi-list-ul"></i> <span>Ver Listas</span>
             </a>
             <a href="../catalogo/indiceDptos.php" class="nav-btn nav-btn-catalogos" style="padding: 5px 15px; font-size: 0.9rem; font-weight: bold; border-radius: 30px; background-color: #037C79; color: white; text-decoration: none; display: inline-flex; align-items: center; gap: 6px;">
-                <i class="bi bi-images"></i> Ver Catálogos
+                <i class="bi bi-images"></i> <span>Ver Catálogos</span>
             </a>
         </div>
         <div class="col-auto text-end">
