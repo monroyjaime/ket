@@ -211,7 +211,7 @@ foreach ($consult as $value)
             width: auto;
         }
         
-        /* Botones de navegación */
+        /* Botones de navegación - versión desktop (por defecto) */
         .nav-buttons {
             display: flex;
             justify-content: center;
@@ -228,34 +228,44 @@ foreach ($consult as $value)
             display: inline-flex;
             align-items: center;
             gap: 8px;
-        }
-
-        .nav-btn-listas {
             background-color: #003272;
             color: white;
             border: 1px solid #003272;
         }
 
-        .nav-btn-listas:hover {
-            background-color: #037C79;
-            border-color: #037C79;
+        .nav-btn-listas {
+            background-color: #003272;
             color: white;
         }
 
         .nav-btn-catalogos {
             background-color: #037C79;
             color: white;
-            border: 1px solid #037C79;
+            border-color: #037C79;
+        }
+
+        .nav-btn:hover {
+            transform: translateY(-2px);
+            text-decoration: none;
+            color: white;
+        }
+
+        .nav-btn-listas:hover {
+            background-color: #037C79;
+            border-color: #037C79;
         }
 
         .nav-btn-catalogos:hover {
             background-color: #003272;
             border-color: #003272;
-            color: white;
         }
 
         .nav-btn i {
             font-size: 1rem;
+        }
+
+        .nav-btn span {
+            display: inline;
         }
 
         /* Versión móvil - solo íconos */
@@ -269,6 +279,8 @@ foreach ($consult as $value)
                 border-radius: 50%;
                 aspect-ratio: 1 / 1;
                 justify-content: center;
+                width: 40px;
+                height: 40px;
             }
             
             .nav-btn span {
@@ -278,11 +290,6 @@ foreach ($consult as $value)
             .nav-btn i {
                 font-size: 1.2rem;
                 margin: 0;
-            }
-            
-            .nav-btn-listas, .nav-btn-catalogos {
-                width: 40px;
-                height: 40px;
             }
         }
         
