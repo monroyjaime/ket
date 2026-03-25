@@ -211,85 +211,80 @@ foreach ($consult as $value)
             width: auto;
         }
         
-        /* Botones de navegación - versión desktop (por defecto) */
+        /* Botones de navegación - versión desktop */
         .nav-buttons {
             display: flex;
             justify-content: center;
             gap: 20px;
+            align-items: center;
         }
 
         .nav-btn {
-            padding: 8px 20px;
-            font-size: 0.9rem;
+            padding: 10px 24px;
+            font-size: 1rem;
             font-weight: 600;
             border-radius: 8px;
             transition: all 0.3s ease;
             text-decoration: none;
             display: inline-flex;
             align-items: center;
-            gap: 8px;
+            gap: 10px;
             background-color: #003272;
             color: white;
-            border: 1px solid #003272;
+            border: none;
+            cursor: pointer;
         }
 
         .nav-btn-listas {
             background-color: #003272;
-            color: white;
         }
 
         .nav-btn-catalogos {
             background-color: #037C79;
-            color: white;
-            border-color: #037C79;
         }
 
         .nav-btn:hover {
             transform: translateY(-2px);
             text-decoration: none;
             color: white;
+            opacity: 0.9;
         }
 
         .nav-btn-listas:hover {
             background-color: #037C79;
-            border-color: #037C79;
         }
 
         .nav-btn-catalogos:hover {
             background-color: #003272;
-            border-color: #003272;
         }
 
         .nav-btn i {
-            font-size: 1rem;
+            font-size: 1.1rem;
         }
 
         .nav-btn span {
             display: inline;
         }
 
-        /* Versión móvil - solo íconos */
+        /* Versión móvil - mantiene padding vertical */
         @media (max-width: 768px) {
             .nav-buttons {
-                gap: 10px;
+                gap: 12px;
             }
             
             .nav-btn {
-                padding: 8px 12px;
-                border-radius: 50%;
-                aspect-ratio: 1 / 1;
-                justify-content: center;
-                width: 40px;
-                height: 40px;
+                padding: 8px 16px;
+                border-radius: 20px;
+                gap: 6px;
             }
             
             .nav-btn span {
-                display: none;
+                display: inline;
+                font-size: 0.8rem;
             }
             
             .nav-btn i {
-                font-size: 1.2rem;
-                margin: 0;
+                font-size: 1rem;
             }
         }
         
