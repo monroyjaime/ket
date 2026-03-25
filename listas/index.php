@@ -262,7 +262,7 @@ foreach ($consult as $value)
     <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px;">
         <!-- Flecha izquierda -->
         <div style="flex-shrink: 0;">
-            <a href="index.php" style="color: #003272; font-size: 24px; text-decoration: none;">
+            <a href="../index.php" style="color: #003272; font-size: 24px; text-decoration: none;">
                 <i class="bi bi-arrow-left-circle-fill"></i>
             </a>
         </div>
