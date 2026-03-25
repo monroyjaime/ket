@@ -210,81 +210,47 @@ foreach ($consult as $value)
             max-height: 40px;
             width: auto;
         }
-        
-        /* Botones de navegación - versión desktop */
+
+        /* Botones de navegación */
         .nav-buttons {
-            display: flex;
-            justify-content: center;
-            gap: 20px;
-            align-items: center;
+            display: flex !important;
+            justify-content: center !important;
+            gap: 15px !important;
         }
 
         .nav-btn {
-            padding: 10px 24px;
-            font-size: 1rem;
-            font-weight: 600;
-            border-radius: 8px;
-            transition: all 0.3s ease;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 10px;
-            background-color: #003272;
-            color: white;
-            border: none;
-            cursor: pointer;
+            padding: 10px 20px !important;
+            font-size: 0.9rem !important;
+            font-weight: 600 !important;
+            border-radius: 8px !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 8px !important;
+            text-decoration: none !important;
+            transition: all 0.2s !important;
         }
 
         .nav-btn-listas {
-            background-color: #003272;
+            background-color: #003272 !important;
+            color: white !important;
         }
 
         .nav-btn-catalogos {
-            background-color: #037C79;
+            background-color: #037C79 !important;
+            color: white !important;
         }
 
         .nav-btn:hover {
-            transform: translateY(-2px);
-            text-decoration: none;
-            color: white;
-            opacity: 0.9;
+            opacity: 0.85 !important;
+            transform: translateY(-1px) !important;
         }
 
-        .nav-btn-listas:hover {
-            background-color: #037C79;
-        }
-
-        .nav-btn-catalogos:hover {
-            background-color: #003272;
-        }
-
-        .nav-btn i {
-            font-size: 1.1rem;
-        }
-
-        .nav-btn span {
-            display: inline;
-        }
-
-        /* Versión móvil - mantiene padding vertical */
+        /* Móvil: botones más compactos */
         @media (max-width: 768px) {
-            .nav-buttons {
-                gap: 12px;
-            }
-            
             .nav-btn {
-                padding: 8px 16px;
-                border-radius: 20px;
-                gap: 6px;
-            }
-            
-            .nav-btn span {
-                display: inline;
-                font-size: 0.8rem;
-            }
-            
-            .nav-btn i {
-                font-size: 1rem;
+                padding: 8px 16px !important;
+                font-size: 0.8rem !important;
+                gap: 6px !important;
             }
         }
         
@@ -340,14 +306,41 @@ foreach ($consult as $value)
                 <i class="bi bi-arrow-left-circle-fill"></i>
             </a>
         </div>
-        <div class="col text-center">
-            <a href="indiceDptos.php" class="nav-btn nav-btn-listas" style="padding: 5px 15px; font-size: 0.9rem; font-weight: bold; border-radius: 30px; background-color: #003272; color: white; text-decoration: none; display: inline-flex; align-items: center; gap: 6px;">
-                <i class="bi bi-list-ul"></i> <span>Ver Listas</span>
-            </a>
-            <a href="../catalogo/indiceDptos.php" class="nav-btn nav-btn-catalogos" style="padding: 5px 15px; font-size: 0.9rem; font-weight: bold; border-radius: 30px; background-color: #037C79; color: white; text-decoration: none; display: inline-flex; align-items: center; gap: 6px;">
-                <i class="bi bi-images"></i> <span>Ver Catálogos</span>
-            </a>
+        <div class="nav-buttons" style="display: flex; justify-content: center; gap: 15px;">
+          <a href="indiceDptos.php" style="
+              padding: 10px 20px;
+              font-size: 0.9rem;
+              font-weight: 600;
+              border-radius: 8px;
+              background-color: #003272;
+              color: white;
+              text-decoration: none;
+              display: inline-flex;
+              align-items: center;
+              gap: 8px;
+              transition: all 0.2s;
+          ">
+              <i class="bi bi-list-ul"></i>
+              <span>Ver Listas</span>
+          </a>
+          <a href="../catalogo/indiceDptos.php" style="
+              padding: 10px 20px;
+              font-size: 0.9rem;
+              font-weight: 600;
+              border-radius: 8px;
+              background-color: #037C79;
+              color: white;
+              text-decoration: none;
+              display: inline-flex;
+              align-items: center;
+              gap: 8px;
+              transition: all 0.2s;
+          ">
+              <i class="bi bi-images"></i>
+              <span>Ver Catálogos</span>
+          </a>
         </div>
+
         <div class="col-auto text-end">
             <img src="../catalogo/images/logoMini.png" class="logo-mini" alt="KET" />
         </div>
