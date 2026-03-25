@@ -333,25 +333,6 @@ foreach ($consult as $value)
     </div>
 </div>
 
-<!-- Título -->
-<div class="title-banner">
-    <h1>
-        <i class="bi bi-table"></i>
-        Listas de Precios KET
-        <i class="bi bi-table"></i>
-    </h1>
-</div>
-
-<!-- Botones de navegación -->
-<div class="nav-buttons">
-    <a href="indiceDptos.php" class="nav-btn nav-btn-listas">
-        <i class="bi bi-list-ul"></i> Ver Listas por Departamento
-    </a>
-    <a href="../catalogo/indiceDptos.php" class="nav-btn nav-btn-catalogos">
-        <i class="bi bi-images"></i> Ver Catálogos Web
-    </a>
-</div>
-
 <div class="col text-center">
     <div class="col text-center" style="background-color: #DDD;">
         <?php echo $tituloLista; ?>
