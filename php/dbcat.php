@@ -32,6 +32,10 @@ class DB{
         //pg_close($this->link);
     }
 
+    public function getConnection() {
+        return $this->conn;
+    }
+
     public function consultas($consulta)
     {
         $return = array();
