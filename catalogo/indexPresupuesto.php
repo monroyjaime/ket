@@ -1,12 +1,12 @@
 <?php
 // Archivo: /var/www/html/catalogo/indexPresupuesto.php
-// Recibe una lista de códigos de producto (separados por coma) y muestra las cards
 
 $role = isset($_GET['role_num']) ? intval($_GET['role_num']) : -1;
 $pageGlobal = isset($_GET['page_global']) ? intval($_GET['page_global']) : 1;
 $totalPaginasGlobal = isset($_GET['total_paginas']) ? intval($_GET['total_paginas']) : 1;
 $numValery = isset($_GET['num_valery']) ? intval($_GET['num_valery']) : 0;
 $codigosStr = isset($_GET['codigos']) ? $_GET['codigos'] : '';
+$mostrarPrecio = isset($_GET['mostrar_precio']) ? intval($_GET['mostrar_precio']) : 0;
 
 require_once("../php/dbcat.php");
 $db = new DB();
@@ -51,14 +51,26 @@ if (empty($codigosStr)) {
     }
     $codigos_lista = implode(',', $codigos_escapados);
     
-    $query = "SELECT p.code, p.name, p.photo_url, d.img_route 
-              FROM productos p
-              JOIN departamentos d ON p.dpto_id = d.id
-              WHERE p.code IN ($codigos_lista)
-                AND p.show = true
-                AND p.photo_url != 'empty.jpg'
-                AND p.cost_max > 0
-              ORDER BY p.code";
+    // Si se requiere mostrar precio, incluir también cost_max
+    if ($mostrarPrecio == 1) {
+        $query = "SELECT p.code, p.name, p.photo_url, p.cost_max, d.img_route 
+                  FROM productos p
+                  JOIN departamentos d ON p.dpto_id = d.id
+                  WHERE p.code IN ($codigos_lista)
+                    AND p.show = true
+                    AND p.photo_url != 'empty.jpg'
+                    AND p.cost_max > 0
+                  ORDER BY p.code";
+    } else {
+        $query = "SELECT p.code, p.name, p.photo_url, d.img_route 
+                  FROM productos p
+                  JOIN departamentos d ON p.dpto_id = d.id
+                  WHERE p.code IN ($codigos_lista)
+                    AND p.show = true
+                    AND p.photo_url != 'empty.jpg'
+                    AND p.cost_max > 0
+                  ORDER BY p.code";
+    }
     
     $consult1 = $db->consultas($query);
     
@@ -89,6 +101,14 @@ if (empty($codigosStr)) {
             $tags .= htmlspecialchars($producto->name);
             $tags .= '</div>';
             $tags .= '</div>';
+            
+            // Si mostrar precio, agregar footer con el precio
+            if ($mostrarPrecio == 1 && isset($producto->cost_max)) {
+                $precioFormateado = number_format($producto->cost_max, 3, ',', '.');
+                $tags .= '<div class="card-footer text-center" style="background-color: #f0f0f0; padding: 6px;">';
+                $tags .= '<strong>Precio: $' . $precioFormateado . '</strong>';
+                $tags .= '</div>';
+            }
             
             $tags .= '</div>';
             $tags .= '</div>';
@@ -151,6 +171,7 @@ if (empty($codigosStr)) {
             margin-top: 5px;
         }
         
+        /* Grid de 3 columnas */
         .row > .col {
             flex: 0 0 auto;
             width: 33.333%;
@@ -211,6 +232,11 @@ if (empty($codigosStr)) {
             word-wrap: break-word;
             overflow-y: auto;
             max-height: 100px;
+        }
+        
+        .card-footer {
+            font-size: 9pt;
+            background-color: #f8f9fa;
         }
         
         @media print {

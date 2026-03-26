@@ -11,6 +11,8 @@ if (!isset($_GET['presupuesto_id'])) {
     exit;
 }
 
+$mostrarPrecio = isset($_GET['mostrar_precio']) ? intval($_GET['mostrar_precio']) : 0;
+
 $presupuesto_id = intval($_GET['presupuesto_id']);
 $calidad = isset($_GET['calidad']) ? $_GET['calidad'] : 'web';
 
