@@ -9,6 +9,11 @@ $numValery = isset($_GET['num_valery']) ? intval($_GET['num_valery']) : 0;
 $codigosStr = isset($_GET['codigos']) ? $_GET['codigos'] : '';
 $mostrarPrecio = isset($_GET['mostrar_precio']) ? intval($_GET['mostrar_precio']) : 0;
 
+// 🔴 AGREGAR LOG
+error_log("=== indexPresupuesto.php ===");
+error_log("mostrar_precio recibido: " . $mostrarPrecio);
+error_log("codigos: " . ($codigosStr ?? 'ninguno'));
+
 require_once("../php/dbcat.php");
 $db = new DB();
 $conn = $db->getLink();
