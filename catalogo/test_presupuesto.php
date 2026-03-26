@@ -25,37 +25,45 @@ $result = pg_query($conn, "SELECT 1 as test");
 $row = pg_fetch_assoc($result);
 echo "   Resultado: " . $row['test'] . "<br><br>";
 
-// Probar consulta con los códigos
-echo "3. Buscando productos...<br>";
+/<?php
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+
+$codigosStr = 'SW09C187,SW10C250';
+echo "<h2>Test de consulta</h2>";
+
+require_once("../php/dbcat.php");
+$db = new DB();
+
+// Escapar valores
 $codigos = explode(',', $codigosStr);
-$placeholders = array();
-$params = array();
-foreach ($codigos as $i => $codigo) {
-    $placeholders[] = '$' . ($i + 1);
-    $params[] = trim($codigo);
+$codigos_escapados = array();
+foreach ($codigos as $codigo) {
+    $codigos_escapados[] = "'" . pg_escape_string($db->getLink(), trim($codigo)) . "'";
 }
+$codigos_lista = implode(',', $codigos_escapados);
+
+$field_order = "FIELD(p.code, $codigos_lista)";
 
 $query = "SELECT p.code, p.name, p.photo_url, d.img_route 
           FROM productos p
           JOIN departamentos d ON p.dpto_id = d.id
-          WHERE p.code IN (" . implode(',', $placeholders) . ")
+          WHERE p.code IN ($codigos_lista)
             AND p.show = true
-            AND p.photo_url != 'empty.jpg'
             AND p.cost_max > 0
-          LIMIT 10";
+          ORDER BY $field_order";
 
-echo "   Query: " . $query . "<br>";
-echo "   Params: " . implode(', ', $params) . "<br>";
+echo "Query: " . htmlspecialchars($query) . "<br><br>";
 
-$result = pg_query_params($conn, $query, $params);
+$result = pg_query($db->getLink(), $query);
 
 if (!$result) {
-    echo "   ❌ Error: " . pg_last_error($conn) . "<br>";
+    echo "Error: " . pg_last_error($db->getLink());
 } else {
     $rows = pg_fetch_all($result);
-    echo "   ✅ Productos encontrados: " . count($rows) . "<br>";
+    echo "Productos encontrados: " . count($rows) . "<br>";
     foreach ($rows as $row) {
-        echo "      - " . $row['code'] . ": " . $row['name'] . "<br>";
+        echo $row['code'] . " - " . $row['name'] . "<br>";
     }
 }
 ?>
