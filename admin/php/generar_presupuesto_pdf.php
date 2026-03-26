@@ -5,25 +5,20 @@ require_once("../../php/dbcat_async.php");
 
 header('Content-Type: application/json');
 
-// Verificar que se recibió el ID
-if (!isset($_GET['presupuesto_id'])) {
-    echo json_encode(['success' => false, 'error' => 'No se especificó presupuesto']);
-    exit;
-}
-
-$mostrarPrecio = isset($_GET['mostrar_precio']) ? intval($_GET['mostrar_precio']) : 0;
-
-error_log("=== generar_presupuesto_pdf.php ===");
-error_log("presupuesto_id: " . $presupuesto_id);
-error_log("calidad: " . $calidad);
-error_log("mostrar_precio: " . $mostrarPrecio);
-
-$presupuesto_id = intval($_GET['presupuesto_id']);
+// Obtener parámetros
+$presupuesto_id = isset($_GET['presupuesto_id']) ? intval($_GET['presupuesto_id']) : 0;
 $calidad = isset($_GET['calidad']) ? $_GET['calidad'] : 'web';
+$mostrarPrecio = isset($_GET['mostrar_precio']) ? intval($_GET['mostrar_precio']) : 0;
 
 // Validar calidad
 if (!in_array($calidad, ['web', 'impresion'])) {
     $calidad = 'web';
+}
+
+// Validar ID
+if ($presupuesto_id == 0) {
+    echo json_encode(['success' => false, 'error' => 'No se especificó presupuesto']);
+    exit;
 }
 
 // Verificar que el presupuesto existe y obtener num_valery
@@ -37,7 +32,7 @@ if (empty($result)) {
 
 $num_valery = $result[0]->num_valery;
 
-// Ruta del PDF existente - usar num_valery
+// Ruta del PDF existente
 $pdf_path = "/var/www/html/pdfs/presupuestos/presupuesto_{$num_valery}.pdf";
 $pdf_url = "/pdfs/presupuestos/presupuesto_{$num_valery}.pdf";
 
@@ -56,6 +51,7 @@ if (file_exists($pdf_path) && !$forzar) {
 $script_path = '/home/jaime/catalogo_ket/generar_presupuesto_pdf.py';
 $python_path = '/home/jaime/catalogo_ket/venv/bin/python3';
 
+// Comando con el parámetro mostrar_precio
 $comando = "$python_path $script_path --presupuesto $presupuesto_id --calidad $calidad --mostrar_precio $mostrarPrecio 2>&1";
 
 $output = [];
