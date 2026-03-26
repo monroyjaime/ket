@@ -220,6 +220,14 @@ try {
                 font-size: 0.75em !important;
                 color: #6c757d !important;
             }
+
+            .form-switch .form-check-input {
+                width: 2em;
+                margin-left: -2.5em;
+            }
+            .form-switch .form-check-label {
+                margin-left: 0.5em;
+            }
         }
     </style>
 </head>
@@ -384,10 +392,16 @@ try {
 <!-- NUEVO BOTÓN PARA PRECARGAR EN CARRITO -->
     <button class="btn btn-warning" onclick="precargarEnCarrito(<?php echo $presupuesto->idx; ?>)"><i class="bi bi-cart-plus"></i> Usar para Nuevo Presupuesto</button>
             <a href="../presupuestos/index.php" class="btn btn-success">🏠 Ir al Inicio</a>
-            <!-- Botón para ver PDF de imágenes -->
-            <button type="button" class="btn btn-info" onclick="verPDFImagenes(<?php echo $presupuesto->idx; ?>)">
-                <i class="bi bi-file-pdf-fill"></i> Ver PDF de Imágenes
-            </button>
+            <!-- Botón para ver PDF de imágenes con opción de precios -->
+            <div class="d-inline-flex align-items-center gap-2">
+                <button type="button" class="btn btn-info" onclick="verPDFImagenes(<?php echo $presupuesto->idx; ?>)">
+                    <i class="bi bi-file-pdf-fill"></i> Ver PDF de Imágenes
+                </button>
+                <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" id="mostrarPrecioCheck" style="cursor: pointer;">
+                    <label class="form-check-label" for="mostrarPrecioCheck" style="font-size: 0.85rem;">Mostrar precios</label>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -453,14 +467,18 @@ try {
         });
     }
     function verPDFImagenes(presupuestoId) {
+        // Verificar si mostrar precios
+        const checkbox = document.getElementById('mostrarPrecioCheck');
+        const mostrarPrecio = checkbox && checkbox.checked ? 1 : 0;
+        
         // Mostrar indicador de carga
         const btn = event.target.closest('button');
         const originalText = btn.innerHTML;
         btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Generando PDF...';
         btn.disabled = true;
         
-        // Llamar al endpoint para generar/obtener PDF
-        fetch(`../../admin/php/generar_presupuesto_pdf.php?presupuesto_id=${presupuestoId}&calidad=web`)
+        // Llamar al endpoint con el parámetro mostrar_precio
+        fetch(`../../admin/php/generar_presupuesto_pdf.php?presupuesto_id=${presupuestoId}&calidad=web&mostrar_precio=${mostrarPrecio}`)
             .then(response => response.json())
             .then(data => {
                 if (data.success) {

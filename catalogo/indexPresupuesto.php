@@ -53,14 +53,17 @@ if (empty($codigosStr)) {
     }
     $codigos_lista = implode(',', $codigos_escapados);
     
-    // 🔴 QUITADA la condición AND p.photo_url != 'empty.jpg'
+    // 🔴 IMPORTANTE: Usar ORDER BY ARRAY_POSITION para mantener el orden original
+    // Construir la lista de códigos para el ORDER BY
+    $order_by = "ORDER BY array_position(ARRAY[" . $codigos_lista . "], p.code)";
+    
     $query = "SELECT p.code, p.name, p.photo_url, p.cost_max, d.img_route 
               FROM productos p
               JOIN departamentos d ON p.dpto_id = d.id
               WHERE p.code IN ($codigos_lista)
                 AND p.show = true
                 AND p.cost_max > 0
-              ORDER BY p.code";
+              $order_by";
     
     $result = pg_query($conn, $query);
     
@@ -76,7 +79,7 @@ if (empty($codigosStr)) {
             $tags .= '<div class="row row-cols-1 row-cols-sm-3 g-4 justify-content-center">';
             
             foreach ($productos as $producto) {
-                // Si photo_url es 'empty.jpg' o está vacío, usar empty.jpg
+                // Manejar imagen: si está vacía o es 'empty.jpg', usar la imagen por defecto
                 $photoUrl = $producto['photo_url'];
                 if (empty($photoUrl) || $photoUrl == 'empty.jpg') {
                     $imgUrl = '../catalogo/images/empty.jpg';
