@@ -51,7 +51,7 @@ if (file_exists($pdf_path) && !$forzar) {
 $script_path = '/home/jaime/catalogo_ket/generar_presupuesto_pdf.py';
 $python_path = '/home/jaime/catalogo_ket/venv/bin/python3';
 
-$comando = "$python_path $script_path --presupuesto $presupuesto_id --calidad $calidad 2>&1";
+$comando = "$python_path $script_path --presupuesto $presupuesto_id --calidad $calidad --mostrar_precio $mostrarPrecio 2>&1";
 
 $output = [];
 $return_code = 0;

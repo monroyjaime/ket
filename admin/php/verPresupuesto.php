@@ -422,6 +422,7 @@ try {
         btn.disabled = true;
         
         const url = 'https://ketelectropartes.com/admin/php/precargarPresupuestoCarrito.php';
+        
         const datos = {
             presupuesto_id: presupuestoId,
             usuario_id: <?php echo $numUsr ?? -1; ?>,
@@ -477,8 +478,10 @@ try {
         btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Generando PDF...';
         btn.disabled = true;
         
-        // Llamar al endpoint con el parámetro mostrar_precio
-        fetch(`../../admin/php/generar_presupuesto_pdf.php?presupuesto_id=${presupuestoId}&calidad=web&mostrar_precio=${mostrarPrecio}`)
+        // 🔴 CORREGIDO: Usar generar_presupuesto_pdf.php
+        const url = `../../admin/php/generar_presupuesto_pdf.php?presupuesto_id=${presupuestoId}&calidad=web&mostrar_precio=${mostrarPrecio}`;
+        
+        fetch(url)
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
