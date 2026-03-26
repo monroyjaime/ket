@@ -481,7 +481,7 @@ try {
         btn.disabled = true;
         
         // 🔴 CORREGIDO: Usar generar_presupuesto_pdf.php
-        const url = `../../admin/php/generar_presupuesto_pdf.php?presupuesto_id=${presupuestoId}&calidad=web&mostrar_precio=${mostrarPrecio}`;
+        const url = `../../admin/php/generar_presupuesto_pdf.php?presupuesto_id=${presupuestoId}&calidad=web&mostrar_precio=${mostrarPrecio}&forzar=1`;
         console.log("🔴 URL:", url);
         fetch(url)
             .then(response => response.json())
