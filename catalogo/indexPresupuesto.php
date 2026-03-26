@@ -51,25 +51,26 @@ if (empty($codigosStr)) {
     }
     $codigos_lista = implode(',', $codigos_escapados);
     
-    // Si se requiere mostrar precio, incluir también cost_max
+    // 🔴 IMPORTANTE: Ordenar por FIELD para mantener el orden original
+    // Construir FIELD para mantener el orden de los códigos en la lista
+    $field_order = "FIELD(p.code, $codigos_lista)";
+    
     if ($mostrarPrecio == 1) {
         $query = "SELECT p.code, p.name, p.photo_url, p.cost_max, d.img_route 
                   FROM productos p
                   JOIN departamentos d ON p.dpto_id = d.id
                   WHERE p.code IN ($codigos_lista)
                     AND p.show = true
-                    AND p.photo_url != 'empty.jpg'
                     AND p.cost_max > 0
-                  ORDER BY p.code";
+                  ORDER BY $field_order";
     } else {
         $query = "SELECT p.code, p.name, p.photo_url, d.img_route 
                   FROM productos p
                   JOIN departamentos d ON p.dpto_id = d.id
                   WHERE p.code IN ($codigos_lista)
                     AND p.show = true
-                    AND p.photo_url != 'empty.jpg'
                     AND p.cost_max > 0
-                  ORDER BY p.code";
+                  ORDER BY $field_order";
     }
     
     $consult1 = $db->consultas($query);
@@ -95,7 +96,7 @@ if (empty($codigosStr)) {
             // Cuerpo: foto y descripción 50/50
             $tags .= '<div class="row g-0">';
             $tags .= '<div class="col-6 text-center img-container">';
-            $tags .= '<img src="'.$imgUrl.'" alt="'.htmlspecialchars($producto->code).'">';
+            $tags .= '<img src="'.$imgUrl.'" alt="'.htmlspecialchars($producto->code).'" onerror="this.src=\'../catalogo/images/empty.jpg\'">';
             $tags .= '</div>';
             $tags .= '<div class="col-6 texto">';
             $tags .= htmlspecialchars($producto->name);
