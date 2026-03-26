@@ -468,10 +468,12 @@ try {
         });
     }
     function verPDFImagenes(presupuestoId) {
+        console.log("🔴 FUNCIÓN LLAMADA con ID:", presupuestoId);
         // Verificar si mostrar precios
         const checkbox = document.getElementById('mostrarPrecioCheck');
+        console.log("🔴 Checkbox encontrado:", checkbox);
         const mostrarPrecio = checkbox && checkbox.checked ? 1 : 0;
-        
+        console.log("🔴 mostrarPrecio:", mostrarPrecio);
         // Mostrar indicador de carga
         const btn = event.target.closest('button');
         const originalText = btn.innerHTML;
@@ -480,10 +482,11 @@ try {
         
         // 🔴 CORREGIDO: Usar generar_presupuesto_pdf.php
         const url = `../../admin/php/generar_presupuesto_pdf.php?presupuesto_id=${presupuestoId}&calidad=web&mostrar_precio=${mostrarPrecio}`;
-        
+        console.log("🔴 URL:", url);
         fetch(url)
             .then(response => response.json())
             .then(data => {
+                console.log("🔴 Respuesta JSON:", data);
                 if (data.success) {
                     // Abrir el PDF en una nueva pestaña
                     window.open(data.pdf_url, '_blank');
