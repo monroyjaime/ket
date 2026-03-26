@@ -44,54 +44,68 @@ if (empty($codigosStr)) {
 } else {
     $codigos = explode(',', $codigosStr);
     
-    // Construir consulta SQL con los códigos
-    $placeholders = implode(',', array_fill(0, count($codigos), '?'));
+    // Construir la consulta con placeholders seguros
+    $placeholders = array();
+    $params = array();
+    foreach ($codigos as $idx => $codigo) {
+        $placeholders[] = '$' . ($idx + 1);
+        $params[] = trim($codigo);
+    }
+    
     $query = "SELECT p.code, p.name, p.photo_url, d.img_route 
               FROM productos p
               JOIN departamentos d ON p.dpto_id = d.id
-              WHERE p.code IN ($placeholders)
+              WHERE p.code IN (" . implode(',', $placeholders) . ")
                 AND p.show = true
                 AND p.photo_url != 'empty.jpg'
                 AND p.cost_max > 0
-              ORDER BY FIELD(p.code, " . implode(',', array_map(function($c) use ($db) { 
-                  return "'" . $db->escape($c) . "'"; 
-              }, $codigos)) . ")";
+              ORDER BY p.code";
     
-    $consult1 = $db->consultas($query);
+    // Usar consulta preparada con pg_query_params
+    $conn = $db->getConnection();
+    $result = pg_query_params($conn, $query, $params);
     
-    // Agrupar productos (pueden ser de diferentes departamentos)
-    // Pero para presupuestos, mostramos todos juntos sin títulos de departamento
-    
-    $tags .= '<div class="products-grid">';
-    $tags .= '<div class="row row-cols-1 row-cols-sm-3 g-4 justify-content-center">';
-    
-    foreach ($consult1 as $producto) {
-        $imgUrl = $producto->img_route . $producto->photo_url;
+    if (!$result) {
+        $tags .= '<p>Error en la consulta: ' . pg_last_error($conn) . '</p>';
+    } else {
+        $productos = pg_fetch_all($result);
         
-        $tags .= '<div class="col">';
-        $tags .= '<div class="card h-100">';
-        
-        // Encabezado con código
-        $tags .= '<div class="card-header text-center" style="background-color: #037C79; color: white; font-weight: bold;">';
-        $tags .= $producto->code;
-        $tags .= '</div>';
-        
-        // Cuerpo: foto y descripción 50/50
-        $tags .= '<div class="row g-0">';
-        $tags .= '<div class="col-6 text-center img-container">';
-        $tags .= '<img src="'.$imgUrl.'" alt="'.$producto->code.'">';
-        $tags .= '</div>';
-        $tags .= '<div class="col-6 texto">';
-        $tags .= $producto->name;
-        $tags .= '</div>';
-        $tags .= '</div>';
-        
-        $tags .= '</div>';
-        $tags .= '</div>';
+        if (empty($productos)) {
+            $tags .= '<p>No se encontraron productos con los códigos especificados.</p>';
+            $tags .= '<p>Códigos recibidos: ' . htmlspecialchars($codigosStr) . '</p>';
+        } else {
+            $tags .= '<div class="products-grid">';
+            $tags .= '<div class="row row-cols-1 row-cols-sm-3 g-4 justify-content-center">';
+            
+            foreach ($productos as $producto) {
+                $imgUrl = $producto['img_route'] . $producto['photo_url'];
+                
+                $tags .= '<div class="col">';
+                $tags .= '<div class="card h-100">';
+                
+                // Encabezado con código
+                $tags .= '<div class="card-header text-center" style="background-color: #037C79; color: white; font-weight: bold;">';
+                $tags .= htmlspecialchars($producto['code']);
+                $tags .= '</div>';
+                
+                // Cuerpo: foto y descripción 50/50
+                $tags .= '<div class="row g-0">';
+                $tags .= '<div class="col-6 text-center img-container">';
+                $tags .= '<img src="'.$imgUrl.'" alt="'.htmlspecialchars($producto['code']).'">';
+                $tags .= '</div>';
+                $tags .= '<div class="col-6 texto">';
+                $tags .= htmlspecialchars($producto['name']);
+                $tags .= '</div>';
+                $tags .= '</div>';
+                
+                $tags .= '</div>';
+                $tags .= '</div>';
+            }
+            
+            $tags .= '</div>';
+            $tags .= '</div>';
+        }
     }
-    
-    $tags .= '</div>';
-    $tags .= '</div>';
 }
 
 ?>
