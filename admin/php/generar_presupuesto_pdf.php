@@ -19,7 +19,7 @@ if (!in_array($calidad, ['web', 'impresion'])) {
     $calidad = 'web';
 }
 
-// Verificar que el presupuesto existe
+// Verificar que el presupuesto existe y obtener num_valery
 $db = new DBAsync();
 $result = $db->consultaSegura("SELECT num_valery FROM presupuesto_gen WHERE idx = $1", [$presupuesto_id]);
 
@@ -30,15 +30,16 @@ if (empty($result)) {
 
 $num_valery = $result[0]->num_valery;
 
-// Ruta del PDF existente
+// Ruta del PDF existente - usar num_valery
 $pdf_path = "/var/www/html/pdfs/presupuestos/presupuesto_{$num_valery}.pdf";
+$pdf_url = "/pdfs/presupuestos/presupuesto_{$num_valery}.pdf";
 
 // Si el PDF ya existe y no se fuerza regeneración, devolver la ruta
 $forzar = isset($_GET['forzar']) && $_GET['forzar'] == '1';
 if (file_exists($pdf_path) && !$forzar) {
     echo json_encode([
         'success' => true,
-        'pdf_url' => "/pdfs/presupuestos/presupuesto_{$num_valery}.pdf",
+        'pdf_url' => $pdf_url,
         'cached' => true
     ]);
     exit;
@@ -52,18 +53,12 @@ $comando = "$python_path $script_path --presupuesto $presupuesto_id --calidad $c
 
 $output = [];
 $return_code = 0;
-
-// Debug temporal
-error_log("=== GENERANDO PDF PRESUPUESTO ===");
-error_log("Presupuesto ID: " . $presupuesto_id);
-error_log("Comando: " . $comando);
-
 exec($comando, $output, $return_code);
 
 if ($return_code === 0) {
     echo json_encode([
         'success' => true,
-        'pdf_url' => "/pdfs/presupuestos/presupuesto_{$num_valery}.pdf",
+        'pdf_url' => $pdf_url,
         'cached' => false,
         'output' => implode("\n", $output)
     ]);
