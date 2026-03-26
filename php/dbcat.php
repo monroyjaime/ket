@@ -33,7 +33,7 @@ class DB{
     }
 
     public function getConnection() {
-        return $this->conn;
+        return $this->link;
     }
 
     public function consultas($consulta)
