@@ -53,7 +53,7 @@ if (empty($codigosStr)) {
     }
     $codigos_lista = implode(',', $codigos_escapados);
     
-    // Construir query SIN FIELD (usar ORDER BY p.code por ahora)
+    // 🔴 QUITADA la condición AND p.photo_url != 'empty.jpg'
     $query = "SELECT p.code, p.name, p.photo_url, p.cost_max, d.img_route 
               FROM productos p
               JOIN departamentos d ON p.dpto_id = d.id
@@ -76,17 +76,23 @@ if (empty($codigosStr)) {
             $tags .= '<div class="row row-cols-1 row-cols-sm-3 g-4 justify-content-center">';
             
             foreach ($productos as $producto) {
-                $imgUrl = $producto['img_route'] . $producto['photo_url'];
+                // Si photo_url es 'empty.jpg' o está vacío, usar empty.jpg
+                $photoUrl = $producto['photo_url'];
+                if (empty($photoUrl) || $photoUrl == 'empty.jpg') {
+                    $imgUrl = '../catalogo/images/empty.jpg';
+                } else {
+                    $imgUrl = $producto['img_route'] . $photoUrl;
+                }
                 
                 $tags .= '<div class="col">';
                 $tags .= '<div class="card h-100">';
                 
-                // Encabezado
+                // Encabezado con código
                 $tags .= '<div class="card-header text-center" style="background-color: #037C79; color: white; font-weight: bold;">';
                 $tags .= htmlspecialchars($producto['code']);
                 $tags .= '</div>';
                 
-                // Cuerpo
+                // Cuerpo: foto y descripción 50/50
                 $tags .= '<div class="row g-0">';
                 $tags .= '<div class="col-6 text-center img-container">';
                 $tags .= '<img src="'.$imgUrl.'" alt="'.htmlspecialchars($producto['code']).'" style="max-height:90px; width:auto; max-width:100%; object-fit:contain;">';
