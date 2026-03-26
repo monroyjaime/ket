@@ -52,6 +52,12 @@ $comando = "$python_path $script_path --presupuesto $presupuesto_id --calidad $c
 
 $output = [];
 $return_code = 0;
+
+// Debug temporal
+error_log("=== GENERANDO PDF PRESUPUESTO ===");
+error_log("Presupuesto ID: " . $presupuesto_id);
+error_log("Comando: " . $comando);
+
 exec($comando, $output, $return_code);
 
 if ($return_code === 0) {
