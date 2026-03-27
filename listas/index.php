@@ -265,7 +265,7 @@ foreach ($consult as $value)
         }
 
         .nav-btn-catalogos:hover {
-            background-color: #003272;
+            background-color: #f5f384;
         }
 
         .nav-btn-pdfs {
