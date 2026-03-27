@@ -232,6 +232,50 @@ foreach ($consult as $value)
         .nav-link{
             color: #003272;
         }
+
+        /* Botones de navegación */
+        .nav-btn {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            white-space: nowrap;
+            transition: all 0.2s;
+        }
+
+        .nav-btn:hover {
+            transform: translateY(-1px);
+        }
+
+        .nav-btn-listas {
+            background-color: #003272;
+            color: white;
+        }
+
+        .nav-btn-listas:hover {
+            background-color: #037C79;
+        }
+
+        .nav-btn-catalogos {
+            background-color: #037C79;
+            color: white;
+        }
+
+        .nav-btn-catalogos:hover {
+            background-color: #003272;
+        }
+
+        .nav-btn-pdfs {
+            background-color: #dc3545;
+            color: white;
+        }
+
+        .nav-btn-pdfs:hover {
+            background-color: #b02a37;
+        }
         
         span {
             display: inline-block;
@@ -269,33 +313,14 @@ foreach ($consult as $value)
         
         <!-- Botones centrados (ocupan el espacio disponible) -->
         <div style="display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; flex: 1;">
-            <a href="indiceDptos.php" style="
-                background-color: #003272;
-                color: white;
-                padding: 5px 12px;
-                border-radius: 20px;
-                font-size: 0.8rem;
-                text-decoration: none;
-                display: inline-flex;
-                align-items: center;
-                gap: 5px;
-                white-space: nowrap;
-            ">
+            <a href="indiceDptos.php" class="nav-btn nav-btn-listas">
                 <i class="bi bi-list-ul"></i> Listas
             </a>
-            <a href="../catalogo/indiceDptos.php" style="
-                background-color: #037C79;
-                color: white;
-                padding: 5px 12px;
-                border-radius: 20px;
-                font-size: 0.8rem;
-                text-decoration: none;
-                display: inline-flex;
-                align-items: center;
-                gap: 5px;
-                white-space: nowrap;
-            ">
+            <a href="../catalogo/indiceDptos.php" class="nav-btn nav-btn-catalogos">
                 <i class="bi bi-images"></i> Catálogos
+            </a>
+            <a href="../pdfs/index.php" class="nav-btn nav-btn-pdfs">
+                <i class="bi bi-file-pdf-fill"></i> PDFs
             </a>
         </div>
         
