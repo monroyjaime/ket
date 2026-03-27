@@ -244,10 +244,12 @@ foreach ($consult as $value)
             gap: 5px;
             white-space: nowrap;
             transition: all 0.2s;
+            color: white !important;  /* 🔴 FORZAR TEXTO BLANCO SIEMPRE */
         }
 
         .nav-btn:hover {
             transform: translateY(-1px);
+            color: white !important;  /* 🔴 FORZAR TEXTO BLANCO EN HOVER */
         }
 
         .nav-btn-listas {
@@ -265,7 +267,7 @@ foreach ($consult as $value)
         }
 
         .nav-btn-catalogos:hover {
-            background-color: #f5f384;
+            background-color: #003272;
         }
 
         .nav-btn-pdfs {
@@ -313,16 +315,16 @@ foreach ($consult as $value)
         
         <!-- Botones centrados (ocupan el espacio disponible) -->
         <div style="display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; flex: 1;">
-            <a href="indiceDptos.php" class="nav-btn nav-btn-listas">
-                <i class="bi bi-list-ul"></i> Listas
-            </a>
-            <a href="../catalogo/indiceDptos.php" class="nav-btn nav-btn-catalogos">
-                <i class="bi bi-images"></i> Catálogos
-            </a>
-            <a href="../pdfs/index.php" class="nav-btn nav-btn-pdfs">
-                <i class="bi bi-file-pdf-fill"></i> PDFs
-            </a>
-        </div>
+        <a href="indiceDptos.php" class="nav-btn nav-btn-listas">
+            <i class="bi bi-list-ul"></i> Listas
+        </a>
+        <a href="../catalogo/indiceDptos.php" class="nav-btn nav-btn-catalogos">
+            <i class="bi bi-images"></i> Catálogos
+        </a>
+        <a href="../pdfs/index.php" class="nav-btn nav-btn-pdfs">
+            <i class="bi bi-file-pdf-fill"></i> PDFs
+        </a>
+    </div>
         
         <!-- Logo derecho -->
         <div style="flex-shrink: 0;">
