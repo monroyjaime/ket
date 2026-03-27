@@ -1,6 +1,97 @@
 <?php
 session_start();
 require_once("../php/dbcat.php");
+
+require_once("../php/dbcat.php");
+
+// ============================================
+// VERIFICACIÓN DE AUTORIZACIÓN
+// ============================================
+$isAdmin = isset($_SESSION['usr_admin']) ? $_SESSION['usr_admin'] : 0;
+$role = isset($_SESSION['role']) ? intval($_SESSION['role']) : -1;
+
+// Si no está autenticado o no es administrador, mostrar error
+if ($role == -1 || $isAdmin != 1) {
+    ?>
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="utf-8"/>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>Acceso Denegado - KET</title>
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet">
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+        <style>
+            body {
+                background-color: #DDD;
+                margin: 0;
+                padding: 0;
+                font-family: 'Segoe UI', Arial, sans-serif;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                min-height: 100vh;
+            }
+            .error-container {
+                text-align: center;
+                background: white;
+                padding: 40px;
+                border-radius: 10px;
+                box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+                max-width: 500px;
+                margin: 20px;
+            }
+            .error-icon {
+                font-size: 5rem;
+                color: #dc3545;
+                margin-bottom: 20px;
+            }
+            .error-title {
+                color: #dc3545;
+                font-size: 1.8rem;
+                margin-bottom: 15px;
+            }
+            .error-message {
+                color: #666;
+                margin-bottom: 25px;
+            }
+            .btn-back {
+                background-color: #003272;
+                color: white;
+                padding: 10px 25px;
+                border-radius: 30px;
+                text-decoration: none;
+                display: inline-flex;
+                align-items: center;
+                gap: 8px;
+                transition: all 0.2s;
+            }
+            .btn-back:hover {
+                background-color: #037C79;
+                color: white;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="error-container">
+            <div class="error-icon">
+                <i class="bi bi-shield-lock-fill"></i>
+            </div>
+            <h1 class="error-title">Acceso Denegado</h1>
+            <p class="error-message">
+                No tienes permisos para acceder a esta página.<br>
+                Esta área está restringida a usuarios administradores.
+            </p>
+            <a href="../listas/index.php" class="btn-back">
+                <i class="bi bi-arrow-left"></i> Volver al inicio
+            </a>
+        </div>
+    </body>
+    </html>
+    <?php
+    exit;
+}
+
 $db = new DB();
 
 // Obtener todos los departamentos con catalogo_orden > 0
