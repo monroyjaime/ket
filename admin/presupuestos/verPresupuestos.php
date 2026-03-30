@@ -365,7 +365,7 @@ try {
         $(document).ready(function() {
             // Inicializar selector de presupuestos
             presupuestosTomSel = new TomSelect("#presupuestos-tom-sel", {
-                sortField: { field: "text", direction: "desc" },
+                sortField: { field: "presupuesto_num", direction: "desc" },
                 searchField: ["text"],
                 placeholder: "Buscar presupuesto...",
                 onChange: function(value) {
