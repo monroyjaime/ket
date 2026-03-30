@@ -368,6 +368,15 @@ try {
                 sortField: { field: "presupuesto_num", direction: "desc", numeric: true },
                 searchField: ["text"],
                 placeholder: "Buscar presupuesto...",
+                load: function(callback) {
+                    // Ya tenemos los datos, solo ordenamos
+                    var options = this.options;
+                    var values = Object.keys(options);
+                    values.sort(function(a, b) {
+                        return parseInt(options[b].presupuesto_num) - parseInt(options[a].presupuesto_num);
+                    });
+                    callback(values);
+                },
                 onChange: function(value) {
                     if (value) {
                         presupuestoActualId = value;
