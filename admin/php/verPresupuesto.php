@@ -468,40 +468,53 @@ try {
         });
     }
     function verPDFImagenes(presupuestoId) {
-        console.log("🔴 FUNCIÓN LLAMADA con ID:", presupuestoId);
+        //console.log("🔴 FUNCIÓN LLAMADA con ID:", presupuestoId);
         // Verificar si mostrar precios
         const checkbox = document.getElementById('mostrarPrecioCheck');
-        console.log("🔴 Checkbox encontrado:", checkbox);
+        //console.log("🔴 Checkbox encontrado:", checkbox);
         const mostrarPrecio = checkbox && checkbox.checked ? 1 : 0;
-        console.log("🔴 mostrarPrecio:", mostrarPrecio);
+        //console.log("🔴 mostrarPrecio:", mostrarPrecio);
         // Mostrar indicador de carga
         const btn = event.target.closest('button');
         const originalText = btn.innerHTML;
         btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Generando PDF...';
         btn.disabled = true;
         
+        // Usar AbortController con timeout más largo (2 minutos)
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 120000); // 120 segundos
+
+
+
         // 🔴 CORREGIDO: Usar generar_presupuesto_pdf.php
         const url = `../../admin/php/generar_presupuesto_pdf.php?presupuesto_id=${presupuestoId}&calidad=web&mostrar_precio=${mostrarPrecio}&forzar=1`;
         console.log("🔴 URL:", url);
-        fetch(url)
-            .then(response => response.json())
-            .then(data => {
-                console.log("🔴 Respuesta JSON:", data);
-                if (data.success) {
-                    // Abrir el PDF en una nueva pestaña
-                    window.open(data.pdf_url, '_blank');
-                } else {
-                    alert('Error al generar el PDF: ' + data.error);
-                }
-            })
-            .catch(error => {
+        
+        fetch(url, { signal: controller.signal })
+        .then(response => response.json())
+        .then(data => {
+            clearTimeout(timeoutId);
+            if (data.success) {
+                window.open(data.pdf_url, '_blank');
+            } else {
+                alert('Error al generar el PDF: ' + data.error);
+            }
+        })
+        .catch(error => {
+            clearTimeout(timeoutId);
+            if (error.name === 'AbortError') {
+                alert('La generación del PDF está tomando demasiado tiempo. Por favor, verifica más tarde en la carpeta de presupuestos.');
+            } else {
                 console.error('Error:', error);
-                alert('Error al generar el PDF');
-            })
-            .finally(() => {
-                btn.innerHTML = originalText;
-                btn.disabled = false;
-            });
+                alert('Error al generar el PDF: ' + error.message);
+            }
+        })
+        .finally(() => {
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+        });
+
+
     }
     </script>
 </body>
