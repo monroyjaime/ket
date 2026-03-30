@@ -468,13 +468,9 @@ try {
             });
         }
         function verPDFImagenes(presupuestoId) {
-            //console.log("🔴 FUNCIÓN LLAMADA con ID:", presupuestoId);
-            // Verificar si mostrar precios
             const checkbox = document.getElementById('mostrarPrecioCheck');
-            //console.log("🔴 Checkbox encontrado:", checkbox);
             const mostrarPrecio = checkbox && checkbox.checked ? 1 : 0;
-            //console.log("🔴 mostrarPrecio:", mostrarPrecio);
-            // Mostrar indicador de carga
+            
             const btn = event.target.closest('button');
             const originalText = btn.innerHTML;
             btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Generando PDF...';
@@ -487,11 +483,9 @@ try {
                 .then(response => response.json())
                 .then(data => {
                     if (data.success && data.processing) {
-                        // PDF en proceso de generación
                         btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Generando PDF (puede tomar varios minutos)...';
                         verificarPDF(presupuestoId, btn, originalText);
                     } else if (data.success && data.pdf_url) {
-                        // PDF ya existente o generado rápidamente
                         window.open(data.pdf_url, '_blank');
                         btn.innerHTML = originalText;
                         btn.disabled = false;
@@ -511,15 +505,22 @@ try {
 
         function verificarPDF(presupuestoId, btn, originalText) {
             let intentos = 0;
-            const maxIntentos = 60; // 60 intentos * 5 segundos = 5 minutos máximo
+            const maxIntentos = 120; // 120 intentos * 5 segundos = 10 minutos máximo
+            
+            console.log('Iniciando verificación de PDF para presupuesto:', presupuestoId);
             
             const intervalo = setInterval(function() {
                 const statusUrl = `../../admin/php/check_pdf_status.php?presupuesto_id=${presupuestoId}`;
                 
+                console.log(`Verificando estado (intento ${intentos + 1}/${maxIntentos})...`);
+                
                 fetch(statusUrl)
                     .then(response => response.json())
                     .then(data => {
+                        console.log('Respuesta:', data);
+                        
                         if (data.ready && data.pdf_url) {
+                            console.log('PDF listo! Abriendo:', data.pdf_url);
                             clearInterval(intervalo);
                             window.open(data.pdf_url, '_blank');
                             btn.innerHTML = originalText;

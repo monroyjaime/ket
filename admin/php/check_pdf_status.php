@@ -9,7 +9,6 @@ if ($presupuesto_id == 0) {
     exit;
 }
 
-// Obtener num_valery
 require_once("../../php/dbcat_async.php");
 $db = new DBAsync();
 $result = $db->consultaSegura("SELECT num_valery FROM presupuesto_gen WHERE idx = $1", [$presupuesto_id]);
@@ -23,14 +22,15 @@ $num_valery = $result[0]->num_valery;
 $pdf_path = "/var/www/html/pdfs/presupuestos/presupuesto_{$num_valery}.pdf";
 $pdf_url = "/pdfs/presupuestos/presupuesto_{$num_valery}.pdf";
 
-if (file_exists($pdf_path)) {
+// Verificar si el PDF existe y tiene tamaño > 0
+if (file_exists($pdf_path) && filesize($pdf_path) > 0) {
     echo json_encode([
         'success' => true,
         'ready' => true,
         'pdf_url' => $pdf_url
     ]);
 } else {
-    // Verificar si sigue en proceso
+    // Verificar estado del proceso
     $status_file = "/tmp/presupuesto_{$presupuesto_id}_status.json";
     $status = ['status' => 'pending'];
     if (file_exists($status_file)) {

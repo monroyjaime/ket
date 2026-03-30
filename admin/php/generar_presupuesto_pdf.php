@@ -9,7 +9,7 @@ header('Content-Type: application/json');
 $presupuesto_id = isset($_GET['presupuesto_id']) ? intval($_GET['presupuesto_id']) : 0;
 $calidad = isset($_GET['calidad']) ? $_GET['calidad'] : 'web';
 $mostrarPrecio = isset($_GET['mostrar_precio']) ? intval($_GET['mostrar_precio']) : 0;
-$async = isset($_GET['async']) ? $_GET['async'] : 0; // Nuevo: modo asíncrono
+$async = isset($_GET['async']) ? $_GET['async'] : 0;
 
 // Validar calidad
 if (!in_array($calidad, ['web', 'impresion'])) {
@@ -33,27 +33,26 @@ if (empty($result)) {
 
 $num_valery = $result[0]->num_valery;
 
-// Ruta del PDF existente
+// Ruta del PDF
 $pdf_path = "/var/www/html/pdfs/presupuestos/presupuesto_{$num_valery}.pdf";
 $pdf_url = "/pdfs/presupuestos/presupuesto_{$num_valery}.pdf";
 
-// Si el PDF ya existe, devolver la ruta inmediatamente
+// 🔴 ELIMINAR PDF EXISTENTE SIEMPRE (para forzar regeneración)
 if (file_exists($pdf_path)) {
-    echo json_encode([
-        'success' => true,
-        'pdf_url' => $pdf_url,
-        'cached' => true
-    ]);
-    exit;
+    unlink($pdf_path);
 }
 
-// Modo asíncrono: iniciar proceso en segundo plano y devolver estado
+// Modo asíncrono: iniciar proceso en segundo plano
 if ($async == 1) {
-    // Crear archivo de estado
+    // Crear archivo de estado (timestamp para saber que es nueva generación)
     $status_file = "/tmp/presupuesto_{$presupuesto_id}_status.json";
-    file_put_contents($status_file, json_encode(['status' => 'processing', 'started_at' => time()]));
+    file_put_contents($status_file, json_encode([
+        'status' => 'processing', 
+        'started_at' => time(),
+        'pdf_url' => $pdf_url
+    ]));
     
-    // Ejecutar en segundo plano (sin esperar resultado)
+    // Ejecutar en segundo plano
     $script_path = '/home/jaime/catalogo_ket/generar_presupuesto_pdf.py';
     $python_path = '/home/jaime/catalogo_ket/venv/bin/python3';
     $comando = "$python_path $script_path --presupuesto $presupuesto_id --calidad $calidad --mostrar_precio $mostrarPrecio > /tmp/presupuesto_{$presupuesto_id}.log 2>&1 &";
@@ -63,13 +62,13 @@ if ($async == 1) {
         'success' => true,
         'processing' => true,
         'pdf_url' => $pdf_url,
-        'status_url' => "/admin/php/check_pdf_status.php?presupuesto_id={$presupuesto_id}"
+        'message' => 'Generando PDF en segundo plano'
     ]);
     exit;
 }
 
-// Modo síncrono (original) - con timeout aumentado
-set_time_limit(300); // 5 minutos
+// Modo síncrono (con timeout aumentado)
+set_time_limit(300);
 $script_path = '/home/jaime/catalogo_ket/generar_presupuesto_pdf.py';
 $python_path = '/home/jaime/catalogo_ket/venv/bin/python3';
 $comando = "$python_path $script_path --presupuesto $presupuesto_id --calidad $calidad --mostrar_precio $mostrarPrecio 2>&1";
@@ -78,11 +77,10 @@ $output = [];
 $return_code = 0;
 exec($comando, $output, $return_code);
 
-if ($return_code === 0) {
+if ($return_code === 0 && file_exists($pdf_path)) {
     echo json_encode([
         'success' => true,
         'pdf_url' => $pdf_url,
-        'cached' => false,
         'output' => implode("\n", $output)
     ]);
 } else {
