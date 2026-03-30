@@ -522,7 +522,8 @@ try {
                         if (data.ready && data.pdf_url) {
                             console.log('PDF listo! Abriendo:', data.pdf_url);
                             clearInterval(intervalo);
-                            window.open(data.pdf_url, '_blank');
+                            //window.open(data.pdf_url, '_blank');
+                            window.location.href = data.pdf_url;
                             btn.innerHTML = originalText;
                             btn.disabled = false;
                         } else if (intentos >= maxIntentos) {
