@@ -20,7 +20,7 @@ try {
          FROM presupuesto_gen pg
          LEFT JOIN usuario u ON pg.user_num = u.num
          WHERE pg.archivado = 0
-         ORDER BY pg.fecha DESC, pg.hora DESC"
+         ORDER BY pg.presupuesto_num DESC"
     );
     
     // Si no hay presupuesto_id específico, tomar el más reciente
