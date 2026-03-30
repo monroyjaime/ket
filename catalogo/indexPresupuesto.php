@@ -8,11 +8,17 @@ $totalPaginasGlobal = isset($_GET['total_paginas']) ? intval($_GET['total_pagina
 $numValery = isset($_GET['num_valery']) ? intval($_GET['num_valery']) : 0;
 $codigosStr = isset($_GET['codigos']) ? $_GET['codigos'] : '';
 $mostrarPrecio = isset($_GET['mostrar_precio']) ? intval($_GET['mostrar_precio']) : 0;
+$itemsStr = isset($_GET['items']) ? $_GET['items'] : '';
+<?php
+// Archivo: /var/www/html/catalogo/indexPresupuesto.php
+// Recibe items en formato: CODIGO|PRECIO,CODIGO2|PRECIO2,...
 
-// 🔴 AGREGAR LOG
-error_log("=== indexPresupuesto.php ===");
-error_log("mostrar_precio recibido: " . $mostrarPrecio);
-error_log("codigos: " . ($codigosStr ?? 'ninguno'));
+$role = isset($_GET['role_num']) ? intval($_GET['role_num']) : -1;
+$pageGlobal = isset($_GET['page_global']) ? intval($_GET['page_global']) : 1;
+$totalPaginasGlobal = isset($_GET['total_paginas']) ? intval($_GET['total_paginas']) : 1;
+$numValery = isset($_GET['num_valery']) ? intval($_GET['num_valery']) : 0;
+$itemsStr = isset($_GET['items']) ? $_GET['items'] : '';
+$mostrarPrecio = isset($_GET['mostrar_precio']) ? intval($_GET['mostrar_precio']) : 0;
 
 require_once("../php/dbcat.php");
 $db = new DB();
@@ -44,86 +50,101 @@ if ($numValery > 0) {
 }
 
 // ============================================
-// PROCESAR CÓDIGOS DE PRODUCTO
+// PROCESAR ÍTEMS (CÓDIGO|PRECIO)
 // ============================================
-if (empty($codigosStr)) {
+if (empty($itemsStr)) {
     $tags .= '<p>No se especificaron productos</p>';
 } else {
-    $codigos = explode(',', $codigosStr);
+    $items = explode(',', $itemsStr);
     
-    // Escapar valores
-    $codigos_escapados = array();
-    foreach ($codigos as $codigo) {
-        $codigos_escapados[] = "'" . pg_escape_string($conn, trim($codigo)) . "'";
+    $codigos = [];
+    $precios_historicos = [];
+    foreach ($items as $item) {
+        $parts = explode('|', $item);
+        if (count($parts) >= 2) {
+            $codigo = trim($parts[0]);
+            $codigos[] = $codigo;
+            $precios_historicos[$codigo] = floatval($parts[1]);
+        }
     }
-    $codigos_lista = implode(',', $codigos_escapados);
     
-    // 🔴 IMPORTANTE: Usar ORDER BY ARRAY_POSITION para mantener el orden original
-    // Construir la lista de códigos para el ORDER BY
-    $order_by = "ORDER BY array_position(ARRAY[" . $codigos_lista . "], p.code)";
-    
-    $query = "SELECT p.code, p.name, p.photo_url, p.cost_max, d.img_route 
-              FROM productos p
-              JOIN departamentos d ON p.dpto_id = d.id
-              WHERE p.code IN ($codigos_lista)
-                AND p.show = true
-                AND p.cost_max > 0
-              $order_by";
-    
-    $result = pg_query($conn, $query);
-    
-    if (!$result) {
-        $tags .= '<p>Error en consulta: ' . pg_last_error($conn) . '</p>';
+    if (empty($codigos)) {
+        $tags .= '<p>No se pudieron procesar los productos</p>';
     } else {
-        $productos = pg_fetch_all($result);
+        // Escapar códigos para consulta
+        $codigos_escapados = array();
+        foreach ($codigos as $codigo) {
+            $codigos_escapados[] = "'" . pg_escape_string($conn, trim($codigo)) . "'";
+        }
+        $codigos_lista = implode(',', $codigos_escapados);
         
-        if (empty($productos)) {
-            $tags .= '<p>No se encontraron productos con los códigos especificados.</p>';
+        // Consultar productos (sin precios, los usaremos de los históricos)
+        $query = "SELECT p.code, p.name, p.photo_url, d.img_route 
+                  FROM productos p
+                  JOIN departamentos d ON p.dpto_id = d.id
+                  WHERE p.code IN ($codigos_lista)
+                    AND p.show = true
+                    AND p.cost_max > 0
+                  ORDER BY p.code";
+        
+        $result = pg_query($conn, $query);
+        
+        if (!$result) {
+            $tags .= '<p>Error en consulta: ' . pg_last_error($conn) . '</p>';
         } else {
-            $tags .= '<div class="products-grid">';
-            $tags .= '<div class="row row-cols-1 row-cols-sm-3 g-4 justify-content-center">';
+            $productos = pg_fetch_all($result);
             
-            foreach ($productos as $producto) {
-                // Manejar imagen: si está vacía o es 'empty.jpg', usar la imagen por defecto
-                $photoUrl = $producto['photo_url'];
-                if (empty($photoUrl) || $photoUrl == 'empty.jpg') {
-                    $imgUrl = '../catalogo/images/empty.jpg';
-                } else {
-                    $imgUrl = $producto['img_route'] . $photoUrl;
-                }
+            if (empty($productos)) {
+                $tags .= '<p>No se encontraron productos con los códigos especificados.</p>';
+            } else {
+                $tags .= '<div class="products-grid">';
+                $tags .= '<div class="row row-cols-1 row-cols-sm-3 g-4 justify-content-center">';
                 
-                $tags .= '<div class="col">';
-                $tags .= '<div class="card h-100">';
-                
-                // Encabezado con código
-                $tags .= '<div class="card-header text-center" style="background-color: #037C79; color: white; font-weight: bold;">';
-                $tags .= htmlspecialchars($producto['code']);
-                $tags .= '</div>';
-                
-                // Cuerpo: foto y descripción 50/50
-                $tags .= '<div class="row g-0">';
-                $tags .= '<div class="col-6 text-center img-container">';
-                $tags .= '<img src="'.$imgUrl.'" alt="'.htmlspecialchars($producto['code']).'" style="max-height:90px; width:auto; max-width:100%; object-fit:contain;">';
-                $tags .= '</div>';
-                $tags .= '<div class="col-6 texto">';
-                $tags .= htmlspecialchars($producto['name']);
-                $tags .= '</div>';
-                $tags .= '</div>';
-                
-                // Precio si se solicita
-                if ($mostrarPrecio == 1 && isset($producto['cost_max'])) {
-                    $precioFormateado = number_format($producto['cost_max'], 3, ',', '.');
-                    $tags .= '<div class="card-footer text-center" style="background-color: #f0f0f0; padding: 6px;">';
-                    $tags .= '<strong>Precio: $' . $precioFormateado . '</strong>';
+                foreach ($productos as $producto) {
+                    $code = $producto['code'];
+                    $precioHistorico = isset($precios_historicos[$code]) ? $precios_historicos[$code] : 0;
+                    
+                    // Manejar imagen
+                    $photoUrl = $producto['photo_url'];
+                    if (empty($photoUrl) || $photoUrl == 'empty.jpg') {
+                        $imgUrl = '../catalogo/images/empty.jpg';
+                    } else {
+                        $imgUrl = $producto['img_route'] . $photoUrl;
+                    }
+                    
+                    $tags .= '<div class="col">';
+                    $tags .= '<div class="card h-100">';
+                    
+                    // Encabezado con código
+                    $tags .= '<div class="card-header text-center" style="background-color: #037C79; color: white; font-weight: bold;">';
+                    $tags .= htmlspecialchars($code);
+                    $tags .= '</div>';
+                    
+                    // Cuerpo: foto y descripción 50/50
+                    $tags .= '<div class="row g-0">';
+                    $tags .= '<div class="col-6 text-center img-container">';
+                    $tags .= '<img src="'.$imgUrl.'" alt="'.htmlspecialchars($code).'" style="max-height:90px; width:auto; max-width:100%; object-fit:contain;">';
+                    $tags .= '</div>';
+                    $tags .= '<div class="col-6 texto">';
+                    $tags .= htmlspecialchars($producto['name']);
+                    $tags .= '</div>';
+                    $tags .= '</div>';
+                    
+                    // Precio histórico (no el actual)
+                    if ($mostrarPrecio == 1 && $precioHistorico > 0) {
+                        $precioFormateado = number_format($precioHistorico, 3, ',', '.');
+                        $tags .= '<div class="card-footer text-center" style="background-color: #f0f0f0; padding: 6px;">';
+                        $tags .= '<strong>Precio: $' . $precioFormateado . '</strong>';
+                        $tags .= '</div>';
+                    }
+                    
+                    $tags .= '</div>';
                     $tags .= '</div>';
                 }
                 
                 $tags .= '</div>';
                 $tags .= '</div>';
             }
-            
-            $tags .= '</div>';
-            $tags .= '</div>';
         }
     }
 }
@@ -149,6 +170,7 @@ if (empty($codigosStr)) {
         .card-header { background-color: #037C79 !important; color: white !important; font-weight: bold; text-align: center; padding: 6px; font-size: 10pt; border-bottom: none; }
         .row.g-0 { margin: 0; min-height: 100px; }
         .col-6.img-container { width: 50%; padding: 4px; display: flex; align-items: center; justify-content: center; background-color: #fff; }
+        .col-6.img-container img { width: 100%; height: auto; max-height: 90px; object-fit: contain; }
         .col-6.texto { width: 50%; padding: 6px; display: flex; align-items: center; font-size: 8pt; line-height: 1.2; background-color: #f8f9fa; word-wrap: break-word; overflow-y: auto; max-height: 100px; }
         .card-footer { font-size: 9pt; background-color: #f8f9fa; }
         @media print { body { margin: 5.5mm 10mm; padding: 0; } .card { break-inside: avoid; } }
