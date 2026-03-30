@@ -361,8 +361,40 @@ try {
         let presupuestosTomSel;
         let listaPresupuestos = <?php echo json_encode($presupuestos); ?>;
         let presupuestoActualId = <?php echo $presupuesto_id > 0 ? $presupuesto_id : '0'; ?>;
+
+         // 🔴 NUEVO: Ordenar el array por presupuesto_num DESC (numérico)
+        listaPresupuestos.sort(function(a, b) {
+            return b.presupuesto_num - a.presupuesto_num;
+        });
         
+        // 🔴 NUEVO: Función para reconstruir el select manualmente
+        function rebuildSelect() {
+            var select = document.getElementById("presupuestos-tom-sel");
+            if (!select) return;
+            
+            // Limpiar select
+            select.innerHTML = '<option value="">Seleccione un presupuesto...</option>';
+            
+            // Agregar opciones en el orden correcto
+            for (var i = 0; i < listaPresupuestos.length; i++) {
+                var pres = listaPresupuestos[i];
+                var option = document.createElement("option");
+                option.value = pres.idx;
+                option.text = '#' + String(pres.presupuesto_num).padStart(5, '0') + ' - ' + 
+                            new Date(pres.fecha).toLocaleDateString('es-ES') + ' - ' + 
+                            pres.cliente;
+                if (pres.idx == presupuestoActualId) {
+                    option.selected = true;
+                }
+                select.appendChild(option);
+            }
+        }
+
         $(document).ready(function() {
+        // 🔴 NUEVO: Reconstruir el select en el orden correcto
+                rebuildSelect();
+
+
             // Inicializar selector de presupuestos
             presupuestosTomSel = new TomSelect("#presupuestos-tom-sel", {
                 sortField: { field: "presupuesto_num", direction: "desc", numeric: true },
