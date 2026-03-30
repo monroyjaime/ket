@@ -1,0 +1,45 @@
+<?php
+// /var/www/html/admin/php/check_pdf_status.php
+header('Content-Type: application/json');
+
+$presupuesto_id = isset($_GET['presupuesto_id']) ? intval($_GET['presupuesto_id']) : 0;
+
+if ($presupuesto_id == 0) {
+    echo json_encode(['success' => false, 'error' => 'No se especificó presupuesto']);
+    exit;
+}
+
+// Obtener num_valery
+require_once("../../php/dbcat_async.php");
+$db = new DBAsync();
+$result = $db->consultaSegura("SELECT num_valery FROM presupuesto_gen WHERE idx = $1", [$presupuesto_id]);
+
+if (empty($result)) {
+    echo json_encode(['success' => false, 'error' => 'Presupuesto no encontrado']);
+    exit;
+}
+
+$num_valery = $result[0]->num_valery;
+$pdf_path = "/var/www/html/pdfs/presupuestos/presupuesto_{$num_valery}.pdf";
+$pdf_url = "/pdfs/presupuestos/presupuesto_{$num_valery}.pdf";
+
+if (file_exists($pdf_path)) {
+    echo json_encode([
+        'success' => true,
+        'ready' => true,
+        'pdf_url' => $pdf_url
+    ]);
+} else {
+    // Verificar si sigue en proceso
+    $status_file = "/tmp/presupuesto_{$presupuesto_id}_status.json";
+    $status = ['status' => 'pending'];
+    if (file_exists($status_file)) {
+        $status = json_decode(file_get_contents($status_file), true);
+    }
+    
+    echo json_encode([
+        'success' => true,
+        'ready' => false,
+        'status' => $status['status'] ?? 'pending'
+    ]);
+}

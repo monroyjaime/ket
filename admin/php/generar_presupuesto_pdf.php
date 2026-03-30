@@ -9,6 +9,7 @@ header('Content-Type: application/json');
 $presupuesto_id = isset($_GET['presupuesto_id']) ? intval($_GET['presupuesto_id']) : 0;
 $calidad = isset($_GET['calidad']) ? $_GET['calidad'] : 'web';
 $mostrarPrecio = isset($_GET['mostrar_precio']) ? intval($_GET['mostrar_precio']) : 0;
+$async = isset($_GET['async']) ? $_GET['async'] : 0; // Nuevo: modo asíncrono
 
 // Validar calidad
 if (!in_array($calidad, ['web', 'impresion'])) {
@@ -36,9 +37,8 @@ $num_valery = $result[0]->num_valery;
 $pdf_path = "/var/www/html/pdfs/presupuestos/presupuesto_{$num_valery}.pdf";
 $pdf_url = "/pdfs/presupuestos/presupuesto_{$num_valery}.pdf";
 
-// Si el PDF ya existe y no se fuerza regeneración, devolver la ruta
-$forzar = isset($_GET['forzar']) && $_GET['forzar'] == '1';
-if (file_exists($pdf_path) && !$forzar) {
+// Si el PDF ya existe, devolver la ruta inmediatamente
+if (file_exists($pdf_path)) {
     echo json_encode([
         'success' => true,
         'pdf_url' => $pdf_url,
@@ -47,11 +47,31 @@ if (file_exists($pdf_path) && !$forzar) {
     exit;
 }
 
-// Generar nuevo PDF
+// Modo asíncrono: iniciar proceso en segundo plano y devolver estado
+if ($async == 1) {
+    // Crear archivo de estado
+    $status_file = "/tmp/presupuesto_{$presupuesto_id}_status.json";
+    file_put_contents($status_file, json_encode(['status' => 'processing', 'started_at' => time()]));
+    
+    // Ejecutar en segundo plano (sin esperar resultado)
+    $script_path = '/home/jaime/catalogo_ket/generar_presupuesto_pdf.py';
+    $python_path = '/home/jaime/catalogo_ket/venv/bin/python3';
+    $comando = "$python_path $script_path --presupuesto $presupuesto_id --calidad $calidad --mostrar_precio $mostrarPrecio > /tmp/presupuesto_{$presupuesto_id}.log 2>&1 &";
+    exec($comando);
+    
+    echo json_encode([
+        'success' => true,
+        'processing' => true,
+        'pdf_url' => $pdf_url,
+        'status_url' => "/admin/php/check_pdf_status.php?presupuesto_id={$presupuesto_id}"
+    ]);
+    exit;
+}
+
+// Modo síncrono (original) - con timeout aumentado
+set_time_limit(300); // 5 minutos
 $script_path = '/home/jaime/catalogo_ket/generar_presupuesto_pdf.py';
 $python_path = '/home/jaime/catalogo_ket/venv/bin/python3';
-
-// Comando con el parámetro mostrar_precio
 $comando = "$python_path $script_path --presupuesto $presupuesto_id --calidad $calidad --mostrar_precio $mostrarPrecio 2>&1";
 
 $output = [];

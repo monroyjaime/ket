@@ -407,115 +407,143 @@ try {
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-    function precargarEnCarrito(presupuestoId) {
-        // Preguntar qué hacer con los precios
-        const opcionPrecios = confirm('¿Desea usar los precios actuales de los productos?\n\n' +
-                                    '• OK = Usar precios ACTUALES\n' +
-                                    '• Cancelar = Mantener precios HISTÓRICOS del presupuesto');
-        if (!confirm('¿Precargar presupuesto en carrito?')) {
-            return;
-        }
-        
-        const btn = event.target;
-        const originalText = btn.innerHTML;
-        btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Cargando...';
-        btn.disabled = true;
-        
-        const url = 'https://ketelectropartes.com/admin/php/precargarPresupuestoCarrito.php';
-        
-        const datos = {
-            presupuesto_id: presupuestoId,
-            usuario_id: <?php echo $numUsr ?? -1; ?>,
-            usar_precios_actuales: opcionPrecios // true = actuales, false = históricos
-        };
-        
-        // Usar fetch para ver la respuesta cruda
-        fetch(url, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(datos)
-        })
-        .then(response => response.text())  // Leer como texto primero
-        .then(text => {
-            console.log('Respuesta CRUDA:', text);
+        function precargarEnCarrito(presupuestoId) {
+            // Preguntar qué hacer con los precios
+            const opcionPrecios = confirm('¿Desea usar los precios actuales de los productos?\n\n' +
+                                        '• OK = Usar precios ACTUALES\n' +
+                                        '• Cancelar = Mantener precios HISTÓRICOS del presupuesto');
+            if (!confirm('¿Precargar presupuesto en carrito?')) {
+                return;
+            }
             
-            try {
-                // Intentar parsear como JSON
-                const data = JSON.parse(text);
-                console.log('JSON parseado:', data);
+            const btn = event.target;
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Cargando...';
+            btn.disabled = true;
+            
+            const url = 'https://ketelectropartes.com/admin/php/precargarPresupuestoCarrito.php';
+            
+            const datos = {
+                presupuesto_id: presupuestoId,
+                usuario_id: <?php echo $numUsr ?? -1; ?>,
+                usar_precios_actuales: opcionPrecios // true = actuales, false = históricos
+            };
+            
+            // Usar fetch para ver la respuesta cruda
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(datos)
+            })
+            .then(response => response.text())  // Leer como texto primero
+            .then(text => {
+                console.log('Respuesta CRUDA:', text);
                 
-                if (data.success) {
-                    window.location.href = 'index.php?abrir_modal=1';
-                } else {
-                    alert('Error: ' + data.error);
+                try {
+                    // Intentar parsear como JSON
+                    const data = JSON.parse(text);
+                    console.log('JSON parseado:', data);
+                    
+                    if (data.success) {
+                        window.location.href = 'index.php?abrir_modal=1';
+                    } else {
+                        alert('Error: ' + data.error);
+                        btn.innerHTML = originalText;
+                        btn.disabled = false;
+                    }
+                } catch (e) {
+                    console.error('No es JSON válido:', e);
+                    alert('El servidor devolvió un formato inválido. Ver consola para detalles.');
                     btn.innerHTML = originalText;
                     btn.disabled = false;
                 }
-            } catch (e) {
-                console.error('No es JSON válido:', e);
-                alert('El servidor devolvió un formato inválido. Ver consola para detalles.');
+            })
+            .catch(error => {
+                console.error('Error de red:', error);
+                alert('Error de conexión: ' + error.message);
                 btn.innerHTML = originalText;
                 btn.disabled = false;
-            }
-        })
-        .catch(error => {
-            console.error('Error de red:', error);
-            alert('Error de conexión: ' + error.message);
-            btn.innerHTML = originalText;
-            btn.disabled = false;
-        });
-    }
-    function verPDFImagenes(presupuestoId) {
-        //console.log("🔴 FUNCIÓN LLAMADA con ID:", presupuestoId);
-        // Verificar si mostrar precios
-        const checkbox = document.getElementById('mostrarPrecioCheck');
-        //console.log("🔴 Checkbox encontrado:", checkbox);
-        const mostrarPrecio = checkbox && checkbox.checked ? 1 : 0;
-        //console.log("🔴 mostrarPrecio:", mostrarPrecio);
-        // Mostrar indicador de carga
-        const btn = event.target.closest('button');
-        const originalText = btn.innerHTML;
-        btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Generando PDF...';
-        btn.disabled = true;
-        
-        // Usar AbortController con timeout más largo (2 minutos)
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 120000); // 120 segundos
+            });
+        }
+        function verPDFImagenes(presupuestoId) {
+            //console.log("🔴 FUNCIÓN LLAMADA con ID:", presupuestoId);
+            // Verificar si mostrar precios
+            const checkbox = document.getElementById('mostrarPrecioCheck');
+            //console.log("🔴 Checkbox encontrado:", checkbox);
+            const mostrarPrecio = checkbox && checkbox.checked ? 1 : 0;
+            //console.log("🔴 mostrarPrecio:", mostrarPrecio);
+            // Mostrar indicador de carga
+            const btn = event.target.closest('button');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Generando PDF...';
+            btn.disabled = true;
+            
+            // Usar modo asíncrono
+            const url = `../../admin/php/generar_presupuesto_pdf.php?presupuesto_id=${presupuestoId}&calidad=web&mostrar_precio=${mostrarPrecio}&async=1`;
+            
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success && data.processing) {
+                        // PDF en proceso de generación
+                        btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Generando PDF (puede tomar varios minutos)...';
+                        verificarPDF(presupuestoId, btn, originalText);
+                    } else if (data.success && data.pdf_url) {
+                        // PDF ya existente o generado rápidamente
+                        window.open(data.pdf_url, '_blank');
+                        btn.innerHTML = originalText;
+                        btn.disabled = false;
+                    } else {
+                        alert('Error: ' + (data.error || 'Desconocido'));
+                        btn.innerHTML = originalText;
+                        btn.disabled = false;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Error al iniciar la generación del PDF');
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
+                });
+        }
 
-
-
-        // 🔴 CORREGIDO: Usar generar_presupuesto_pdf.php
-        const url = `../../admin/php/generar_presupuesto_pdf.php?presupuesto_id=${presupuestoId}&calidad=web&mostrar_precio=${mostrarPrecio}&forzar=1`;
-        console.log("🔴 URL:", url);
-        
-        fetch(url, { signal: controller.signal })
-        .then(response => response.json())
-        .then(data => {
-            clearTimeout(timeoutId);
-            if (data.success) {
-                window.open(data.pdf_url, '_blank');
-            } else {
-                alert('Error al generar el PDF: ' + data.error);
-            }
-        })
-        .catch(error => {
-            clearTimeout(timeoutId);
-            if (error.name === 'AbortError') {
-                alert('La generación del PDF está tomando demasiado tiempo. Por favor, verifica más tarde en la carpeta de presupuestos.');
-            } else {
-                console.error('Error:', error);
-                alert('Error al generar el PDF: ' + error.message);
-            }
-        })
-        .finally(() => {
-            btn.innerHTML = originalText;
-            btn.disabled = false;
-        });
-
-
-    }
+        function verificarPDF(presupuestoId, btn, originalText) {
+            let intentos = 0;
+            const maxIntentos = 60; // 60 intentos * 5 segundos = 5 minutos máximo
+            
+            const intervalo = setInterval(function() {
+                const statusUrl = `../../admin/php/check_pdf_status.php?presupuesto_id=${presupuestoId}`;
+                
+                fetch(statusUrl)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.ready && data.pdf_url) {
+                            clearInterval(intervalo);
+                            window.open(data.pdf_url, '_blank');
+                            btn.innerHTML = originalText;
+                            btn.disabled = false;
+                        } else if (intentos >= maxIntentos) {
+                            clearInterval(intervalo);
+                            alert('El PDF no pudo ser generado. Verifique más tarde.');
+                            btn.innerHTML = originalText;
+                            btn.disabled = false;
+                        }
+                        intentos++;
+                    })
+                    .catch(error => {
+                        console.error('Error verificando estado:', error);
+                        if (intentos >= maxIntentos) {
+                            clearInterval(intervalo);
+                            alert('Error verificando el estado del PDF.');
+                            btn.innerHTML = originalText;
+                            btn.disabled = false;
+                        }
+                        intentos++;
+                    });
+            }, 5000); // Verificar cada 5 segundos
+        }
     </script>
 </body>
 </html>
