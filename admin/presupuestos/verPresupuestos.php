@@ -380,6 +380,9 @@ try {
             var pres = listaPresupuestos[i];
             var option = document.createElement("option");
             option.value = pres.idx;
+             // 🔴 NUEVO: Agregar atributo con el número de presupuesto
+            option.setAttribute('data-presupuesto-num', pres.presupuesto_num);
+
             // 🔴 MANTENER EL FORMATO ORIGINAL con fecha, número, cliente y usuario
             var fecha = new Date(pres.fecha);
             var fechaStr = fecha.getDate().toString().padStart(2, '0') + '/' + 
@@ -398,11 +401,49 @@ try {
         // Reconstruir el select en el orden correcto
         rebuildSelect();
         
-        // Inicializar Tom Select
+        // Inicializar Tom Select con ordenamiento personalizado
         presupuestosTomSel = new TomSelect("#presupuestos-tom-sel", {
             searchField: ["text"],
             placeholder: "Buscar presupuesto...",
             maxOptions: 100,
+            // Ordenar resultados de búsqueda por presupuesto_num DESC
+            score: function(search) {
+                var scores = [];
+                var self = this;
+                var searchTerm = search.toLowerCase();
+                
+                this.options.forEach(function(option, key) {
+                    var text = option.text.toLowerCase();
+                    var score = 0;
+                    
+                    if (text === searchTerm) {
+                        score = 100;
+                    } else if (text.indexOf(searchTerm) === 0) {
+                        score = 90;
+                    } else if (text.indexOf(searchTerm) > -1) {
+                        score = 80;
+                    }
+                    
+                    if (score > 0) {
+                        var presupuestoNum = parseInt(option.attributes['data-presupuesto-num']?.value || 0);
+                        scores.push({
+                            key: key,
+                            score: score,
+                            presupuestoNum: presupuestoNum
+                        });
+                    }
+                });
+                
+                // Ordenar por puntuación (relevancia) y luego por número de presupuesto DESC
+                scores.sort(function(a, b) {
+                    if (a.score !== b.score) {
+                        return b.score - a.score;
+                    }
+                    return b.presupuestoNum - a.presupuestoNum;
+                });
+                
+                return scores.map(function(s) { return s.key; });
+            },
             onChange: function(value) {
                 if (value) {
                     presupuestoActualId = value;
