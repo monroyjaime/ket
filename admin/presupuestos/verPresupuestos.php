@@ -357,196 +357,189 @@ try {
     <script src="https://cdn.jsdelivr.net/npm/tom-select@2.0.0-rc.4/dist/js/tom-select.complete.min.js"></script>
     
     <script>
-        // Variables globales
-        let presupuestosTomSel;
-        let listaPresupuestos = <?php echo json_encode($presupuestos); ?>;
-        let presupuestoActualId = <?php echo $presupuesto_id > 0 ? $presupuesto_id : '0'; ?>;
-
-         // 🔴 NUEVO: Ordenar el array por presupuesto_num DESC (numérico)
-        listaPresupuestos.sort(function(a, b) {
-            return b.presupuesto_num - a.presupuesto_num;
-        });
+    // Variables globales
+    let presupuestosTomSel;
+    let listaPresupuestos = <?php echo json_encode($presupuestos); ?>;
+    let presupuestoActualId = <?php echo $presupuesto_id > 0 ? $presupuesto_id : '0'; ?>;
+    
+    // 🔴 CORREGIDO: Ordenar por presupuesto_num DESC (mayor a menor)
+    listaPresupuestos.sort(function(a, b) {
+        return b.presupuesto_num - a.presupuesto_num;
+    });
+    
+    // 🔴 Función para reconstruir el select con el formato original
+    function rebuildSelect() {
+        var select = document.getElementById("presupuestos-tom-sel");
+        if (!select) return;
         
-        // 🔴 NUEVO: Función para reconstruir el select manualmente
-        function rebuildSelect() {
-            var select = document.getElementById("presupuestos-tom-sel");
-            if (!select) return;
-            
-            // Limpiar select
-            select.innerHTML = '<option value="">Seleccione un presupuesto...</option>';
-            
-            // Agregar opciones en el orden correcto
-            for (var i = 0; i < listaPresupuestos.length; i++) {
-                var pres = listaPresupuestos[i];
-                var option = document.createElement("option");
-                option.value = pres.idx;
-                option.text = '#' + String(pres.presupuesto_num).padStart(5, '0') + ' - ' + 
-                            new Date(pres.fecha).toLocaleDateString('es-ES') + ' - ' + 
-                            pres.cliente;
-                if (pres.idx == presupuestoActualId) {
-                    option.selected = true;
-                }
-                select.appendChild(option);
+        // Limpiar select
+        select.innerHTML = '<option value="">Seleccione un presupuesto...</option>';
+        
+        // Agregar opciones en el orden correcto
+        for (var i = 0; i < listaPresupuestos.length; i++) {
+            var pres = listaPresupuestos[i];
+            var option = document.createElement("option");
+            option.value = pres.idx;
+            // 🔴 MANTENER EL FORMATO ORIGINAL con fecha, número, cliente y usuario
+            var fecha = new Date(pres.fecha);
+            var fechaStr = fecha.getDate().toString().padStart(2, '0') + '/' + 
+                          (fecha.getMonth() + 1).toString().padStart(2, '0') + '/' + 
+                          fecha.getFullYear();
+            option.text = fechaStr + ' - #' + pres.presupuesto_num + ' - ' + 
+                          pres.cliente + ' - Por: ' + (pres.usuario_nombre || 'Sistema');
+            if (pres.idx == presupuestoActualId) {
+                option.selected = true;
             }
+            select.appendChild(option);
         }
-
-        $(document).ready(function() {
-        // 🔴 NUEVO: Reconstruir el select en el orden correcto
-                rebuildSelect();
-
-
-            // Inicializar selector de presupuestos
-            presupuestosTomSel = new TomSelect("#presupuestos-tom-sel", {
-                sortField: { field: "presupuesto_num", direction: "desc", numeric: true },
-                searchField: ["text"],
-                placeholder: "Buscar presupuesto...",
-                load: function(callback) {
-                    // Ya tenemos los datos, solo ordenamos
-                    var options = this.options;
-                    var values = Object.keys(options);
-                    values.sort(function(a, b) {
-                        return parseInt(options[b].presupuesto_num) - parseInt(options[a].presupuesto_num);
-                    });
-                    callback(values);
-                },
-                onChange: function(value) {
-                    if (value) {
-                        presupuestoActualId = value;
-                        cargarPresupuesto(value);
-                    }
+    }
+    
+    $(document).ready(function() {
+        // Reconstruir el select en el orden correcto
+        rebuildSelect();
+        
+        // Inicializar Tom Select
+        presupuestosTomSel = new TomSelect("#presupuestos-tom-sel", {
+            searchField: ["text"],
+            placeholder: "Buscar presupuesto...",
+            maxOptions: 100,
+            onChange: function(value) {
+                if (value) {
+                    presupuestoActualId = value;
+                    cargarPresupuesto(value);
                 }
-            });
-            
-            // Cargar el presupuesto actual y actualizar navegación
-            if (presupuestoActualId > 0) {
-                cargarPresupuesto(presupuestoActualId);
-                actualizarNavegacion();
             }
         });
         
-        // Función para cargar presupuesto
-        function cargarPresupuesto(presupuestoId) {
+        // Cargar el presupuesto actual y actualizar navegación
+        if (presupuestoActualId > 0) {
+            cargarPresupuesto(presupuestoActualId);
+            actualizarNavegacion();
+        }
+    });
+    
+    // Función para cargar presupuesto
+    function cargarPresupuesto(presupuestoId) {
+        $('#presupuesto-content').html(`
+            <div class="text-center">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Cargando presupuesto...</span>
+                </div>
+                <p>Cargando presupuesto...</p>
+            </div>
+        `);
+        
+        const url = `https://ketelectropartes.com/admin/php/verPresupuesto.php?presupuesto_id=${presupuestoId}`;
+        
+        $.get(url, function(data) {
+            $('#presupuesto-content').html(data);
+            presupuestoActualId = presupuestoId;
+            actualizarNavegacion();
+            
+            const nuevaUrl = `verPresupuestos.php?presupuesto_id=${presupuestoId}`;
+            window.history.pushState({path: nuevaUrl}, '', nuevaUrl);
+            
+        }).fail(function(xhr, status, error) {
+            console.error('Error cargando presupuesto:', error);
             $('#presupuesto-content').html(`
-                <div class="text-center">
-                    <div class="spinner-border text-primary" role="status">
-                        <span class="visually-hidden">Cargando presupuesto...</span>
-                    </div>
-                    <p>Cargando presupuesto...</p>
+                <div class="alert alert-danger text-center">
+                    <i class="bi bi-exclamation-triangle"></i>
+                    Error al cargar el presupuesto.
                 </div>
             `);
-            
-            // URL ABSOLUTA
-            const url = `https://ketelectropartes.com/admin/php/verPresupuesto.php?presupuesto_id=${presupuestoId}`;
-            
-            $.get(url, function(data) {
-                $('#presupuesto-content').html(data);
-                presupuestoActualId = presupuestoId;
-                actualizarNavegacion();
-                
-                // Actualizar URL sin recargar la página
-                const nuevaUrl = `verPresupuestos.php?presupuesto_id=${presupuestoId}`;
-                window.history.pushState({path: nuevaUrl}, '', nuevaUrl);
-                
-            }).fail(function(xhr, status, error) {
-                console.error('Error cargando presupuesto:', error);
-                $('#presupuesto-content').html(`
-                    <div class="alert alert-danger text-center">
-                        <i class="bi bi-exclamation-triangle"></i>
-                        Error al cargar el presupuesto.
-                    </div>
-                `);
-            });
-        }
-        
-        // Función para actualizar la navegación
-        function actualizarNavegacion() {
-            if (listaPresupuestos.length === 0) return;
-            
-            // Encontrar índice actual
-            let indiceActual = -1;
-            for (let i = 0; i < listaPresupuestos.length; i++) {
-                if (listaPresupuestos[i].idx == presupuestoActualId) {
-                    indiceActual = i;
-                    break;
-                }
-            }
-            
-            if (indiceActual === -1) return;
-            
-            // Actualizar contador
-            $('#contador-navegacion').text(`${indiceActual + 1} de ${listaPresupuestos.length}`);
-            
-            // Actualizar botones
-            let htmlNavegacion = `
-                <div class="navigation-buttons">
-                    ${indiceActual > 0 ? 
-                        `<button class="btn btn-outline-primary" onclick="navegarAnterior()">
-                            <i class="bi bi-chevron-left"></i> Anterior
-                        </button>` :
-                        `<button class="btn btn-outline-secondary" disabled>
-                            <i class="bi bi-chevron-left"></i> Anterior
-                        </button>`
-                    }
-                    
-                    <span class="align-self-center px-3">
-                        ${indiceActual + 1} de ${listaPresupuestos.length}
-                    </span>
-                    
-                    ${indiceActual < listaPresupuestos.length - 1 ? 
-                        `<button class="btn btn-outline-primary" onclick="navegarSiguiente()">
-                            Siguiente <i class="bi bi-chevron-right"></i>
-                        </button>` :
-                        `<button class="btn btn-outline-secondary" disabled>
-                            Siguiente <i class="bi bi-chevron-right"></i>
-                        </button>`
-                    }
-                </div>
-            `;
-            
-            $('#navigation-container').html(htmlNavegacion);
-        }
-        
-        // Funciones de navegación
-        function navegarAnterior() {
-            let indiceActual = -1;
-            for (let i = 0; i < listaPresupuestos.length; i++) {
-                if (listaPresupuestos[i].idx == presupuestoActualId) {
-                    indiceActual = i;
-                    break;
-                }
-            }
-            
-            if (indiceActual > 0) {
-                const presupuestoAnterior = listaPresupuestos[indiceActual - 1];
-                presupuestosTomSel.setValue(presupuestoAnterior.idx);
-                cargarPresupuesto(presupuestoAnterior.idx);
-            }
-        }
-        
-        function navegarSiguiente() {
-            let indiceActual = -1;
-            for (let i = 0; i < listaPresupuestos.length; i++) {
-                if (listaPresupuestos[i].idx == presupuestoActualId) {
-                    indiceActual = i;
-                    break;
-                }
-            }
-            
-            if (indiceActual < listaPresupuestos.length - 1) {
-                const presupuestoSiguiente = listaPresupuestos[indiceActual + 1];
-                presupuestosTomSel.setValue(presupuestoSiguiente.idx);
-                cargarPresupuesto(presupuestoSiguiente.idx);
-            }
-        }
-        
-        // Navegación con teclado
-        $(document).keydown(function(e) {
-            if (e.key === 'ArrowLeft') {
-                navegarAnterior();
-            } else if (e.key === 'ArrowRight') {
-                navegarSiguiente();
-            }
         });
-    </script>
+    }
+    
+    // Función para actualizar la navegación
+    function actualizarNavegacion() {
+        if (listaPresupuestos.length === 0) return;
+        
+        let indiceActual = -1;
+        for (let i = 0; i < listaPresupuestos.length; i++) {
+            if (listaPresupuestos[i].idx == presupuestoActualId) {
+                indiceActual = i;
+                break;
+            }
+        }
+        
+        if (indiceActual === -1) return;
+        
+        $('#contador-navegacion').text(`${indiceActual + 1} de ${listaPresupuestos.length}`);
+        
+        let htmlNavegacion = `
+            <div class="navigation-buttons">
+                ${indiceActual > 0 ? 
+                    `<button class="btn btn-outline-primary" onclick="navegarAnterior()">
+                        <i class="bi bi-chevron-left"></i> Anterior
+                    </button>` :
+                    `<button class="btn btn-outline-secondary" disabled>
+                        <i class="bi bi-chevron-left"></i> Anterior
+                    </button>`
+                }
+                
+                <span class="align-self-center px-3">
+                    ${indiceActual + 1} de ${listaPresupuestos.length}
+                </span>
+                
+                ${indiceActual < listaPresupuestos.length - 1 ? 
+                    `<button class="btn btn-outline-primary" onclick="navegarSiguiente()">
+                        Siguiente <i class="bi bi-chevron-right"></i>
+                    </button>` :
+                    `<button class="btn btn-outline-secondary" disabled>
+                        Siguiente <i class="bi bi-chevron-right"></i>
+                    </button>`
+                }
+            </div>
+        `;
+        
+        $('#navigation-container').html(htmlNavegacion);
+    }
+    
+    // Funciones de navegación
+    function navegarAnterior() {
+        let indiceActual = -1;
+        for (let i = 0; i < listaPresupuestos.length; i++) {
+            if (listaPresupuestos[i].idx == presupuestoActualId) {
+                indiceActual = i;
+                break;
+            }
+        }
+        
+        if (indiceActual > 0) {
+            const presupuestoAnterior = listaPresupuestos[indiceActual - 1];
+            if (presupuestosTomSel) {
+                presupuestosTomSel.setValue(presupuestoAnterior.idx);
+            }
+            cargarPresupuesto(presupuestoAnterior.idx);
+        }
+    }
+    
+    function navegarSiguiente() {
+        let indiceActual = -1;
+        for (let i = 0; i < listaPresupuestos.length; i++) {
+            if (listaPresupuestos[i].idx == presupuestoActualId) {
+                indiceActual = i;
+                break;
+            }
+        }
+        
+        if (indiceActual < listaPresupuestos.length - 1) {
+            const presupuestoSiguiente = listaPresupuestos[indiceActual + 1];
+            if (presupuestosTomSel) {
+                presupuestosTomSel.setValue(presupuestoSiguiente.idx);
+            }
+            cargarPresupuesto(presupuestoSiguiente.idx);
+        }
+    }
+    
+    // Navegación con teclado
+    $(document).keydown(function(e) {
+        if (e.key === 'ArrowLeft') {
+            navegarAnterior();
+        } else if (e.key === 'ArrowRight') {
+            navegarSiguiente();
+        }
+    });
+</script>
 </body>
 </html>
