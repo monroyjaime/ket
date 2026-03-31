@@ -74,7 +74,7 @@ if (empty($itemsStr)) {
                   WHERE p.code IN ($codigos_lista)
                     AND p.show = true
                     AND p.cost_max > 0
-                  ORDER BY p.code";
+                  ORDER BY FIELD(p.code, $codigos_lista);
         
         $result = pg_query($conn, $query);
         
