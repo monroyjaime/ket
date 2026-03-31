@@ -68,13 +68,14 @@ if (empty($itemsStr)) {
         $codigos_lista = implode(',', $codigos_escapados);
         
         // Consultar productos
+        $order_by = "ORDER BY array_position(ARRAY[$codigos_lista], p.code)";
         $query = "SELECT p.code, p.name, p.photo_url, d.img_route 
                   FROM productos p
                   JOIN departamentos d ON p.dpto_id = d.id
                   WHERE p.code IN ($codigos_lista)
                     AND p.show = true
                     AND p.cost_max > 0
-                  ORDER BY FIELD(p.code, $codigos_lista);
+                  $order_by";
         
         $result = pg_query($conn, $query);
         
