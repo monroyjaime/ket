@@ -6,17 +6,6 @@ $role = isset($_GET['role_num']) ? intval($_GET['role_num']) : -1;
 $pageGlobal = isset($_GET['page_global']) ? intval($_GET['page_global']) : 1;
 $totalPaginasGlobal = isset($_GET['total_paginas']) ? intval($_GET['total_paginas']) : 1;
 $numValery = isset($_GET['num_valery']) ? intval($_GET['num_valery']) : 0;
-$codigosStr = isset($_GET['codigos']) ? $_GET['codigos'] : '';
-$mostrarPrecio = isset($_GET['mostrar_precio']) ? intval($_GET['mostrar_precio']) : 0;
-$itemsStr = isset($_GET['items']) ? $_GET['items'] : '';
-<?php
-// Archivo: /var/www/html/catalogo/indexPresupuesto.php
-// Recibe items en formato: CODIGO|PRECIO,CODIGO2|PRECIO2,...
-
-$role = isset($_GET['role_num']) ? intval($_GET['role_num']) : -1;
-$pageGlobal = isset($_GET['page_global']) ? intval($_GET['page_global']) : 1;
-$totalPaginasGlobal = isset($_GET['total_paginas']) ? intval($_GET['total_paginas']) : 1;
-$numValery = isset($_GET['num_valery']) ? intval($_GET['num_valery']) : 0;
 $itemsStr = isset($_GET['items']) ? $_GET['items'] : '';
 $mostrarPrecio = isset($_GET['mostrar_precio']) ? intval($_GET['mostrar_precio']) : 0;
 
@@ -50,7 +39,7 @@ if ($numValery > 0) {
 }
 
 // ============================================
-// PROCESAR ÍTEMS (CÓDIGO|PRECIO)
+// PROCESAR ÍTEMS
 // ============================================
 if (empty($itemsStr)) {
     $tags .= '<p>No se especificaron productos</p>';
@@ -58,13 +47,13 @@ if (empty($itemsStr)) {
     $items = explode(',', $itemsStr);
     
     $codigos = [];
-    $precios_historicos = [];
+    $precios = [];
     foreach ($items as $item) {
         $parts = explode('|', $item);
         if (count($parts) >= 2) {
             $codigo = trim($parts[0]);
             $codigos[] = $codigo;
-            $precios_historicos[$codigo] = floatval($parts[1]);
+            $precios[$codigo] = floatval($parts[1]);
         }
     }
     
@@ -74,11 +63,11 @@ if (empty($itemsStr)) {
         // Escapar códigos para consulta
         $codigos_escapados = array();
         foreach ($codigos as $codigo) {
-            $codigos_escapados[] = "'" . pg_escape_string($conn, trim($codigo)) . "'";
+            $codigos_escapados[] = "'" . pg_escape_string($conn, $codigo) . "'";
         }
         $codigos_lista = implode(',', $codigos_escapados);
         
-        // Consultar productos (sin precios, los usaremos de los históricos)
+        // Consultar productos
         $query = "SELECT p.code, p.name, p.photo_url, d.img_route 
                   FROM productos p
                   JOIN departamentos d ON p.dpto_id = d.id
@@ -102,7 +91,7 @@ if (empty($itemsStr)) {
                 
                 foreach ($productos as $producto) {
                     $code = $producto['code'];
-                    $precioHistorico = isset($precios_historicos[$code]) ? $precios_historicos[$code] : 0;
+                    $precio = isset($precios[$code]) ? $precios[$code] : 0;
                     
                     // Manejar imagen
                     $photoUrl = $producto['photo_url'];
@@ -130,9 +119,9 @@ if (empty($itemsStr)) {
                     $tags .= '</div>';
                     $tags .= '</div>';
                     
-                    // Precio histórico (no el actual)
-                    if ($mostrarPrecio == 1 && $precioHistorico > 0) {
-                        $precioFormateado = number_format($precioHistorico, 3, ',', '.');
+                    // Precio histórico
+                    if ($mostrarPrecio == 1 && $precio > 0) {
+                        $precioFormateado = number_format($precio, 3, ',', '.');
                         $tags .= '<div class="card-footer text-center" style="background-color: #f0f0f0; padding: 6px;">';
                         $tags .= '<strong>Precio: $' . $precioFormateado . '</strong>';
                         $tags .= '</div>';
