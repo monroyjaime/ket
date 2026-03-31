@@ -23,8 +23,8 @@ $script_path = '/home/jaime/catalogo_ket/generar_catalogo_3x7.py';
 $python_path = '/home/jaime/catalogo_ket/venv/bin/python3';
 
 // Comando a ejecutar - USANDO EL PYTHON DEL ENTORNO VIRTUAL
-$comando = "$python_path $script_path --dptos $dpto_id --calidad $calidad 2>&1";
-
+$env_cmd = "PLAYWRIGHT_BROWSERS_PATH=/home/jaime/.cache/ms-playwright";
+$comando = "$env_cmd $python_path $script_path --dptos $dpto_id --calidad $calidad 2>&1";
 // Ejecutar el comando
 $output = [];
 $return_code = 0;
