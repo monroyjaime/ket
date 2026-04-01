@@ -1,32 +1,111 @@
 <?php
-// index.php - Sección de administración de fotos de productos
+// admin/fotos/index.php - Gestión de fotos de productos
 session_start();
-if (!isset($_SESSION['user_id'])) {
-    header('Location: ../../login.php');
+require_once("../../php/dbcat.php");
+
+// ============================================
+// VERIFICACIÓN DE AUTORIZACIÓN (misma lógica que actualizar_catalogos.php)
+// ============================================
+$isAdmin = isset($_SESSION['usr_admin']) ? $_SESSION['usr_admin'] : 0;
+$role = isset($_SESSION['role']) ? intval($_SESSION['role']) : -1;
+
+// Si no está autenticado o no es administrador, mostrar error
+if ($role == -1 || $isAdmin != 1) {
+    ?>
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="utf-8"/>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>Acceso Denegado - KET</title>
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet">
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+        <style>
+            body {
+                background-color: #DDD;
+                margin: 0;
+                padding: 0;
+                font-family: 'Segoe UI', Arial, sans-serif;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                min-height: 100vh;
+            }
+            .error-container {
+                text-align: center;
+                background: white;
+                padding: 40px;
+                border-radius: 10px;
+                box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+                max-width: 500px;
+                margin: 20px;
+            }
+            .error-icon {
+                font-size: 5rem;
+                color: #dc3545;
+                margin-bottom: 20px;
+            }
+            .error-title {
+                color: #dc3545;
+                font-size: 1.8rem;
+                margin-bottom: 15px;
+            }
+            .error-message {
+                color: #666;
+                margin-bottom: 25px;
+            }
+            .btn-back {
+                background-color: #003272;
+                color: white;
+                padding: 10px 25px;
+                border-radius: 30px;
+                text-decoration: none;
+                display: inline-flex;
+                align-items: center;
+                gap: 8px;
+                transition: all 0.2s;
+            }
+            .btn-back:hover {
+                background-color: #037C79;
+                color: white;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="error-container">
+            <div class="error-icon">
+                <i class="bi bi-shield-lock-fill"></i>
+            </div>
+            <h1 class="error-title">Acceso Denegado</h1>
+            <p class="error-message">
+                No tienes permisos para acceder a esta página.<br>
+                Esta área está restringida a usuarios administradores.
+            </p>
+            <a href="../../index.php" class="btn-back">
+                <i class="bi bi-arrow-left"></i> Volver al inicio
+            </a>
+        </div>
+    </body>
+    </html>
+    <?php
     exit;
 }
 
-// Verificar permisos de administrador si es necesario
-if (!isset($_SESSION['is_admin']) || $_SESSION['is_admin'] != 1) {
-    header('Location: ../../index.php');
-    exit;
-}
-
+$db = new DB();
 $pageTitle = "Actualización de Fotos - Catálogo";
 ?>
 <!DOCTYPE html>
-<html lang="es">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?php echo $pageTitle; ?></title>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="initial-scale=1, maximum-scale=1">
+    <title><?php echo $pageTitle; ?> - KET</title>
+    <link rel="Shortcut Icon" href="../../favicon.ico" type="image/x-icon" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
     
     <!-- DataTables CSS -->
-    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.24/css/dataTables.bootstrap4.min.css">
-    <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.6.0/css/bootstrap.min.css">
-    
-    <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.24/css/dataTables.bootstrap5.min.css">
     
     <!-- SweetAlert2 -->
     <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet">
@@ -34,32 +113,82 @@ $pageTitle = "Actualización de Fotos - Catálogo";
     
     <style>
         body {
-            background-color: #f8f9fa;
+            background-color: #DDD;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Arial, sans-serif;
         }
-        .container-fluid {
-            padding: 20px;
+        
+        /* Barra superior estilo página principal */
+        .top-bar {
+            background-color: #DDD;
+            padding: 0px 5px;
         }
-        .card {
-            border-radius: 10px;
-            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        
+        .top-bar .row {
+            align-items: center;
         }
-        .card-header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        
+        .top-bar .back-icon {
+            font-size: 25px;
+            color: #003272;
+            text-decoration: none;
+        }
+        
+        .top-bar .logo-mini {
+            max-height: 40px;
+            width: auto;
+        }
+        
+        /* Título centrado sobre franja verde agua */
+        .title-banner {
+            background-color: #037c79;
+            padding: 7px 0;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .title-banner h1 {
             color: white;
-            border-radius: 10px 10px 0 0;
-            padding: 15px 20px;
+            margin: 0;
+            font-size: 1.8rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
         }
+        
+        .title-banner h1 i {
+            font-size: 2rem;
+        }
+        
+        .card {
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            border: none;
+            border-radius: 8px;
+        }
+        
+        .card-header {
+            background-color: #003272;
+            color: white;
+            font-weight: bold;
+            border-radius: 8px 8px 0 0 !important;
+        }
+        
         .btn-actualizar {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background-color: #037C79;
             color: white;
             border: none;
-            transition: transform 0.2s;
+            transition: all 0.2s;
         }
+        
         .btn-actualizar:hover {
-            transform: translateY(-2px);
+            background-color: #003272;
             color: white;
-            box-shadow: 0 5px 15px rgba(102,126,234,0.4);
+            transform: translateY(-2px);
         }
+        
         .badge-departamento {
             background-color: #e9ecef;
             color: #495057;
@@ -68,29 +197,71 @@ $pageTitle = "Actualización de Fotos - Catálogo";
             font-size: 12px;
             font-weight: 500;
         }
+        
+        .table {
+            background-color: white;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
         .table th {
             background-color: #f8f9fa;
             border-top: none;
+            color: #003272;
+            font-weight: 600;
         }
+        
         .dataTables_wrapper .dataTables_filter input {
             border-radius: 20px;
             padding: 5px 15px;
             border: 1px solid #ddd;
+            margin-left: 10px;
+        }
+        
+        .dataTables_wrapper .dataTables_paginate .paginate_button.current {
+            background: #037C79;
+            color: white !important;
+            border: none;
+        }
+        
+        .dataTables_wrapper .dataTables_paginate .paginate_button:hover {
+            background: #003272;
+            color: white !important;
         }
     </style>
 </head>
 <body>
-    <div class="container-fluid">
+    <!-- Barra superior estilo página principal -->
+    <div class="top-bar">
+        <div class="row">
+            <div class="col text-start">
+                <a href="../../index.php" class="back-icon" title="Volver al inicio">
+                    <i class="bi bi-arrow-left-circle-fill"></i>
+                </a>
+            </div>
+            <div class="col text-end">
+                <img src="../../catalogo/images/logoMini.png" class="logo-mini" alt="KET" />
+            </div>
+        </div>
+    </div>
+    
+    <!-- Título centrado sobre franja verde agua -->
+    <div class="title-banner">
+        <h1>
+            <i class="bi bi-camera-fill"></i>
+            Actualización de Fotos - Catálogo
+            <i class="bi bi-image-fill"></i>
+        </h1>
+    </div>
+
+    <div class="container-fluid px-4">
         <div class="card">
             <div class="card-header">
-                <h4 class="mb-0">
-                    <i class="fas fa-camera-retro me-2"></i>
-                    Actualización Masiva de Fotos - Productos sin Imagen
-                </h4>
-                <p class="mb-0 mt-2 small">
-                    <i class="fas fa-info-circle"></i> 
-                    Productos que actualmente tienen la imagen por defecto (empty.jpg) y necesitan ser actualizados
-                </p>
+                <i class="bi bi-image"></i> Productos sin imagen asignada
+                <span class="float-end">
+                    <i class="bi bi-info-circle-fill"></i> 
+                    Productos con foto = empty.jpg
+                </span>
             </div>
             <div class="card-body">
                 <div class="table-responsive">
@@ -116,11 +287,11 @@ $pageTitle = "Actualización de Fotos - Catálogo";
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     
     <!-- Bootstrap JS -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.6.0/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"></script>
     
     <!-- DataTables JS -->
     <script src="https://cdn.datatables.net/1.10.24/js/jquery.dataTables.min.js"></script>
-    <script src="https://cdn.datatables.net/1.10.24/js/dataTables.bootstrap4.min.js"></script>
+    <script src="https://cdn.datatables.net/1.10.24/js/dataTables.bootstrap5.min.js"></script>
     
     <script>
         $(document).ready(function() {
@@ -148,7 +319,7 @@ $pageTitle = "Actualización de Fotos - Catálogo";
                     { 
                         "data": "departamento",
                         "render": function(data, type, row) {
-                            return '<span class="badge-departamento"><i class="fas fa-building"></i> ' + data + '</span>';
+                            return '<span class="badge-departamento"><i class="bi bi-building"></i> ' + data + '</span>';
                         }
                     },
                     { "data": "codigo" },
@@ -157,7 +328,7 @@ $pageTitle = "Actualización de Fotos - Catálogo";
                         "data": null,
                         "render": function(data, type, row) {
                             return '<button class="btn btn-actualizar btn-sm" onclick="actualizarFoto(\'' + row.codigo + '\', \'' + row.departamento.replace(/'/g, "\\'") + '\')">' +
-                                   '<i class="fas fa-camera"></i> Actualizar Foto</button>';
+                                   '<i class="bi bi-camera"></i> Actualizar Foto</button>';
                         },
                         "orderable": false
                     }
@@ -165,7 +336,7 @@ $pageTitle = "Actualización de Fotos - Catálogo";
                 "language": {
                     "url": "//cdn.datatables.net/plug-ins/1.10.24/i18n/Spanish.json"
                 },
-                "order": [[0, "asc"], [1, "asc"]], // Ordenar por departamento y luego por código
+                "order": [[0, "asc"], [1, "asc"]],
                 "pageLength": 25,
                 "lengthMenu": [[10, 25, 50, 100], [10, 25, 50, 100]]
             });
@@ -180,23 +351,23 @@ $pageTitle = "Actualización de Fotos - Catálogo";
                         <p><strong>Producto:</strong> ${codigo}</p>
                         <p><strong>Departamento:</strong> ${departamento}</p>
                         <hr>
-                        <div class="form-group">
-                            <label for="fotoUrl">URL de la nueva imagen:</label>
+                        <div class="mb-3">
+                            <label class="form-label">URL de la nueva imagen:</label>
                             <input type="text" class="form-control" id="fotoUrl" placeholder="https://ejemplo.com/imagen.jpg">
                         </div>
-                        <div class="form-group mt-2">
-                            <label>O selecciona un archivo:</label>
-                            <input type="file" class="form-control-file" id="archivoFoto" accept="image/*">
+                        <div class="mb-3">
+                            <label class="form-label">O selecciona un archivo:</label>
+                            <input type="file" class="form-control" id="archivoFoto" accept="image/jpeg,image/jpg,image/png,image/gif,image/webp">
                         </div>
                         <div id="previewImagen" class="mt-2 text-center" style="display:none;">
-                            <img id="preview" src="" style="max-width: 200px; max-height: 200px;">
+                            <img id="preview" src="" style="max-width: 200px; max-height: 200px; border-radius: 8px;">
                         </div>
                     </div>
                 `,
                 showCancelButton: true,
                 confirmButtonText: 'Actualizar',
                 cancelButtonText: 'Cancelar',
-                confirmButtonColor: '#667eea',
+                confirmButtonColor: '#037C79',
                 preConfirm: () => {
                     const url = document.getElementById('fotoUrl').value;
                     const archivo = document.getElementById('archivoFoto').files[0];

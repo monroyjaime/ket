@@ -1,82 +1,84 @@
 <?php
 // getProductosSinFoto.php
-require_once '../../config/database.php';
+session_start();
+require_once("../../php/dbcat.php");
+
+// Verificar autenticación
+$isAdmin = isset($_SESSION['usr_admin']) ? $_SESSION['usr_admin'] : 0;
+$role = isset($_SESSION['role']) ? intval($_SESSION['role']) : -1;
+
+if ($role == -1 || $isAdmin != 1) {
+    http_response_code(403);
+    echo json_encode(['error' => 'Acceso denegado']);
+    exit;
+}
 
 header('Content-Type: application/json');
 
 try {
-    $database = new Database();
-    $db = $database->getConnection();
+    $db = new DB();
     
-    // Parámetros de paginación y búsqueda
+    // Parámetros de paginación de DataTables
     $start = isset($_GET['start']) ? (int)$_GET['start'] : 0;
     $length = isset($_GET['length']) ? (int)$_GET['length'] : 10;
     $searchValue = isset($_GET['search']['value']) ? $_GET['search']['value'] : '';
+    $draw = isset($_GET['draw']) ? (int)$_GET['draw'] : 1;
     
-    // Consulta para contar total de registros (productos con foto = empty.jpg)
+    // Consulta base para contar total de registros (productos con foto = empty.jpg)
     $countQuery = "SELECT COUNT(*) as total 
                    FROM productos p 
                    INNER JOIN departamentos d ON p.cod_departamento = d.cod_departamento
                    WHERE p.foto = 'empty.jpg' OR p.foto IS NULL OR p.foto = ''";
     
-    // Agregar búsqueda si existe
+    // Agregar condición de búsqueda si existe
+    $searchCondition = "";
     if (!empty($searchValue)) {
-        $countQuery .= " AND (p.codigo LIKE :search OR p.descripcion LIKE :search OR d.nombre LIKE :search)";
+        $searchCondition = " AND (p.codigo LIKE '%$searchValue%' 
+                              OR p.descripcion LIKE '%$searchValue%' 
+                              OR d.name LIKE '%$searchValue%')";
+        $countQuery .= $searchCondition;
     }
     
-    $countStmt = $db->prepare($countQuery);
-    if (!empty($searchValue)) {
-        $searchParam = "%{$searchValue}%";
-        $countStmt->bindParam(':search', $searchParam);
-    }
-    $countStmt->execute();
-    $totalRecords = $countStmt->fetch(PDO::FETCH_ASSOC)['total'];
+    $totalRecords = $db->single($countQuery);
     
     // Consulta principal con paginación
     $query = "SELECT p.codigo, 
                      p.descripcion, 
-                     d.nombre as departamento,
-                     p.foto,
+                     d.name as departamento,
+                     p.foto as foto_actual,
                      p.cod_departamento
               FROM productos p 
               INNER JOIN departamentos d ON p.cod_departamento = d.cod_departamento
-              WHERE p.foto = 'empty.jpg' OR p.foto IS NULL OR p.foto = ''";
+              WHERE (p.foto = 'empty.jpg' OR p.foto IS NULL OR p.foto = '')";
     
     if (!empty($searchValue)) {
-        $query .= " AND (p.codigo LIKE :search OR p.descripcion LIKE :search OR d.nombre LIKE :search)";
+        $query .= " AND (p.codigo LIKE '%$searchValue%' 
+                    OR p.descripcion LIKE '%$searchValue%' 
+                    OR d.name LIKE '%$searchValue%')";
     }
     
-    $query .= " ORDER BY d.nombre ASC, p.codigo ASC LIMIT :start, :length";
+    $query .= " ORDER BY d.name ASC, p.codigo ASC LIMIT $start, $length";
     
-    $stmt = $db->prepare($query);
+    $productos = $db->consultas($query);
     
-    // Bind parameters
-    if (!empty($searchValue)) {
-        $searchParam = "%{$searchValue}%";
-        $stmt->bindParam(':search', $searchParam);
-    }
-    $stmt->bindParam(':start', $start, PDO::PARAM_INT);
-    $stmt->bindParam(':length', $length, PDO::PARAM_INT);
-    
-    $stmt->execute();
-    
-    $productos = [];
-    while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-        $productos[] = [
-            'codigo' => $row['codigo'],
-            'descripcion' => $row['descripcion'],
-            'departamento' => $row['departamento'],
-            'foto_actual' => $row['foto'],
-            'cod_departamento' => $row['cod_departamento']
+    // Formatear datos para DataTables
+    $data = [];
+    foreach ($productos as $row) {
+        $data[] = [
+            'codigo' => $row->codigo,
+            'descripcion' => $row->descripcion,
+            'departamento' => $row->departamento,
+            'foto_actual' => $row->foto_actual,
+            'cod_departamento' => $row->cod_departamento
         ];
     }
     
     // Respuesta para DataTables
     echo json_encode([
-        'draw' => isset($_GET['draw']) ? (int)$_GET['draw'] : 1,
-        'recordsTotal' => $totalRecords,
-        'recordsFiltered' => $totalRecords,
-        'data' => $productos
+        'draw' => $draw,
+        'recordsTotal' => (int)$totalRecords,
+        'recordsFiltered' => (int)$totalRecords,
+        'data' => $data
     ]);
     
 } catch (Exception $e) {
