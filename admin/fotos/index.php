@@ -4,7 +4,7 @@ session_start();
 require_once("../../php/dbcat.php");
 
 // ============================================
-// VERIFICACIÓN DE AUTORIZACIÓN (misma lógica que actualizar_catalogos.php)
+// VERIFICACIÓN DE AUTORIZACIÓN
 // ============================================
 $isAdmin = isset($_SESSION['usr_admin']) ? $_SESSION['usr_admin'] : 0;
 $role = isset($_SESSION['role']) ? intval($_SESSION['role']) : -1;
@@ -228,6 +228,19 @@ $pageTitle = "Actualización de Fotos - Catálogo";
             background: #003272;
             color: white !important;
         }
+        
+        .info-box {
+            background-color: #e7f3ff;
+            border-left: 4px solid #037C79;
+            padding: 12px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+        }
+        
+        .info-box i {
+            color: #037C79;
+            font-size: 1.2rem;
+        }
     </style>
 </head>
 <body>
@@ -255,6 +268,12 @@ $pageTitle = "Actualización de Fotos - Catálogo";
     </div>
 
     <div class="container-fluid px-4">
+        <div class="info-box">
+            <i class="bi bi-info-circle-fill"></i>
+            <strong>Instrucciones:</strong> Selecciona la imagen del producto. El sistema la renombrará automáticamente con el formato 
+            <code>[código_producto].jpg</code> (ej: GA002-01 → GA002.01.jpg) y la guardará en la carpeta correspondiente según el departamento.
+        </div>
+        
         <div class="card">
             <div class="card-header">
                 <i class="bi bi-image"></i> Productos sin imagen asignada
@@ -327,7 +346,7 @@ $pageTitle = "Actualización de Fotos - Catálogo";
                     {
                         "data": null,
                         "render": function(data, type, row) {
-                            return '<button class="btn btn-actualizar btn-sm" onclick="actualizarFoto(\'' + row.codigo + '\', \'' + row.departamento.replace(/'/g, "\\'") + '\')">' +
+                            return '<button class="btn btn-actualizar btn-sm" onclick="actualizarFoto(\'' + row.codigo + '\', \'' + row.departamento.replace(/'/g, "\\'") + '\', ' + row.dpto_id + ')">' +
                                    '<i class="bi bi-camera"></i> Actualizar Foto</button>';
                         },
                         "orderable": false
@@ -342,22 +361,25 @@ $pageTitle = "Actualización de Fotos - Catálogo";
             });
         });
         
-        // Función para actualizar foto
-        function actualizarFoto(codigo, departamento) {
+        // Función para actualizar foto - MODIFICADA sin opción URL
+        function actualizarFoto(codigo, departamento, dptoId) {
+            // Generar el nombre del archivo que se espera 
+            var nombreEsperado = codigo + '.jpg';
+            
             Swal.fire({
                 title: 'Actualizar Foto',
                 html: `
                     <div style="text-align: left;">
-                        <p><strong>Producto:</strong> ${codigo}</p>
-                        <p><strong>Departamento:</strong> ${departamento}</p>
-                        <hr>
-                        <div class="mb-3">
-                            <label class="form-label">URL de la nueva imagen:</label>
-                            <input type="text" class="form-control" id="fotoUrl" placeholder="https://ejemplo.com/imagen.jpg">
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle"></i>
+                            <strong>Producto:</strong> ${codigo}<br>
+                            <strong>Departamento:</strong> ${departamento}<br>
+                            <strong>Nombre del archivo esperado:</strong> <code>${nombreEsperado}</code>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">O selecciona un archivo:</label>
-                            <input type="file" class="form-control" id="archivoFoto" accept="image/jpeg,image/jpg,image/png,image/gif,image/webp">
+                            <label class="form-label">Seleccionar imagen:</label>
+                            <input type="file" class="form-control" id="archivoFoto" accept="image/jpeg,image/jpg">
+                            <small class="text-muted">Solo archivos JPG. El archivo se renombrará automáticamente.</small>
                         </div>
                         <div id="previewImagen" class="mt-2 text-center" style="display:none;">
                             <img id="preview" src="" style="max-width: 200px; max-height: 200px; border-radius: 8px;">
@@ -365,67 +387,39 @@ $pageTitle = "Actualización de Fotos - Catálogo";
                     </div>
                 `,
                 showCancelButton: true,
-                confirmButtonText: 'Actualizar',
+                confirmButtonText: 'Subir y Actualizar',
                 cancelButtonText: 'Cancelar',
                 confirmButtonColor: '#037C79',
                 preConfirm: () => {
-                    const url = document.getElementById('fotoUrl').value;
                     const archivo = document.getElementById('archivoFoto').files[0];
                     
-                    if (!url && !archivo) {
-                        Swal.showValidationMessage('Debes proporcionar una URL o seleccionar un archivo');
+                    if (!archivo) {
+                        Swal.showValidationMessage('Debes seleccionar un archivo de imagen');
                         return false;
                     }
                     
-                    if (url && archivo) {
-                        Swal.showValidationMessage('Solo puedes usar URL o archivo, no ambos');
+                    // Validar que sea JPG
+                    if (archivo.type !== 'image/jpeg' && archivo.type !== 'image/jpg') {
+                        Swal.showValidationMessage('Solo se permiten archivos JPG');
                         return false;
                     }
                     
-                    if (archivo) {
-                        // Validar tipo de archivo
-                        const tiposPermitidos = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
-                        if (!tiposPermitidos.includes(archivo.type)) {
-                            Swal.showValidationMessage('Tipo de archivo no permitido. Usa JPG, PNG, GIF o WEBP');
-                            return false;
-                        }
-                        
-                        // Validar tamaño (máximo 2MB)
-                        if (archivo.size > 2 * 1024 * 1024) {
-                            Swal.showValidationMessage('El archivo no debe superar los 2MB');
-                            return false;
-                        }
-                        
-                        // Preparar FormData para subir archivo
-                        const formData = new FormData();
-                        formData.append('archivo', archivo);
-                        formData.append('codigo', codigo);
-                        formData.append('tipo', 'archivo');
-                        
-                        return fetch('actualizarFoto.php', {
-                            method: 'POST',
-                            body: formData
-                        }).then(response => response.json());
-                        
-                    } else if (url) {
-                        // Validar URL
-                        if (!url.match(/^https?:\/\/.+\/.+\.(jpg|jpeg|png|gif|webp)$/i)) {
-                            Swal.showValidationMessage('URL no válida. Debe ser una imagen (jpg, png, gif, webp)');
-                            return false;
-                        }
-                        
-                        return fetch('actualizarFoto.php', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                            },
-                            body: JSON.stringify({
-                                codigo: codigo,
-                                url: url,
-                                tipo: 'url'
-                            })
-                        }).then(response => response.json());
+                    // Validar tamaño (máximo 2MB)
+                    if (archivo.size > 2 * 1024 * 1024) {
+                        Swal.showValidationMessage('El archivo no debe superar los 2MB');
+                        return false;
                     }
+                    
+                    // Preparar FormData para subir archivo
+                    const formData = new FormData();
+                    formData.append('archivo', archivo);
+                    formData.append('codigo', codigo);
+                    formData.append('dpto_id', dptoId);
+                    
+                    return fetch('actualizarFoto.php', {
+                        method: 'POST',
+                        body: formData
+                    }).then(response => response.json());
                 }
             }).then((result) => {
                 if (result.isConfirmed) {
@@ -433,8 +427,9 @@ $pageTitle = "Actualización de Fotos - Catálogo";
                         Swal.fire({
                             icon: 'success',
                             title: '¡Actualizado!',
-                            text: 'La foto se ha actualizado correctamente',
-                            timer: 2000,
+                            html: `La foto se ha actualizado correctamente.<br>
+                                   Archivo guardado como: <code>${result.value.nombre_archivo}</code>`,
+                            timer: 3000,
                             showConfirmButton: false
                         }).then(() => {
                             // Recargar la tabla
@@ -463,21 +458,6 @@ $pageTitle = "Actualización de Fotos - Catálogo";
                 reader.readAsDataURL(file);
             } else {
                 $('#previewImagen').hide();
-            }
-        });
-        
-        // Limpiar preview cuando se ingresa URL
-        $(document).on('input', '#fotoUrl', function() {
-            if ($(this).val()) {
-                $('#previewImagen').hide();
-                $('#archivoFoto').val('');
-            }
-        });
-        
-        // Limpiar URL cuando se selecciona archivo
-        $(document).on('change', '#archivoFoto', function() {
-            if ($(this).val()) {
-                $('#fotoUrl').val('');
             }
         });
     </script>
