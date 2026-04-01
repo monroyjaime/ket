@@ -27,10 +27,10 @@ try {
     $searchValue = isset($_GET['search']['value']) ? $_GET['search']['value'] : '';
     $draw = isset($_GET['draw']) ? (int)$_GET['draw'] : 1;
     
-    // Escapar valor de búsqueda
-    $searchValue = addslashes($searchValue);
+    // Escapar valor de búsqueda para evitar inyección SQL
+    $searchValue = pg_escape_string($searchValue);
     
-    // Consulta para contar total de registros (productos con photo_url = 'none' o vacío)
+    // Consulta para contar total de registros
     $countQuery = "SELECT COUNT(*) as total 
                    FROM productos p 
                    INNER JOIN departamentos d ON p.dpto_id = d.id
@@ -41,15 +41,15 @@ try {
     
     // Agregar condición de búsqueda si existe
     if (!empty($searchValue)) {
-        $countQuery .= " AND (p.code LIKE '%$searchValue%' 
-                              OR p.name LIKE '%$searchValue%' 
-                              OR d.name LIKE '%$searchValue%')";
+        $countQuery .= " AND (p.code ILIKE '%$searchValue%' 
+                              OR p.name ILIKE '%$searchValue%' 
+                              OR d.name ILIKE '%$searchValue%')";
     }
     
     $resultCount = $db->consultas($countQuery);
     $totalRecords = !empty($resultCount) ? (int)$resultCount[0]->total : 0;
     
-    // Consulta principal con paginación
+    // Consulta principal con paginación - Usando sintaxis PostgreSQL
     $query = "SELECT p.code, 
                      p.name as descripcion, 
                      d.name as departamento,
@@ -63,12 +63,15 @@ try {
                  OR p.photo_url = 'empty.jpg'";
     
     if (!empty($searchValue)) {
-        $query .= " AND (p.code LIKE '%$searchValue%' 
-                    OR p.name LIKE '%$searchValue%' 
-                    OR d.name LIKE '%$searchValue%')";
+        $query .= " AND (p.code ILIKE '%$searchValue%' 
+                    OR p.name ILIKE '%$searchValue%' 
+                    OR d.name ILIKE '%$searchValue%')";
     }
     
-    $query .= " ORDER BY d.name ASC, p.code ASC LIMIT $start, $length";
+    $query .= " ORDER BY d.name ASC, p.code ASC";
+    
+    // Agregar LIMIT y OFFSET en sintaxis PostgreSQL
+    $query .= " LIMIT $length OFFSET $start";
     
     $productos = $db->consultas($query);
     
