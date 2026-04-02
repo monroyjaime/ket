@@ -1,11 +1,11 @@
 <?php
 // getProductosSinFoto.php
 session_start();
-require_once("../../php/dbcat.php");
 
-// ============================================
-// VERIFICACIÓN DE AUTORIZACIÓN
-// ============================================
+$docRoot = $_SERVER['DOCUMENT_ROOT'];
+require_once($docRoot . "/php/dbcat.php");
+
+// Verificar administrador
 $isAdmin = isset($_SESSION['usr_admin']) ? $_SESSION['usr_admin'] : 0;
 $role = isset($_SESSION['role']) ? intval($_SESSION['role']) : -1;
 
@@ -25,6 +25,7 @@ try {
     $searchValue = isset($_GET['search']['value']) ? pg_escape_string($_GET['search']['value']) : '';
     $draw = isset($_GET['draw']) ? (int)$_GET['draw'] : 1;
     
+    // Consulta para contar total
     $countQuery = "SELECT COUNT(*) as total 
                    FROM productos p 
                    INNER JOIN departamentos d ON p.dpto_id = d.id
@@ -42,6 +43,7 @@ try {
     $resultCount = $db->consultas($countQuery);
     $totalRecords = !empty($resultCount) ? (int)$resultCount[0]->total : 0;
     
+    // Consulta principal
     $query = "SELECT p.code, 
                      p.name as descripcion, 
                      d.name as departamento,
