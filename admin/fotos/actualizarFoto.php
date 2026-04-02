@@ -55,7 +55,20 @@ try {
     
     $imgRoute = $deptoResult[0]->img_route;
     
-    // Si img_route está vacío, usar la ruta por defecto
+    // LIMPIAR LA RUTA: Eliminar la parte de la URL si está presente
+    // Ejemplo: "https://ketelectropartes.com/catalogo/images/terminalesAutomotriz/"
+    // Convertir a: "catalogo/images/terminalesAutomotriz/"
+    
+    // Eliminar el protocolo (http:// o https://)
+    $imgRoute = preg_replace('#^https?://[^/]+/#', '', $imgRoute);
+    
+    // Eliminar la parte del dominio si quedó
+    $imgRoute = preg_replace('#^ketelectropartes\.com/#', '', $imgRoute);
+    
+    // Asegurar que no tenga doble slash al inicio
+    $imgRoute = ltrim($imgRoute, '/');
+    
+    // Si img_route está vacío después de limpiar, usar la ruta por defecto
     if (empty($imgRoute)) {
         $imgRoute = 'catalogo/images/departamentos/';
     }
@@ -65,18 +78,19 @@ try {
         $imgRoute .= '/';
     }
     
-    // Generar el nombre del archivo según el código del producto
-    // Reemplazar guiones por puntos y asegurar extensión .jpg
-    $nombreArchivo = $codigo . '.jpg';    
-    // Construir la ruta completa
+    // Generar el nombre del archivo según el código del producto (MANTENER GUIONES)
+    $nombreArchivo = $codigo . '.jpg';
+    
+    // Construir la ruta completa (RUTA RELATIVA desde la raíz del sitio)
     $directorioDestino = '../../' . $imgRoute;
     $rutaCompleta = $directorioDestino . $nombreArchivo;
     $rutaRelativa = $imgRoute . $nombreArchivo;
     
-    // Crear el directorio si no existe
+    // Verificar si el directorio existe
     if (!file_exists($directorioDestino)) {
+        // Intentar crear el directorio si no existe
         if (!mkdir($directorioDestino, 0777, true)) {
-            throw new Exception('No se pudo crear el directorio: ' . $directorioDestino);
+            throw new Exception('No se pudo crear el directorio: ' . $directorioDestino . '. La ruta limpia es: ' . $imgRoute);
         }
     }
     
@@ -117,7 +131,7 @@ try {
     
     // Guardar la imagen optimizada (calidad 85)
     if (!imagejpeg($img, $rutaCompleta, 85)) {
-        throw new Exception('Error al guardar la imagen');
+        throw new Exception('Error al guardar la imagen en: ' . $rutaCompleta);
     }
     
     imagedestroy($img);
@@ -131,7 +145,8 @@ try {
             'success' => true,
             'message' => 'Foto actualizada correctamente',
             'nombre_archivo' => $nombreArchivo,
-            'ruta' => $rutaRelativa
+            'ruta' => $rutaRelativa,
+            'directorio' => $directorioDestino
         ]);
     } else {
         // Si falla la BD, eliminar el archivo subido
