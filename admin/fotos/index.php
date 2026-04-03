@@ -416,7 +416,7 @@ $pageTitle = "Actualización de Fotos - Catálogo";
                     formData.append('codigo', codigo);
                     formData.append('dpto_id', dptoId);
                     
-                    return fetch('test_ultra_simple.php', {
+                    return fetch('upload_test.php', {
                         method: 'POST',
                         body: formData
                     }).then(response => response.json());
