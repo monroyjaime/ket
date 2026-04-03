@@ -418,7 +418,8 @@ $pageTitle = "Actualización de Fotos - Catálogo";
                     
                     return fetch('upload_test.php', {
                         method: 'POST',
-                        body: formData
+                        body: formData,
+                        credentials: 'include'  // <--- ESTO ES CLAVE
                     }).then(response => response.json());
                 }
             }).then((result) => {

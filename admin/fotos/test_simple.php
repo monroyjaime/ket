@@ -20,6 +20,12 @@ $role = isset($_SESSION['role']) ? intval($_SESSION['role']) : -1;
 echo "<p>usr_admin: $isAdmin</p>";
 echo "<p>role: $role</p>";
 
+// Mostrar todas las variables de sesión para depuración
+echo "<h3>Variables de sesión:</h3>";
+echo "<pre>";
+print_r($_SESSION);
+echo "</pre>";
+
 if ($role == -1 || $isAdmin != 1) {
     echo "<p style='color:red'>ACCESO DENEGADO</p>";
     exit;
