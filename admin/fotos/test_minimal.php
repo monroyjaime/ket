@@ -1,9 +1,11 @@
 <?php
-// test_minimal.php - Script mínimo para probar subida
+// test_minimal.php - Con guardado real
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
 session_start();
+
+$docRoot = $_SERVER['DOCUMENT_ROOT'];
 
 // Verificar admin
 $isAdmin = isset($_SESSION['usr_admin']) ? $_SESSION['usr_admin'] : 0;
@@ -16,37 +18,43 @@ if ($role != 1 || $isAdmin != 1) {
     exit;
 }
 
-// Verificar método
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     echo json_encode(['success' => false, 'message' => 'Method not POST']);
     exit;
 }
 
-// Verificar datos
-if (empty($_FILES)) {
-    echo json_encode(['success' => false, 'message' => 'No files received']);
+if (!isset($_FILES['archivo']) || $_FILES['archivo']['error'] !== UPLOAD_ERR_OK) {
+    echo json_encode(['success' => false, 'message' => 'Error en archivo']);
     exit;
 }
 
-// Verificar que tenemos el archivo
-if (!isset($_FILES['archivo'])) {
-    echo json_encode(['success' => false, 'message' => 'Missing archivo field']);
-    exit;
-}
+$codigo = $_POST['codigo'] ?? 'unknown';
+$dptoId = $_POST['dpto_id'] ?? 0;
 
 $archivo = $_FILES['archivo'];
 
-// Devolver información del archivo recibido
-echo json_encode([
-    'success' => true,
-    'message' => 'File received',
-    'file_info' => [
-        'name' => $archivo['name'],
-        'type' => $archivo['type'],
-        'size' => $archivo['size'],
-        'error' => $archivo['error'],
-        'tmp_name' => $archivo['tmp_name']
-    ],
-    'post' => $_POST
-]);
+// Crear directorio de prueba
+$testDir = $docRoot . '/catalogo/images/test_uploads/';
+if (!file_exists($testDir)) {
+    mkdir($testDir, 0777, true);
+}
+
+$nombreArchivo = $codigo . '.jpg';
+$rutaCompleta = $testDir . $nombreArchivo;
+
+// Mover el archivo
+if (move_uploaded_file($archivo['tmp_name'], $rutaCompleta)) {
+    echo json_encode([
+        'success' => true,
+        'message' => 'Archivo guardado',
+        'ruta' => $rutaCompleta,
+        'url' => '/catalogo/images/test_uploads/' . $nombreArchivo
+    ]);
+} else {
+    echo json_encode([
+        'success' => false,
+        'message' => 'Error al guardar',
+        'error' => error_get_last()
+    ]);
+}
 ?>
