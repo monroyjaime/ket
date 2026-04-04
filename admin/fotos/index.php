@@ -349,6 +349,8 @@ $pageTitle = "Actualización de Fotos - Catálogo";
                     {
                         "data": null,
                         "render": function(data, type, row) {
+                        console.log('Row en render:', row);  // Ver qué contiene row
+                        console.log('img_route en row:', row.img_route);
                         // Limpiar img_route
                         var imgRoute = row.img_route || '';
                         imgRoute = imgRoute.replace(/^https?:\/\/[^/]+\//, '');

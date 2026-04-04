@@ -1,5 +1,5 @@
 <?php
-// getProductos.php - Trae todos los productos (con o sin foto)
+// getProductos.php
 session_start();
 
 $docRoot = $_SERVER['DOCUMENT_ROOT'];
@@ -25,7 +25,7 @@ try {
     $searchValue = isset($_GET['search']['value']) ? pg_escape_string($_GET['search']['value']) : '';
     $draw = isset($_GET['draw']) ? (int)$_GET['draw'] : 1;
     
-    // Consulta para contar total (TODOS los productos)
+    // Consulta para contar total
     $countQuery = "SELECT COUNT(*) as total 
                    FROM productos p 
                    INNER JOIN departamentos d ON p.dpto_id = d.id";
@@ -39,7 +39,7 @@ try {
     $resultCount = $db->consultas($countQuery);
     $totalRecords = !empty($resultCount) ? (int)$resultCount[0]->total : 0;
     
-    // Consulta principal (TODOS los productos)
+    // Consulta principal - INCLUIR d.img_route
     $query = "SELECT p.code, 
                      p.name as descripcion, 
                      d.name as departamento,
@@ -66,7 +66,6 @@ try {
     
     $data = [];
     foreach ($productos as $row) {
-        // Determinar si tiene foto o no
         $hasPhoto = !empty($row->foto_actual) 
                     && $row->foto_actual !== 'empty.jpg' 
                     && $row->foto_actual !== 'none';
@@ -75,7 +74,8 @@ try {
             'codigo' => $row->code,
             'descripcion' => $row->descripcion,
             'departamento' => $row->departamento,
-            'foto_actual' => $row->foto_actual,
+            'img_route' => $row->img_route ?? '',  // <--- IMPORTANTE
+            'foto_actual' => $row->foto_actual ?? '',
             'dpto_id' => $row->dpto_id,
             'has_photo' => $hasPhoto
         ];
