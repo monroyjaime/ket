@@ -1,5 +1,5 @@
 <?php
-// upload_final.php - Con debugging detallado
+// upload_final.php - Con respaldo y control de caché
 session_start();
 header('Content-Type: application/json');
 
@@ -47,8 +47,6 @@ try {
     }
     
     $imgRoute = $deptoResult[0]->img_route;
-    $response['debug_imgRoute_original'] = $imgRoute;
-    
     $imgRoute = preg_replace('#^https?://[^/]+/#', '', $imgRoute);
     $imgRoute = ltrim($imgRoute, '/');
     
@@ -60,95 +58,78 @@ try {
         $imgRoute .= '/';
     }
     
-    $response['debug_imgRoute_limpia'] = $imgRoute;
-    
     $nombreArchivo = $codigo . '.jpg';
     $directorioDestino = $docRoot . '/' . $imgRoute;
     $rutaCompleta = $directorioDestino . $nombreArchivo;
     
-    $response['debug_docRoot'] = $docRoot;
-    $response['debug_directorioDestino'] = $directorioDestino;
-    $response['debug_rutaCompleta'] = $rutaCompleta;
-    $response['debug_nombreArchivo'] = $nombreArchivo;
+    // Solo el nombre del archivo para la BD
+    $rutaRelativa = $nombreArchivo;
     
-    // Verificar si el directorio existe
+    // Crear directorio si no existe
     if (!file_exists($directorioDestino)) {
-        $response['debug_directorio_existe'] = false;
-        // Intentar crear el directorio
-        if (mkdir($directorioDestino, 0775, true)) {
-            $response['debug_directorio_creado'] = true;
-        } else {
-            $response['debug_error_creacion'] = error_get_last();
+        if (!mkdir($directorioDestino, 0775, true)) {
             throw new Exception('No se pudo crear el directorio: ' . $directorioDestino);
         }
-    } else {
-        $response['debug_directorio_existe'] = true;
-        $response['debug_directorio_permisos'] = substr(sprintf('%o', fileperms($directorioDestino)), -4);
-        $response['debug_directorio_writable'] = is_writable($directorioDestino);
+    }
+    
+    // ============================================
+    // RESPALDAR FOTO EXISTENTE SI EXISTE
+    // ============================================
+    $backupName = null;
+    if (file_exists($rutaCompleta)) {
+        $timestamp = date('Ymd_His');
+        $extension = pathinfo($nombreArchivo, PATHINFO_EXTENSION);
+        $nombreBase = pathinfo($nombreArchivo, PATHINFO_FILENAME);
+        $backupName = $nombreBase . "_backup_{$timestamp}." . $extension;
+        $rutaBackup = $directorioDestino . $backupName;
         
-        if (!is_writable($directorioDestino)) {
-            chmod($directorioDestino, 0775);
-            clearstatcache();
-            $response['debug_permisos_cambiados'] = is_writable($directorioDestino);
+        if (copy($rutaCompleta, $rutaBackup)) {
+            $response['backup'] = $backupName;
+            error_log("Backup creado: " . $rutaBackup);
+        } else {
+            error_log("No se pudo crear backup de: " . $rutaCompleta);
         }
     }
     
-    // Verificar el archivo temporal
-    if (!file_exists($archivo['tmp_name'])) {
-        throw new Exception('El archivo temporal no existe: ' . $archivo['tmp_name']);
-    }
-    $response['debug_temp_file_exists'] = true;
-    $response['debug_temp_file_size'] = filesize($archivo['tmp_name']);
-    
-    // Verificar espacio en disco
-    $freeSpace = disk_free_space($directorioDestino);
-    $response['debug_free_space_bytes'] = $freeSpace;
-    $response['debug_free_space_mb'] = round($freeSpace / 1024 / 1024, 2);
-    
-    if ($freeSpace < $archivo['size']) {
-        throw new Exception('No hay suficiente espacio en disco');
-    }
-    
-    // Intentar guardar el archivo
-/*    if (!move_uploaded_file($archivo['tmp_name'], $rutaCompleta)) {
-        $error = error_get_last();
-        $response['debug_move_error'] = $error;
-        throw new Exception('Error al guardar: ' . ($error['message'] ?? 'desconocido'));
-    }
-    
-    $response['debug_file_saved'] = true;*/
-
-    // Intentar guardar el archivo usando copy() en lugar de move_uploaded_file()
+    // Guardar el nuevo archivo (usando el método que funcionó)
     if (!copy($archivo['tmp_name'], $rutaCompleta)) {
         $error = error_get_last();
         throw new Exception('Error al copiar archivo: ' . ($error['message'] ?? 'desconocido'));
     }
-
-    // Eliminar el archivo temporal después de copiar
+    
+    // Eliminar el archivo temporal
     if (file_exists($archivo['tmp_name'])) {
         unlink($archivo['tmp_name']);
     }
-
-    $response['debug_copy_method'] = 'success';
     
     // Actualizar base de datos
-    $rutaRelativa = $nombreArchivo;
     $updateQuery = "UPDATE productos SET photo_url = '$rutaRelativa' WHERE code = '$codigo'";
     $result = $db->querySet($updateQuery);
     
     if ($result !== 1) {
-        if (file_exists($rutaCompleta)) {
-            unlink($rutaCompleta);
+        // Si falla la BD, restaurar backup si existe
+        if (isset($rutaBackup) && file_exists($rutaBackup)) {
+            copy($rutaBackup, $rutaCompleta);
         }
         throw new Exception('Error al actualizar la base de datos');
     }
     
-    $response['success'] = true;
-    $response['message'] = 'Foto actualizada correctamente';
-    $response['url'] = '/' . $imgRoute . $nombreArchivo;
+    // Eliminar backups antiguos (más de 30 días)
+    $files = glob($directorioDestino . "*_backup_*.jpg");
+    $now = time();
+    foreach ($files as $file) {
+        if (is_file($file) && ($now - filemtime($file)) > 30 * 24 * 60 * 60) {
+            unlink($file);
+        }
+    }
     
-    // Limpiar datos de debug en producción (opcional)
-    // unset($response['debug_*']);
+    $response = [
+        'success' => true,
+        'message' => 'Foto actualizada correctamente',
+        'url' => '/' . $imgRoute . $nombreArchivo,
+        'backup' => $backupName,
+        'timestamp' => time()  // Para forzar recarga de caché
+    ];
     
 } catch (Exception $e) {
     $response['message'] = $e->getMessage();

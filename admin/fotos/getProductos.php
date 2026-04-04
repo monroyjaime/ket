@@ -77,7 +77,8 @@ try {
             'img_route' => $row->img_route ?? '',  // <--- IMPORTANTE
             'foto_actual' => $row->foto_actual ?? '',
             'dpto_id' => $row->dpto_id,
-            'has_photo' => $hasPhoto
+            'has_photo' => $hasPhoto,
+            'foto_url_with_cache' => $hasPhoto ? ('/' . $imgRoute . $row->foto_actual . '?t=' . time()) : null
         ];
     }
     
