@@ -119,6 +119,9 @@ $pageTitle = "Actualización de Fotos - Catálogo";
     <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     
+    <!-- RowGroup extension for DataTables -->
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/rowgroup/1.2.0/css/rowGroup.dataTables.min.css">
+    <script src="https://cdn.datatables.net/rowgroup/1.2.0/js/dataTables.rowGroup.min.js"></script>
     <style>
         body {
             background-color: #DDD;
@@ -249,6 +252,34 @@ $pageTitle = "Actualización de Fotos - Catálogo";
             color: #037C79;
             font-size: 1.2rem;
         }
+
+        .btn-actualizar {
+            background-color: #037C79;
+            color: white;
+            border: none;
+            transition: all 0.2s;
+        }
+
+        .btn-actualizar:hover {
+            background-color: #003272;
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        .btn-cambiar-foto {
+            background-color: #f39c12;
+            color: white;
+            border: none;
+            transition: all 0.2s;
+        }
+
+        .btn-cambiar-foto:hover {
+            background-color: #e67e22;
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
     </style>
 </head>
 <body>
@@ -277,17 +308,19 @@ $pageTitle = "Actualización de Fotos - Catálogo";
 
     <div class="container-fluid px-4">
         <div class="info-box">
-            <i class="bi bi-info-circle-fill"></i>
-            <strong>Instrucciones:</strong> Selecciona la imagen del producto. El sistema la renombrará automáticamente con el formato 
-            <code>[código_producto].jpg</code> y la guardará en la carpeta correspondiente según el departamento.
+            <i class="bi bi-info-circle-fill" style="color: #037C79;"></i>
+            <strong>Instrucciones:</strong> 
+            <span style="color: #037C79;">● Botón verde "Actualizar Foto"</span> para productos sin imagen | 
+            <span style="color: #f39c12;">● Botón naranja "Cambiar Foto"</span> para productos con imagen existente.
+            <br>Las imágenes anteriores se respaldan automáticamente con fecha y hora.
         </div>
         
         <div class="card">
             <div class="card-header">
-                <i class="bi bi-image"></i> Productos sin imagen asignada
+                <i class="bi bi-image"></i> Gestión de Fotos del Catálogo
                 <span class="float-end">
                     <i class="bi bi-info-circle-fill"></i> 
-                    Productos con foto = empty.jpg
+                    Actualización y cambio de fotos de productos
                 </span>
             </div>
             <div class="card-body">
@@ -323,6 +356,7 @@ $pageTitle = "Actualización de Fotos - Catálogo";
     <script>
         $(document).ready(function() {
             // Inicializar DataTable
+            // En el DataTable, agregar opción de agrupación
             var table = $('#tablaProductos').DataTable({
                 "processing": true,
                 "serverSide": true,
@@ -332,41 +366,27 @@ $pageTitle = "Actualización de Fotos - Catálogo";
                     "dataSrc": function(json) {
                         console.log("Datos recibidos:", json);
                         return json.data;
-                    },
-                    "error": function(xhr, error, thrown) {
-                        console.error("Error en DataTable:", error);
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Error',
-                            text: 'Error al cargar los productos: ' + error
-                        });
                     }
                 },
                 "columns": [
-                    { "data": "departamento" },
+                    { "data": "departamento", "visible": false }, // Ocultar columna de departamento
                     { "data": "codigo" },
                     { "data": "descripcion" },
                     {
                         "data": null,
                         "render": function(data, type, row) {
-                        console.log('Row en render:', row);  // Ver qué contiene row
-                        console.log('img_route en row:', row.img_route);
-                        // Limpiar img_route
-                        var imgRoute = row.img_route || '';
-                        imgRoute = imgRoute.replace(/^https?:\/\/[^/]+\//, '');
-                        imgRoute = imgRoute.replace(/^ketelectropartes\.com\//, '');
-                        
-                        // Escapar foto_actual para pasarla como parámetro
-                        var fotoActual = row.foto_actual || '';
-                        
-                        if (data.has_photo) {
-                            return '<button class="btn btn-warning btn-sm" onclick="actualizarFoto(\'' + data.codigo + '\', \'' + data.departamento.replace(/'/g, "\\'") + '\', ' + data.dpto_id + ', true, \'' + imgRoute + '\', \'' + fotoActual + '\')">' +
-                                '<i class="bi bi-camera"></i> Cambiar Foto</button>';
-                        } else {
-                            return '<button class="btn btn-actualizar btn-sm" onclick="actualizarFoto(\'' + data.codigo + '\', \'' + data.departamento.replace(/'/g, "\\'") + '\', ' + data.dpto_id + ', false, \'' + imgRoute + '\', \'' + fotoActual + '\')">' +
-                                '<i class="bi bi-camera"></i> Actualizar Foto</button>';
-                        }
-                    },
+                            var imgRoute = row.img_route || '';
+                            imgRoute = imgRoute.replace(/^https?:\/\/[^/]+\//, '');
+                            imgRoute = imgRoute.replace(/^ketelectropartes\.com\//, '');
+                            
+                            if (row.has_photo) {
+                                return '<button class="btn btn-warning btn-sm btn-cambiar-foto" onclick="actualizarFoto(\'' + row.codigo + '\', \'' + row.departamento.replace(/'/g, "\\'") + '\', ' + row.dpto_id + ', true, \'' + imgRoute + '\', \'' + (row.foto_actual || '') + '\')">' +
+                                    '<i class="bi bi-camera"></i> Cambiar Foto</button>';
+                            } else {
+                                return '<button class="btn btn-actualizar btn-sm" onclick="actualizarFoto(\'' + row.codigo + '\', \'' + row.departamento.replace(/'/g, "\\'") + '\', ' + row.dpto_id + ', false, \'' + imgRoute + '\', \'' + (row.foto_actual || '') + '\')">' +
+                                    '<i class="bi bi-camera"></i> Actualizar Foto</button>';
+                            }
+                        },
                         "orderable": false
                     }
                 ],
@@ -375,7 +395,13 @@ $pageTitle = "Actualización de Fotos - Catálogo";
                 },
                 "order": [[0, "asc"], [1, "asc"]],
                 "pageLength": 25,
-                "lengthMenu": [[10, 25, 50, 100], [10, 25, 50, 100]]
+                "lengthMenu": [[10, 25, 50, 100], [10, 25, 50, 100]],
+                "rowGroup": {
+                    "dataSrc": "departamento",  // Agrupar por departamento
+                    "startRender": function(rows, group) {
+                        return '<tr class="table-primary"><td colspan="3"><strong><i class="bi bi-building"></i> ' + group + '</strong></td></tr>';
+                    }
+                }
             });
         });
         
