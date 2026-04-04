@@ -19,7 +19,7 @@ jobs:
         ssh-keyscan -p 5655 -H ${{ secrets.SERVER_HOST }} >> ~/.ssh/known_hosts
 
     - name: 📦 Sync Files
-      run: rsync -avz --exclude='.env' --exclude='.git' --exclude='.github' --exclude='node_modules' --exclude='reports/' --exclude='*.sql' --exclude='*.log' --exclude='backup-*' --exclude='pdfs/' -e "ssh -i ~/.ssh/deploy_key -p 5655" ./ ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/var/www/html/
+      run: rsync -avz --exclude='.env' --exclude='.git' --exclude='.github' --exclude='catalogo/images/' --exclude='node_modules' --exclude='reports/' --exclude='*.sql' --exclude='*.log' --exclude='backup-*' --exclude='pdfs/' -e "ssh -i ~/.ssh/deploy_key -p 5655" ./ ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/var/www/html/
 
     - name: ✅ Verify Sync
       run: ssh -i ~/.ssh/deploy_key -p 5655 ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} "ls -la /var/www/html/ | head -3 && echo '✅ Sync successful'"
