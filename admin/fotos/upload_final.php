@@ -110,13 +110,26 @@ try {
     }
     
     // Intentar guardar el archivo
-    if (!move_uploaded_file($archivo['tmp_name'], $rutaCompleta)) {
+/*    if (!move_uploaded_file($archivo['tmp_name'], $rutaCompleta)) {
         $error = error_get_last();
         $response['debug_move_error'] = $error;
         throw new Exception('Error al guardar: ' . ($error['message'] ?? 'desconocido'));
     }
     
-    $response['debug_file_saved'] = true;
+    $response['debug_file_saved'] = true;*/
+
+    // Intentar guardar el archivo usando copy() en lugar de move_uploaded_file()
+    if (!copy($archivo['tmp_name'], $rutaCompleta)) {
+        $error = error_get_last();
+        throw new Exception('Error al copiar archivo: ' . ($error['message'] ?? 'desconocido'));
+    }
+
+    // Eliminar el archivo temporal después de copiar
+    if (file_exists($archivo['tmp_name'])) {
+        unlink($archivo['tmp_name']);
+    }
+
+    $response['debug_copy_method'] = 'success';
     
     // Actualizar base de datos
     $rutaRelativa = $nombreArchivo;
