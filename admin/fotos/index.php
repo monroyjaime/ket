@@ -1,6 +1,7 @@
 <?php
 // admin/fotos/index.php - Gestión de fotos de productos
 session_start();
+
 require_once("../../php/dbcat.php");
 
 // ============================================
@@ -70,6 +71,13 @@ if ($role == -1 || $isAdmin != 1) {
                 color: white;
             }
         </style>
+        <script>
+        // ============================================
+        // AGREGAR ESTO AQUÍ - Dentro del <head> o antes de cerrar </head>
+        // ============================================
+        var SESSION_ID = '<?php echo session_id(); ?>';
+        console.log('Session ID:', SESSION_ID);
+    </script>
     </head>
     <body>
         <div class="error-container">
@@ -362,90 +370,116 @@ $pageTitle = "Actualización de Fotos - Catálogo";
         });
         
         // Función para actualizar foto - MODIFICADA sin opción URL
-        function actualizarFoto(codigo, departamento, dptoId) {
-            // Generar el nombre del archivo que se espera 
-            var nombreEsperado = codigo + '.jpg';
-            
-            Swal.fire({
-                title: 'Actualizar Foto',
-                html: `
-                    <div style="text-align: left;">
-                        <div class="alert alert-info">
-                            <i class="bi bi-info-circle"></i>
-                            <strong>Producto:</strong> ${codigo}<br>
-                            <strong>Departamento:</strong> ${departamento}<br>
-                            <strong>Nombre del archivo esperado:</strong> <code>${nombreEsperado}</code>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Seleccionar imagen:</label>
-                            <input type="file" class="form-control" id="archivoFoto" accept="image/jpeg,image/jpg">
-                            <small class="text-muted">Solo archivos JPG. El archivo se renombrará automáticamente.</small>
-                        </div>
-                        <div id="previewImagen" class="mt-2 text-center" style="display:none;">
-                            <img id="preview" src="" style="max-width: 200px; max-height: 200px; border-radius: 8px;">
-                        </div>
-                    </div>
-                `,
-                showCancelButton: true,
-                confirmButtonText: 'Subir y Actualizar',
-                cancelButtonText: 'Cancelar',
-                confirmButtonColor: '#037C79',
-                preConfirm: () => {
-                    const archivo = document.getElementById('archivoFoto').files[0];
+function actualizarFoto(codigo, departamento, dptoId) {
+    var nombreEsperado = codigo + '.jpg';
+    
+    Swal.fire({
+        title: 'Actualizar Foto',
+        html: `
+            <div style="text-align: left;">
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i>
+                    <strong>Producto:</strong> ${codigo}<br>
+                    <strong>Departamento:</strong> ${departamento}<br>
+                    <strong>Nombre del archivo esperado:</strong> <code>${nombreEsperado}</code>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Seleccionar imagen:</label>
+                    <input type="file" class="form-control" id="archivoFoto" accept="image/jpeg,image/jpg">
+                    <small class="text-muted">Solo archivos JPG. El archivo se renombrará automáticamente.</small>
+                </div>
+                <div id="previewImagen" class="mt-2 text-center" style="display:none;">
+                    <img id="preview" src="" style="max-width: 200px; max-height: 200px; border-radius: 8px;">
+                </div>
+            </div>
+        `,
+        showCancelButton: true,
+        confirmButtonText: 'Subir y Actualizar',
+        cancelButtonText: 'Cancelar',
+        confirmButtonColor: '#037C79',
+        didOpen: () => {
+            // Previsualización de imagen al seleccionar archivo
+            const input = document.getElementById('archivoFoto');
+            if (input) {
+                input.addEventListener('change', function(e) {
+                    const file = e.target.files[0];
+                    const previewDiv = document.getElementById('previewImagen');
+                    const previewImg = document.getElementById('preview');
                     
-                    if (!archivo) {
-                        Swal.showValidationMessage('Debes seleccionar un archivo de imagen');
-                        return false;
-                    }
-                    
-                    // Validar que sea JPG
-                    if (archivo.type !== 'image/jpeg' && archivo.type !== 'image/jpg') {
-                        Swal.showValidationMessage('Solo se permiten archivos JPG');
-                        return false;
-                    }
-                    
-                    // Validar tamaño (máximo 2MB)
-                    if (archivo.size > 2 * 1024 * 1024) {
-                        Swal.showValidationMessage('El archivo no debe superar los 2MB');
-                        return false;
-                    }
-                    
-                    // Preparar FormData para subir archivo
-                    const formData = new FormData();
-                    formData.append('archivo', archivo);
-                    formData.append('codigo', codigo);
-                    formData.append('dpto_id', dptoId);
-                    
-                    return fetch('upload_test.php', {
-                        method: 'POST',
-                        body: formData,
-                        credentials: 'include'  // <--- ESTO ES CLAVE
-                    }).then(response => response.json());
-                }
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    if (result.value.success) {
-                        Swal.fire({
-                            icon: 'success',
-                            title: '¡Actualizado!',
-                            html: `La foto se ha actualizado correctamente.<br>
-                                   Archivo guardado como: <code>${result.value.nombre_archivo}</code>`,
-                            timer: 3000,
-                            showConfirmButton: false
-                        }).then(() => {
-                            // Recargar la tabla
-                            $('#tablaProductos').DataTable().ajax.reload();
-                        });
+                    if (file) {
+                        const reader = new FileReader();
+                        reader.onload = function(e) {
+                            previewDiv.style.display = 'block';
+                            previewImg.src = e.target.result;
+                        };
+                        reader.readAsDataURL(file);
                     } else {
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Error',
-                            text: result.value.message || 'Error al actualizar la foto'
-                        });
+                        previewDiv.style.display = 'none';
                     }
+                });
+            }
+        },
+        preConfirm: () => {
+            const archivo = document.getElementById('archivoFoto').files[0];
+            
+            if (!archivo) {
+                Swal.showValidationMessage('Debes seleccionar un archivo de imagen');
+                return false;
+            }
+            
+            if (archivo.type !== 'image/jpeg' && archivo.type !== 'image/jpg') {
+                Swal.showValidationMessage('Solo se permiten archivos JPG');
+                return false;
+            }
+            
+            if (archivo.size > 2 * 1024 * 1024) {
+                Swal.showValidationMessage('El archivo no debe superar los 2MB');
+                return false;
+            }
+            
+            const formData = new FormData();
+            formData.append('archivo', archivo);
+            formData.append('codigo', codigo);
+            formData.append('dpto_id', dptoId);
+            
+            return fetch('upload_final.php', {
+                method: 'POST',
+                body: formData,
+                credentials: 'include'
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('HTTP error ' + response.status);
                 }
+                return response.json();
+            })
+            .then(data => {
+                if (!data.success) {
+                    throw new Error(data.message);
+                }
+                return data;
             });
         }
+    }).then((result) => {
+        if (result.isConfirmed && result.value) {
+            Swal.fire({
+                icon: 'success',
+                title: '¡Actualizado!',
+                text: 'La foto se ha actualizado correctamente',
+                timer: 2000,
+                showConfirmButton: false
+            }).then(() => {
+                $('#tablaProductos').DataTable().ajax.reload();
+            });
+        }
+    }).catch((error) => {
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: error.message || 'Error al actualizar la foto'
+        });
+    });
+}
         
         // Previsualización de imagen al seleccionar archivo
         $(document).on('change', '#archivoFoto', function(e) {
