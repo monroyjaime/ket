@@ -1,5 +1,5 @@
 <?php
-// getProductosSinFoto.php
+// getProductos.php - Trae todos los productos (con o sin foto)
 session_start();
 
 $docRoot = $_SERVER['DOCUMENT_ROOT'];
@@ -25,17 +25,13 @@ try {
     $searchValue = isset($_GET['search']['value']) ? pg_escape_string($_GET['search']['value']) : '';
     $draw = isset($_GET['draw']) ? (int)$_GET['draw'] : 1;
     
-    // Consulta para contar total
+    // Consulta para contar total (TODOS los productos)
     $countQuery = "SELECT COUNT(*) as total 
                    FROM productos p 
-                   INNER JOIN departamentos d ON p.dpto_id = d.id
-                   WHERE p.photo_url IS NULL 
-                      OR p.photo_url = '' 
-                      OR p.photo_url = 'none'
-                      OR p.photo_url = 'empty.jpg'";
+                   INNER JOIN departamentos d ON p.dpto_id = d.id";
     
     if (!empty($searchValue)) {
-        $countQuery .= " AND (p.code ILIKE '%$searchValue%' 
+        $countQuery .= " WHERE (p.code ILIKE '%$searchValue%' 
                               OR p.name ILIKE '%$searchValue%' 
                               OR d.name ILIKE '%$searchValue%')";
     }
@@ -43,21 +39,18 @@ try {
     $resultCount = $db->consultas($countQuery);
     $totalRecords = !empty($resultCount) ? (int)$resultCount[0]->total : 0;
     
-    // Consulta principal
+    // Consulta principal (TODOS los productos)
     $query = "SELECT p.code, 
                      p.name as descripcion, 
                      d.name as departamento,
+                     d.img_route,
                      p.photo_url as foto_actual,
                      p.dpto_id
               FROM productos p 
-              INNER JOIN departamentos d ON p.dpto_id = d.id
-              WHERE p.photo_url IS NULL 
-                 OR p.photo_url = '' 
-                 OR p.photo_url = 'none'
-                 OR p.photo_url = 'empty.jpg'";
+              INNER JOIN departamentos d ON p.dpto_id = d.id";
     
     if (!empty($searchValue)) {
-        $query .= " AND (p.code ILIKE '%$searchValue%' 
+        $query .= " WHERE (p.code ILIKE '%$searchValue%' 
                     OR p.name ILIKE '%$searchValue%' 
                     OR d.name ILIKE '%$searchValue%')";
     }
@@ -73,12 +66,18 @@ try {
     
     $data = [];
     foreach ($productos as $row) {
+        // Determinar si tiene foto o no
+        $hasPhoto = !empty($row->foto_actual) 
+                    && $row->foto_actual !== 'empty.jpg' 
+                    && $row->foto_actual !== 'none';
+        
         $data[] = [
             'codigo' => $row->code,
             'descripcion' => $row->descripcion,
             'departamento' => $row->departamento,
             'foto_actual' => $row->foto_actual,
-            'dpto_id' => $row->dpto_id
+            'dpto_id' => $row->dpto_id,
+            'has_photo' => $hasPhoto
         ];
     }
     
@@ -90,7 +89,7 @@ try {
     ]);
     
 } catch (Exception $e) {
-    error_log("Error en getProductosSinFoto.php: " . $e->getMessage());
+    error_log("Error en getProductos.php: " . $e->getMessage());
     header('HTTP/1.0 500 Internal Server Error');
     echo json_encode([
         'error' => true,

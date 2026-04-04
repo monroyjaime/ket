@@ -327,7 +327,7 @@ $pageTitle = "Actualización de Fotos - Catálogo";
                 "processing": true,
                 "serverSide": true,
                 "ajax": {
-                    "url": "getProductosSinFoto.php",
+                    "url": "getProductos.php",
                     "type": "GET",
                     "dataSrc": function(json) {
                         console.log("Datos recibidos:", json);
@@ -343,20 +343,28 @@ $pageTitle = "Actualización de Fotos - Catálogo";
                     }
                 },
                 "columns": [
-                    { 
-                        "data": "departamento",
-                        "render": function(data, type, row) {
-                            return '<span class="badge-departamento"><i class="bi bi-building"></i> ' + data + '</span>';
-                        }
-                    },
+                    { "data": "departamento" },
                     { "data": "codigo" },
                     { "data": "descripcion" },
                     {
                         "data": null,
                         "render": function(data, type, row) {
-                            return '<button class="btn btn-actualizar btn-sm" onclick="actualizarFoto(\'' + row.codigo + '\', \'' + row.departamento.replace(/'/g, "\\'") + '\', ' + row.dpto_id + ')">' +
-                                   '<i class="bi bi-camera"></i> Actualizar Foto</button>';
-                        },
+                        // Limpiar img_route (eliminar dominio si existe)
+                        var imgRoute = row.img_route || '';
+                        imgRoute = imgRoute.replace(/^https?:\/\/[^/]+\//, '');
+                        imgRoute = imgRoute.replace(/^ketelectropartes\.com\//, '');
+                        
+                        // Determinar el texto y estilo del botón según si tiene foto
+                        if (data.has_photo) {
+                            // Producto con foto - Botón "Cambiar Foto" en color naranja
+                            return '<button class="btn btn-warning btn-sm" onclick="actualizarFoto(\'' + data.codigo + '\', \'' + data.departamento.replace(/'/g, "\\'") + '\', ' + data.dpto_id + ', true, \'' + imgRoute + '\')">' +
+                                '<i class="bi bi-camera"></i> Cambiar Foto</button>';
+                        } else {
+                            // Producto sin foto - Botón "Actualizar Foto" en color verde
+                            return '<button class="btn btn-actualizar btn-sm" onclick="actualizarFoto(\'' + data.codigo + '\', \'' + data.departamento.replace(/'/g, "\\'") + '\', ' + data.dpto_id + ', false, \'' + imgRoute + '\')">' +
+                                '<i class="bi bi-camera"></i> Actualizar Foto</button>';
+                        }
+                    },
                         "orderable": false
                     }
                 ],
@@ -370,7 +378,25 @@ $pageTitle = "Actualización de Fotos - Catálogo";
         });
         
         // Función para actualizar foto - MODIFICADA sin opción URL
-function actualizarFoto(codigo, departamento, dptoId) {
+function actualizarFoto(codigo, departamento, dptoId, tieneFotoActual, imgRoute) {
+     // Limpiar y preparar la ruta base
+    var rutaBase = imgRoute || '';
+    rutaBase = rutaBase.replace(/^https?:\/\/[^/]+\//, '');
+    rutaBase = rutaBase.replace(/^ketelectropartes\.com\//, '');
+    if (rutaBase && !rutaBase.endsWith('/')) rutaBase += '/';
+    
+    var nombreEsperado = codigo + '.jpg';
+    
+    // Construir la URL de la foto actual si existe
+    var fotoActualUrl = '';
+    if (tieneFotoActual) {
+        // Obtener el nombre de la foto actual desde la fila
+        var row = $('#tablaProductos').DataTable().row($(this).parents('tr')).data();
+        if (row && row.foto_actual && row.foto_actual !== 'empty.jpg' && row.foto_actual !== 'none') {
+            fotoActualUrl = '/' + rutaBase + row.foto_actual;
+        }
+    }
+    
     var nombreEsperado = codigo + '.jpg';
     
     Swal.fire({
