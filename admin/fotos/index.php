@@ -279,7 +279,7 @@ $pageTitle = "Actualización de Fotos - Catálogo";
         <div class="info-box">
             <i class="bi bi-info-circle-fill"></i>
             <strong>Instrucciones:</strong> Selecciona la imagen del producto. El sistema la renombrará automáticamente con el formato 
-            <code>[código_producto].jpg</code> (ej: GA002-01 → GA002.01.jpg) y la guardará en la carpeta correspondiente según el departamento.
+            <code>[código_producto].jpg</code> y la guardará en la carpeta correspondiente según el departamento.
         </div>
         
         <div class="card">
