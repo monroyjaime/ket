@@ -349,19 +349,19 @@ $pageTitle = "Actualización de Fotos - Catálogo";
                     {
                         "data": null,
                         "render": function(data, type, row) {
-                        // Limpiar img_route (eliminar dominio si existe)
+                        // Limpiar img_route
                         var imgRoute = row.img_route || '';
                         imgRoute = imgRoute.replace(/^https?:\/\/[^/]+\//, '');
                         imgRoute = imgRoute.replace(/^ketelectropartes\.com\//, '');
                         
-                        // Determinar el texto y estilo del botón según si tiene foto
+                        // Escapar foto_actual para pasarla como parámetro
+                        var fotoActual = row.foto_actual || '';
+                        
                         if (data.has_photo) {
-                            // Producto con foto - Botón "Cambiar Foto" en color naranja
-                            return '<button class="btn btn-warning btn-sm" onclick="actualizarFoto(\'' + data.codigo + '\', \'' + data.departamento.replace(/'/g, "\\'") + '\', ' + data.dpto_id + ', true, \'' + imgRoute + '\')">' +
+                            return '<button class="btn btn-warning btn-sm" onclick="actualizarFoto(\'' + data.codigo + '\', \'' + data.departamento.replace(/'/g, "\\'") + '\', ' + data.dpto_id + ', true, \'' + imgRoute + '\', \'' + fotoActual + '\')">' +
                                 '<i class="bi bi-camera"></i> Cambiar Foto</button>';
                         } else {
-                            // Producto sin foto - Botón "Actualizar Foto" en color verde
-                            return '<button class="btn btn-actualizar btn-sm" onclick="actualizarFoto(\'' + data.codigo + '\', \'' + data.departamento.replace(/'/g, "\\'") + '\', ' + data.dpto_id + ', false, \'' + imgRoute + '\')">' +
+                            return '<button class="btn btn-actualizar btn-sm" onclick="actualizarFoto(\'' + data.codigo + '\', \'' + data.departamento.replace(/'/g, "\\'") + '\', ' + data.dpto_id + ', false, \'' + imgRoute + '\', \'' + fotoActual + '\')">' +
                                 '<i class="bi bi-camera"></i> Actualizar Foto</button>';
                         }
                     },
@@ -378,8 +378,8 @@ $pageTitle = "Actualización de Fotos - Catálogo";
         });
         
         // Función para actualizar foto - MODIFICADA sin opción URL
-function actualizarFoto(codigo, departamento, dptoId, tieneFotoActual, imgRoute) {
-     // Limpiar y preparar la ruta base
+function actualizarFoto(codigo, departamento, dptoId, tieneFotoActual, imgRoute, fotoActual) {
+    // Limpiar y preparar la ruta base
     var rutaBase = imgRoute || '';
     rutaBase = rutaBase.replace(/^https?:\/\/[^/]+\//, '');
     rutaBase = rutaBase.replace(/^ketelectropartes\.com\//, '');
@@ -387,44 +387,52 @@ function actualizarFoto(codigo, departamento, dptoId, tieneFotoActual, imgRoute)
     
     var nombreEsperado = codigo + '.jpg';
     
-    // Construir la URL de la foto actual si existe
+    // Construir la URL de la foto actual
     var fotoActualUrl = '';
-    if (tieneFotoActual) {
-        // Obtener el nombre de la foto actual desde la fila
-        var row = $('#tablaProductos').DataTable().row($(this).parents('tr')).data();
-        if (row && row.foto_actual && row.foto_actual !== 'empty.jpg' && row.foto_actual !== 'none') {
-            fotoActualUrl = '/' + rutaBase + row.foto_actual;
-        }
+    if (tieneFotoActual && fotoActual && fotoActual !== 'empty.jpg' && fotoActual !== 'none') {
+        fotoActualUrl = '/' + rutaBase + fotoActual;
+        console.log('Foto actual URL:', fotoActualUrl); // Para depuración
     }
     
-    var nombreEsperado = codigo + '.jpg';
+    // Construir el HTML del modal
+    var modalHtml = `
+        <div style="text-align: left;">
+            <div class="alert alert-info">
+                <i class="bi bi-info-circle"></i>
+                <strong>Producto:</strong> ${codigo}<br>
+                <strong>Departamento:</strong> ${departamento}<br>
+                <strong>Nombre del archivo esperado:</strong> <code>${nombreEsperado}</code>
+            </div>`;
+    
+    // Si tiene foto actual, mostrar miniatura
+    if (tieneFotoActual && fotoActualUrl) {
+        modalHtml += `
+            <div class="alert alert-secondary">
+                <strong>Foto actual:</strong><br>
+                <img src="${fotoActualUrl}" style="max-width: 150px; max-height: 150px; border-radius: 8px; margin-top: 8px; border: 1px solid #ddd;">
+            </div>`;
+    }
+    
+    modalHtml += `
+            <div class="mb-3">
+                <label class="form-label">Seleccionar nueva imagen:</label>
+                <input type="file" class="form-control" id="archivoFoto" accept="image/jpeg,image/jpg">
+                <small class="text-muted">Solo archivos JPG. El archivo se renombrará automáticamente.</small>
+            </div>
+            <div id="previewImagen" class="mt-2 text-center" style="display:none;">
+                <img id="preview" src="" style="max-width: 200px; max-height: 200px; border-radius: 8px;">
+            </div>
+        </div>
+    `;
     
     Swal.fire({
-        title: 'Actualizar Foto',
-        html: `
-            <div style="text-align: left;">
-                <div class="alert alert-info">
-                    <i class="bi bi-info-circle"></i>
-                    <strong>Producto:</strong> ${codigo}<br>
-                    <strong>Departamento:</strong> ${departamento}<br>
-                    <strong>Nombre del archivo esperado:</strong> <code>${nombreEsperado}</code>
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">Seleccionar imagen:</label>
-                    <input type="file" class="form-control" id="archivoFoto" accept="image/jpeg,image/jpg">
-                    <small class="text-muted">Solo archivos JPG. El archivo se renombrará automáticamente.</small>
-                </div>
-                <div id="previewImagen" class="mt-2 text-center" style="display:none;">
-                    <img id="preview" src="" style="max-width: 200px; max-height: 200px; border-radius: 8px;">
-                </div>
-            </div>
-        `,
+        title: tieneFotoActual ? 'Cambiar Foto' : 'Actualizar Foto',
+        html: modalHtml,
         showCancelButton: true,
-        confirmButtonText: 'Subir y Actualizar',
+        confirmButtonText: tieneFotoActual ? 'Cambiar Foto' : 'Subir y Actualizar',
         cancelButtonText: 'Cancelar',
-        confirmButtonColor: '#037C79',
+        confirmButtonColor: tieneFotoActual ? '#f39c12' : '#037C79',
         didOpen: () => {
-            // Previsualización de imagen al seleccionar archivo
             const input = document.getElementById('archivoFoto');
             if (input) {
                 input.addEventListener('change', function(e) {
