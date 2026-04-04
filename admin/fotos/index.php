@@ -415,12 +415,14 @@ function actualizarFoto(codigo, departamento, dptoId, tieneFotoActual, imgRoute,
     
     // Si tiene foto actual, mostrar miniatura
     if (tieneFotoActual && fotoActualUrl) {
+        // Agregar timestamp para evitar caché
+        var fotoUrlConCache = fotoActualUrl + '?t=' + new Date().getTime();
         modalHtml += `
             <div class="alert alert-secondary">
                 <strong>Foto actual:</strong><br>
-                <img src="${fotoActualUrl}" style="max-width: 150px; max-height: 150px; border-radius: 8px; margin-top: 8px; border: 1px solid #ddd;">
+                <img src="${fotoUrlConCache}" style="max-width: 150px; max-height: 150px; border-radius: 8px; margin-top: 8px; border: 1px solid #ddd;">
             </div>`;
-    }
+    }                                                   
     
     modalHtml += `
             <div class="mb-3">
@@ -505,14 +507,22 @@ function actualizarFoto(codigo, departamento, dptoId, tieneFotoActual, imgRoute,
         }
     }).then((result) => {
         if (result.isConfirmed && result.value) {
+            let mensaje = 'La foto se ha actualizado correctamente';
+            if (result.value.backup) {
+                mensaje += `<br><small>Backup de la foto anterior: ${result.value.backup}</small>`;
+            }
             Swal.fire({
                 icon: 'success',
                 title: '¡Actualizado!',
-                text: 'La foto se ha actualizado correctamente',
-                timer: 2000,
+                html: mensaje,
+                timer: 3000,
                 showConfirmButton: false
             }).then(() => {
-                $('#tablaProductos').DataTable().ajax.reload();
+                // Forzar recarga completa de la tabla
+                $('#tablaProductos').DataTable().ajax.reload(null, false);
+                
+                // Opcional: Recargar la página después de 1 segundo
+                // setTimeout(() => location.reload(), 1000);
             });
         }
     }).catch((error) => {
