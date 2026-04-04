@@ -379,6 +379,13 @@ $pageTitle = "Actualización de Fotos - Catálogo";
         
         // Función para actualizar foto - MODIFICADA sin opción URL
 function actualizarFoto(codigo, departamento, dptoId, tieneFotoActual, imgRoute, fotoActual) {
+    console.log('=== actualizarFoto ===');
+    console.log('codigo:', codigo);
+    console.log('departamento:', departamento);
+    console.log('dptoId:', dptoId);
+    console.log('tieneFotoActual:', tieneFotoActual);
+    console.log('imgRoute RECIBIDO:', imgRoute);
+    console.log('fotoActual:', fotoActual);
     // Limpiar y preparar la ruta base
     var rutaBase = imgRoute || '';
     rutaBase = rutaBase.replace(/^https?:\/\/[^/]+\//, '');
