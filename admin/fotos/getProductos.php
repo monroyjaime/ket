@@ -43,6 +43,7 @@ try {
     $query = "SELECT p.code, 
                      p.name as descripcion, 
                      d.name as departamento,
+                     d.code as depto_code, 
                      d.img_route,
                      p.photo_url as foto_actual,
                      p.dpto_id
@@ -91,7 +92,7 @@ try {
             // Agregar un marcador de grupo antes del producto
             $grupo = [
                 'is_group_header' => true,
-                'departamento' => $row->departamento,
+                'depto_code' => $row->depto_code ?? '',     // <--- Usar el código real
                 'codigo' => '',
                 'descripcion' => '',
                 'img_route' => '',

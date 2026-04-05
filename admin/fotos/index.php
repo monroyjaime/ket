@@ -303,6 +303,13 @@ $pageTitle = "Actualización de Fotos - Catálogo";
             color: #037C79;
             margin-right: 8px;
         }
+
+        .dynamic-group-header td {
+            background-color: #e8f4f8 !important;
+            border-top: 2px solid #037C79;
+            border-bottom: 1px solid #037C79;
+        }
+
     </style>
 </head>
 <body>
@@ -381,84 +388,80 @@ $pageTitle = "Actualización de Fotos - Catálogo";
             // Inicializar DataTable
             // En el DataTable, agregar opción de agrupación
     var table = $('#tablaProductos').DataTable({
-        "processing": true,
-        "serverSide": true,
-        "ajax": {
-            "url": "getProductos.php",
-            "type": "GET",
-            "dataSrc": function(json) {
-                console.log("Datos recibidos:", json);
-                return json.data;
-            }
-        },
-        "columns": [
-            { 
-                "data": "departamento",
-                "render": function(data, type, row) {
-                    if (row.is_group_header) {
-                        return '<strong><i class="bi bi-building"></i> ' + data + '</strong>';
-                    }
-                    return '';
+    "processing": true,
+    "serverSide": true,
+    "ajax": {
+        "url": "getProductos.php",
+        "type": "GET",
+        "dataSrc": function(json) {
+            console.log("Datos recibidos:", json);
+            return json.data;
+        }
+    },
+    "columns": [
+        { "data": "codigo" },           // Columna 0
+        { "data": "descripcion" },      // Columna 1
+        {                               // Columna 2 (acciones)
+            "data": null,
+            "render": function(data, type, row) {
+                if (row.is_group_header) return '';
+                
+                var imgRoute = row.img_route || '';
+                imgRoute = imgRoute.replace(/^https?:\/\/[^/]+\//, '');
+                imgRoute = imgRoute.replace(/^ketelectropartes\.com\//, '');
+                
+                if (row.has_photo) {
+                    return '<button class="btn btn-warning btn-sm btn-cambiar-foto" onclick="actualizarFoto(\'' + row.codigo + '\', \'' + row.departamento.replace(/'/g, "\\'") + '\', ' + row.dpto_id + ', true, \'' + imgRoute + '\', \'' + (row.foto_actual || '') + '\')">' +
+                           '<i class="bi bi-camera"></i> Cambiar Foto</button>';
+                } else {
+                    return '<button class="btn btn-actualizar btn-sm" onclick="actualizarFoto(\'' + row.codigo + '\', \'' + row.departamento.replace(/'/g, "\\'") + '\', ' + row.dpto_id + ', false, \'' + imgRoute + '\', \'' + (row.foto_actual || '') + '\')">' +
+                           '<i class="bi bi-camera"></i> Actualizar Foto</button>';
                 }
             },
-            { 
-                "data": "codigo",
-                "render": function(data, type, row) {
-                    if (row.is_group_header) return '';
-                    return data;
-                }
-            },
-            { 
-                "data": "descripcion",
-                "render": function(data, type, row) {
-                    if (row.is_group_header) return '';
-                    return data;
-                }
-            },
-            { 
-                "data": null,
-                "render": function(data, type, row) {
-                    if (row.is_group_header) return '';
-                    
-                    var imgRoute = row.img_route || '';
-                    imgRoute = imgRoute.replace(/^https?:\/\/[^/]+\//, '');
-                    imgRoute = imgRoute.replace(/^ketelectropartes\.com\//, '');
-                    
-                    if (row.has_photo) {
-                        return '<button class="btn btn-warning btn-sm btn-cambiar-foto" onclick="actualizarFoto(\'' + row.codigo + '\', \'' + row.departamento.replace(/'/g, "\\'") + '\', ' + row.dpto_id + ', true, \'' + imgRoute + '\', \'' + (row.foto_actual || '') + '\')">' +
-                            '<i class="bi bi-camera"></i> Cambiar Foto</button>';
-                    } else {
-                        return '<button class="btn btn-actualizar btn-sm" onclick="actualizarFoto(\'' + row.codigo + '\', \'' + row.departamento.replace(/'/g, "\\'") + '\', ' + row.dpto_id + ', false, \'' + imgRoute + '\', \'' + (row.foto_actual || '') + '\')">' +
-                            '<i class="bi bi-camera"></i> Actualizar Foto</button>';
-                    }
-                },
-                "orderable": false
+            "orderable": false
+        }
+    ],
+    "language": {
+        "url": "//cdn.datatables.net/plug-ins/1.10.24/i18n/Spanish.json"
+    },
+    "order": [[0, "asc"]],
+    "pageLength": 25,
+    "lengthMenu": [[10, 25, 50, 100], [10, 25, 50, 100]],
+    "drawCallback": function(settings) {
+        var api = this.api();
+        var rows = api.rows({page: 'current'}).data();
+        var tableBody = $('#tablaProductos tbody');
+        
+        // Eliminar encabezados existentes
+        $('.dynamic-group-header').remove();
+        
+        for (var i = 0; i < rows.length; i++) {
+            var row = rows[i];
+            var rowNode = tableBody.children('tr').eq(i);
+            
+            if (row.is_group_header) {
+                var deptoCode = row.depto_code || '';
+                var deptoName = row.departamento || '';
+                
+                var groupHtml = '<tr class="dynamic-group-header" style="background-color: #d4edda;">' +
+                               '<td colspan="3" style="background-color: #e8f4f8; border-top: 2px solid #037C79; border-bottom: 1px solid #037C79; padding: 8px 12px;">' +
+                               '   <div style="display: flex; justify-content: space-between; align-items: center;">' +
+                               '       <div>' +
+                               '           <i class="bi bi-building" style="color: #037C79; font-size: 1.1rem;"></i>' +
+                               '           <strong style="font-size: 0.9rem; margin-left: 5px;">Dpto. ' + deptoCode + '</strong>' +
+                               '       </div>' +
+                               '   </div>' +
+                               '   <div style="font-size: 0.7rem; color: #555; margin-top: 3px;">' +
+                               '       ' + deptoName +
+                               '   </div>' +
+                               '</td>' +
+                               '</tr>';
+                
+                rowNode.before(groupHtml);
             }
-        ],
-        "columnDefs": [
-            { 
-                "className": "group-header-cell", 
-                "targets": [0, 1, 2, 3],
-                "render": function(data, type, row) {
-                    if (row.is_group_header) {
-                        return '<td colspan="4" class="table-primary group-header">' +
-                            '<strong><i class="bi bi-building"></i> ' + row.departamento + '</strong>' +
-                            ' <span class="badge bg-secondary rounded-pill">' + 
-                            // Contar productos en este grupo (requiere lógica adicional)
-                            '</span>' +
-                            '</td>';
-                    }
-                    return null;
-                }
-            }
-        ],
-        "language": {
-            "url": "//cdn.datatables.net/plug-ins/1.10.24/i18n/Spanish.json"
-        },
-        "order": [[0, "asc"], [1, "asc"]],
-        "pageLength": 25,
-        "lengthMenu": [[10, 25, 50, 100], [10, 25, 50, 100]]
-    });
+        }
+    }
+});
         });
         
         // Función para actualizar foto - MODIFICADA sin opción URL
