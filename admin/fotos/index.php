@@ -370,7 +370,7 @@ $pageTitle = "Actualización de Fotos - Catálogo";
             // En el DataTable, agregar opción de agrupación
             var table = $('#tablaProductos').DataTable({
                 "processing": true,
-                "serverSide": true,
+                "serverSide": false,
                 "ajax": {
                     "url": "getProductos.php",
                     "type": "GET",
