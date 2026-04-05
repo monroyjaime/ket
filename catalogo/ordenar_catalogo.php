@@ -22,6 +22,18 @@ if ($dpto_id <= 0) {
 
 $db = new DB();
 
+// Obtener img_route del departamento
+$deptoQuery = "SELECT img_route FROM departamentos WHERE id = $dpto_id";
+$deptoResult = $db->consultas($deptoQuery);
+$imgRoute = !empty($deptoResult) ? $deptoResult[0]->img_route : '';
+
+// Limpiar img_route
+$imgRoute = preg_replace('#^https?://[^/]+/#', '', $imgRoute);
+$imgRoute = ltrim($imgRoute, '/');
+if ($imgRoute && substr($imgRoute, -1) !== '/') {
+    $imgRoute .= '/';
+}
+
 // Obtener productos del departamento
 $query = "SELECT id, code, name, photo_url, orden 
           FROM productos 
@@ -222,6 +234,14 @@ $pageTitle = "Ordenar Catálogo - " . htmlspecialchars($nombre_dpto);
                 height: 100px;
             }
         }
+        .product-image {
+            width: 100%;
+            height: 150px;
+            object-fit: contain;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
     </style>
 </head>
 <body>
@@ -258,15 +278,18 @@ $pageTitle = "Ordenar Catálogo - " . htmlspecialchars($nombre_dpto);
                 El orden superior (izquierda a derecha, arriba a abajo) determina la posición. Haz clic en "Guardar Orden" cuando termines.
             </div>
             <div id="productos-container" class="grid-container">
-                <?php foreach ($productos as $index => $p): ?>
-                <div class="product-item" data-id="<?php echo $p->id; ?>" data-code="<?php echo htmlspecialchars($p->code); ?>">
-                    <?php
-                    $imgPath = '../catalogo/images/productos/' . $p->photo_url;
-                    if (!file_exists($imgPath) || empty($p->photo_url) || $p->photo_url == 'empty.jpg') {
+                <?php foreach ($productos as $index => $p): 
+                    // Construir ruta de la imagen
+                    $fotoNombre = $p->photo_url;
+                    if (empty($fotoNombre) || $fotoNombre == 'empty.jpg' || $fotoNombre == 'none') {
                         $imgPath = '../catalogo/images/empty.jpg';
+                    } else {
+                        $imgPath = '../' . $imgRoute . $fotoNombre;
                     }
-                    ?>
-                    <img src="<?php echo $imgPath; ?>" class="product-image" alt="<?php echo htmlspecialchars($p->code); ?>">
+                ?>
+                <div class="product-item" data-id="<?php echo $p->id; ?>" data-code="<?php echo htmlspecialchars($p->code); ?>">
+                    <img src="<?php echo $imgPath; ?>" class="product-image" alt="<?php echo htmlspecialchars($p->code); ?>"
+                        onerror="this.src='../catalogo/images/empty.jpg'">
                     <div class="product-code"><?php echo htmlspecialchars($p->code); ?></div>
                     <div class="product-name"><?php echo htmlspecialchars(substr($p->name, 0, 60)) . (strlen($p->name) > 60 ? '...' : ''); ?></div>
                     <div class="product-order">Orden: <?php echo $p->orden; ?></div>
