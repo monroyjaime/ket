@@ -1,6 +1,12 @@
 <?php
 require_once("../php/dbcat.php");
+session_start();
 $db = new DB();
+
+// Verificar si es administrador
+$isAdmin = isset($_SESSION['usr_admin']) && $_SESSION['usr_admin'] == 1;
+$role = isset($_SESSION['role']) ? intval($_SESSION['role']) : -1;
+$esAdmin = ($role == 1 && $isAdmin);
 
 // Obtener todos los departamentos con catalogo_orden > 0
 $query = "
@@ -218,6 +224,26 @@ $total_general = $total_auto + $total_ferre;
             .stats {
                 margin: 0 15px 20px 15px;
             }
+
+            .btn-ordenar {
+                text-decoration: none;
+                font-size: 0.9rem;
+                padding: 6px 15px;
+                border-radius: 20px;
+                transition: all 0.2s;
+                display: inline-flex;
+                align-items: center;
+                gap: 8px;
+                background-color: #f39c12;
+                color: white;
+                border: 1px solid #f39c12;
+            }
+
+            .btn-ordenar:hover {
+                background-color: #e67e22;
+                border-color: #e67e22;
+                color: white;
+            }
         }
     </style>
 </head>
@@ -263,10 +289,15 @@ $total_general = $total_auto + $total_ferre;
         <div class="card-dpto">
             <h3><?php echo htmlspecialchars($d->name); ?></h3>
             <div class="card-code">Código: <?php echo $d->code; ?> | ID: <?php echo $d->id; ?></div>
-            <div class="link">
+            <div class="link" style="display: flex; gap: 10px; flex-wrap: wrap;">
                 <a href="../catalogo/indexDptoAll2.php?dpto_id=<?php echo $d->id; ?>&line=1&prec=0&from=1" target="_blank">
                     <i class="bi bi-eye-fill"></i> Ver catálogo
                 </a>
+                <?php if ($esAdmin): ?>
+                <a href="ordenar_catalogo.php?dpto_id=<?php echo $d->id; ?>&nombre=<?php echo urlencode($d->name); ?>" class="btn-ordenar">
+                    <i class="bi bi-arrow-up-down"></i> Ordenar catálogo
+                </a>
+                <?php endif; ?>
             </div>
         </div>
         <?php endforeach; ?>
