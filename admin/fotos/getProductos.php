@@ -92,6 +92,7 @@ try {
             // Agregar un marcador de grupo antes del producto
             $grupo = [
                 'is_group_header' => true,
+                'departamento' => $row->departamento,
                 'depto_code' => $row->depto_code ?? '',     // <--- Usar el código real
                 'codigo' => '',
                 'descripcion' => '',

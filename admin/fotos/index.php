@@ -322,6 +322,11 @@ $pageTitle = "Actualización de Fotos - Catálogo";
         .btn-sm {
             white-space: nowrap;
         }
+        .dataTable thead th.sorting:after,
+        .dataTable thead th.sorting_asc:after,
+        .dataTable thead th.sorting_desc:after {
+            display: none !important;
+        }
 
     </style>
 </head>
@@ -411,8 +416,12 @@ $pageTitle = "Actualización de Fotos - Catálogo";
         }
     },
     "columns": [
-        { "data": "codigo" },           // Columna 0 - Código
-        { "data": "descripcion" },      // Columna 1 - Descripción
+        { "data": "codigo",
+          "orderable": false  
+         },           // Columna 0 - Código
+        { "data": "descripcion",
+          "orderable": false  
+         },      // Columna 1 - Descripción
         {                               // Columna 2 - Acciones
             "data": null,
             "render": function(data, type, row) {
@@ -453,8 +462,9 @@ $pageTitle = "Actualización de Fotos - Catálogo";
             
             if (row.is_group_header) {
                 var deptoCode = row.depto_code || '';
-                var deptoName = row.departamento || '';
-                // Limpiar el nombre: eliminar el código y el guión si están al inicio
+                var deptoName = row.departamento || '';  // Ahora sí tiene el nombre
+                
+                // Limpiar el nombre (eliminar el código y guión al inicio si existe)
                 var cleanName = deptoName.replace(/^\d+\s*-\s*/, '');
                 
                 var groupHtml = '<tr class="dynamic-group-header">' +
