@@ -38,6 +38,10 @@ if ($imgRoute && substr($imgRoute, -1) !== '/') {
 $query = "SELECT id, code, name, photo_url, orden 
           FROM productos 
           WHERE dpto_id = $dpto_id 
+          AND photo_url IS NOT NULL
+          AND photo_url != ''
+          AND photo_url != 'empty.jpg'
+          AND photo_url != 'none'
           ORDER BY orden ASC, code ASC";
 $productos = $db->consultas($query);
 
@@ -224,14 +228,23 @@ $pageTitle = "Ordenar Catálogo - " . htmlspecialchars($nombre_dpto);
         }
         
         @media (max-width: 768px) {
-            .grid-container {
-                grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-                gap: 10px;
-                padding: 15px;
+           .grid-container {
+                grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+                gap: 8px;
+                padding: 10px;
             }
             
             .product-image {
-                height: 100px;
+                height: 80px;
+            }
+            
+            .product-code {
+                font-size: 0.7rem;
+            }
+            
+            .product-name {
+                font-size: 0.6rem;
+                height: 28px;
             }
         }
         .product-image {
@@ -270,12 +283,22 @@ $pageTitle = "Ordenar Catálogo - " . htmlspecialchars($nombre_dpto);
         <div class="card">
             <div class="card-header">
                 <i class="bi bi-building"></i> <?php echo htmlspecialchars($nombre_dpto); ?>
-                <span class="float-end"><?php echo count($productos); ?> productos</span>
+                <span class="float-end">
+                    <i class="bi bi-image-fill"></i> <?php echo count($productos); ?> productos con foto
+                </span>
             </div>
             <div class="info-box">
                 <i class="bi bi-arrows-move"></i>
                 <strong>Instrucciones:</strong> Arrastra y suelta los productos para cambiar su orden de aparición en el catálogo.
                 El orden superior (izquierda a derecha, arriba a abajo) determina la posición. Haz clic en "Guardar Orden" cuando termines.
+            </div>
+            <div class="row px-3 mb-3">
+                <div class="col-md-4">
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-search"></i></span>
+                        <input type="text" id="filtroProductos" class="form-control" placeholder="Filtrar por código o descripción...">
+                    </div>
+                </div>
             </div>
             <div id="productos-container" class="grid-container">
                 <?php foreach ($productos as $index => $p): 
@@ -326,6 +349,22 @@ $pageTitle = "Ordenar Catálogo - " . htmlspecialchars($nombre_dpto);
             
             // Actualizar números de orden visuales
             actualizarNumerosOrden();
+        });
+
+        // Filtro en tiempo real
+        document.getElementById('filtroProductos').addEventListener('keyup', function() {
+            const filtro = this.value.toLowerCase();
+            const items = document.querySelectorAll('.product-item');
+            
+            items.forEach(item => {
+                const codigo = item.dataset.code.toLowerCase();
+                const nombre = item.querySelector('.product-name').textContent.toLowerCase();
+                if (codigo.includes(filtro) || nombre.includes(filtro)) {
+                    item.style.display = '';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
         });
         
         function actualizarNumerosOrden() {
