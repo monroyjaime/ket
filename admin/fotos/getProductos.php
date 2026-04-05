@@ -1,5 +1,5 @@
 <?php
-// getProductos.php
+// getProductos.php - Con información de agrupación
 session_start();
 
 $docRoot = $_SERVER['DOCUMENT_ROOT'];
@@ -21,7 +21,7 @@ try {
     $db = new DB();
     
     $start = isset($_GET['start']) ? (int)$_GET['start'] : 0;
-    $length = isset($_GET['length']) ? (int)$_GET['length'] : 10;
+    $length = isset($_GET['length']) ? (int)$_GET['length'] : 25;
     $searchValue = isset($_GET['search']['value']) ? pg_escape_string($_GET['search']['value']) : '';
     $draw = isset($_GET['draw']) ? (int)$_GET['draw'] : 1;
     
@@ -39,7 +39,7 @@ try {
     $resultCount = $db->consultas($countQuery);
     $totalRecords = !empty($resultCount) ? (int)$resultCount[0]->total : 0;
     
-    // Consulta principal - INCLUIR d.img_route
+    // Consulta principal
     $query = "SELECT p.code, 
                      p.name as descripcion, 
                      d.name as departamento,
@@ -64,22 +64,46 @@ try {
         $productos = [];
     }
     
+    // Agrupar por departamento para enviar también los grupos
+    $grupos = [];
     $data = [];
+    $lastDepto = null;
+    $rowIndex = 0;
+    
     foreach ($productos as $row) {
         $hasPhoto = !empty($row->foto_actual) 
                     && $row->foto_actual !== 'empty.jpg' 
                     && $row->foto_actual !== 'none';
         
-        $data[] = [
+        $producto = [
             'codigo' => $row->code,
             'descripcion' => $row->descripcion,
             'departamento' => $row->departamento,
-            'img_route' => $row->img_route ?? '',  // <--- IMPORTANTE
+            'img_route' => $row->img_route ?? '',
             'foto_actual' => $row->foto_actual ?? '',
             'dpto_id' => $row->dpto_id,
             'has_photo' => $hasPhoto,
-            'foto_url_with_cache' => $hasPhoto ? ('/' . $imgRoute . $row->foto_actual . '?t=' . time()) : null
+            'is_group_header' => false
         ];
+        
+        // Verificar si es el primer producto de un nuevo departamento
+        if ($row->departamento !== $lastDepto) {
+            // Agregar un marcador de grupo antes del producto
+            $grupo = [
+                'is_group_header' => true,
+                'departamento' => $row->departamento,
+                'codigo' => '',
+                'descripcion' => '',
+                'img_route' => '',
+                'foto_actual' => '',
+                'dpto_id' => 0,
+                'has_photo' => false
+            ];
+            $data[] = $grupo;
+            $lastDepto = $row->departamento;
+        }
+        
+        $data[] = $producto;
     }
     
     echo json_encode([
