@@ -310,6 +310,19 @@ $pageTitle = "Actualización de Fotos - Catálogo";
             border-bottom: 1px solid #037C79;
         }
 
+        #tablaProductos {
+            width: 100% !important;
+        }
+
+        .dataTables_wrapper {
+            width: 100%;
+        }
+
+        /* Para que los botones no se rompan en varias líneas */
+        .btn-sm {
+            white-space: nowrap;
+        }
+
     </style>
 </head>
 <body>
@@ -355,10 +368,9 @@ $pageTitle = "Actualización de Fotos - Catálogo";
             </div>
             <div class="card-body">
                 <div class="table-responsive">
-                    <table id="tablaProductos" class="table table-hover table-striped">
+                    <table id="tablaProductos" class="table table-hover table-striped w-100">
                         <thead>
                             <tr>
-                                <th>Departamento</th>
                                 <th>Código</th>
                                 <th>Descripción</th>
                                 <th>Acciones</th>
@@ -399,9 +411,9 @@ $pageTitle = "Actualización de Fotos - Catálogo";
         }
     },
     "columns": [
-        { "data": "codigo" },           // Columna 0
-        { "data": "descripcion" },      // Columna 1
-        {                               // Columna 2 (acciones)
+        { "data": "codigo" },           // Columna 0 - Código
+        { "data": "descripcion" },      // Columna 1 - Descripción
+        {                               // Columna 2 - Acciones
             "data": null,
             "render": function(data, type, row) {
                 if (row.is_group_header) return '';
@@ -412,10 +424,10 @@ $pageTitle = "Actualización de Fotos - Catálogo";
                 
                 if (row.has_photo) {
                     return '<button class="btn btn-warning btn-sm btn-cambiar-foto" onclick="actualizarFoto(\'' + row.codigo + '\', \'' + row.departamento.replace(/'/g, "\\'") + '\', ' + row.dpto_id + ', true, \'' + imgRoute + '\', \'' + (row.foto_actual || '') + '\')">' +
-                           '<i class="bi bi-camera"></i> Cambiar Foto</button>';
+                        '<i class="bi bi-camera"></i> Cambiar Foto</button>';
                 } else {
                     return '<button class="btn btn-actualizar btn-sm" onclick="actualizarFoto(\'' + row.codigo + '\', \'' + row.departamento.replace(/'/g, "\\'") + '\', ' + row.dpto_id + ', false, \'' + imgRoute + '\', \'' + (row.foto_actual || '') + '\')">' +
-                           '<i class="bi bi-camera"></i> Actualizar Foto</button>';
+                        '<i class="bi bi-camera"></i> Actualizar Foto</button>';
                 }
             },
             "orderable": false
@@ -442,20 +454,22 @@ $pageTitle = "Actualización de Fotos - Catálogo";
             if (row.is_group_header) {
                 var deptoCode = row.depto_code || '';
                 var deptoName = row.departamento || '';
+                // Limpiar el nombre: eliminar el código y el guión si están al inicio
+                var cleanName = deptoName.replace(/^\d+\s*-\s*/, '');
                 
-                var groupHtml = '<tr class="dynamic-group-header" style="background-color: #d4edda;">' +
-                               '<td colspan="3" style="background-color: #e8f4f8; border-top: 2px solid #037C79; border-bottom: 1px solid #037C79; padding: 8px 12px;">' +
-                               '   <div style="display: flex; justify-content: space-between; align-items: center;">' +
-                               '       <div>' +
-                               '           <i class="bi bi-building" style="color: #037C79; font-size: 1.1rem;"></i>' +
-                               '           <strong style="font-size: 0.9rem; margin-left: 5px;">Dpto. ' + deptoCode + '</strong>' +
-                               '       </div>' +
-                               '   </div>' +
-                               '   <div style="font-size: 0.7rem; color: #555; margin-top: 3px;">' +
-                               '       ' + deptoName +
-                               '   </div>' +
-                               '</td>' +
-                               '</tr>';
+                var groupHtml = '<tr class="dynamic-group-header">' +
+                            '<td colspan="3" style="background-color: #e8f4f8; border-top: 2px solid #037C79; border-bottom: 1px solid #037C79; padding: 8px 12px;">' +
+                            '   <div style="display: flex; align-items: center; gap: 12px;">' +
+                            '       <div style="display: flex; align-items: center; gap: 5px;">' +
+                            '           <i class="bi bi-building" style="color: #037C79; font-size: 1.1rem;"></i>' +
+                            '           <strong style="font-size: 0.9rem;">Dpto. ' + deptoCode + '</strong>' +
+                            '       </div>' +
+                            '       <div style="color: #555; font-size: 0.85rem;">' +
+                            '           <i class="bi bi-tag"></i> ' + cleanName +
+                            '       </div>' +
+                            '   </div>' +
+                            '</td>' +
+                            '</tr>';
                 
                 rowNode.before(groupHtml);
             }
