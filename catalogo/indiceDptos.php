@@ -394,109 +394,119 @@ $total_general = $total_auto + $total_ferre;
         <p>⚙️ Catálogos web KET</p>
     </div>
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const buscador = document.getElementById('buscadorDptos');
-            const limpiarBtn = document.getElementById('limpiarBusqueda');
-            const secciones = document.querySelectorAll('.section-header');
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('DOM cargado - Inicializando buscador');
+        
+        const buscador = document.getElementById('buscadorDptos');
+        const limpiarBtn = document.getElementById('limpiarBusqueda');
+        
+        // Verificar que los elementos existen
+        if (!buscador) {
+            console.error('No se encontró el elemento buscadorDptos');
+            return;
+        }
+        
+        if (!limpiarBtn) {
+            console.error('No se encontró el elemento limpiarBusqueda');
+        }
+        
+        function filtrarDepartamentos() {
+            const termino = buscador.value.toLowerCase().trim();
+            console.log('Filtrando por:', termino);
+            
+            // Encontrar grids y secciones
             const grids = document.querySelectorAll('.grid');
+            const sectionHeaders = document.querySelectorAll('.section-header');
             
-            function filtrarDepartamentos() {
-                const termino = buscador.value.toLowerCase().trim();
-                let hayResultadosAuto = false;
-                let hayResultadosFerre = false;
+            if (grids.length === 0) {
+                console.error('No se encontraron elementos .grid');
+                return;
+            }
+            
+            // Procesar cada grid por separado
+            grids.forEach((grid, index) => {
+                const cards = grid.querySelectorAll('.card-dpto');
+                let hayResultados = false;
                 
-                // Filtrar departamentos en Automotriz (primer grid)
-                const autoCards = document.querySelectorAll('.grid:first-child .card-dpto');
-                autoCards.forEach(card => {
-                    const nombre = card.querySelector('h3').textContent.toLowerCase();
-                    const codigo = card.querySelector('.card-code').textContent.toLowerCase();
-                    if (nombre.includes(termino) || codigo.includes(termino) || termino === '') {
-                        card.style.display = '';
-                        hayResultadosAuto = true;
-                    } else {
-                        card.style.display = 'none';
-                    }
-                });
-                
-                // Filtrar departamentos en Ferretera (segundo grid)
-                const ferreCards = document.querySelectorAll('.grid:last-child .card-dpto');
-                ferreCards.forEach(card => {
-                    const nombre = card.querySelector('h3').textContent.toLowerCase();
-                    const codigo = card.querySelector('.card-code').textContent.toLowerCase();
-                    if (nombre.includes(termino) || codigo.includes(termino) || termino === '') {
-                        card.style.display = '';
-                        hayResultadosFerre = true;
-                    } else {
-                        card.style.display = 'none';
-                    }
-                });
-                
-                // Mostrar/ocultar secciones según resultados
-                const autoSection = document.querySelector('.section-header:first-of-type');
-                const autoGrid = document.querySelector('.grid:first-of-type');
-                const ferreSection = document.querySelector('.section-header:last-of-type');
-                const ferreGrid = document.querySelector('.grid:last-of-type');
-                
-                if (termino === '') {
-                    autoSection.classList.remove('hidden');
-                    autoGrid.classList.remove('hidden');
-                    ferreSection.classList.remove('hidden');
-                    ferreGrid.classList.remove('hidden');
-                } else {
-                    if (!hayResultadosAuto) {
-                        autoSection.classList.add('hidden');
-                        autoGrid.classList.add('hidden');
-                    } else {
-                        autoSection.classList.remove('hidden');
-                        autoGrid.classList.remove('hidden');
-                    }
+                cards.forEach(card => {
+                    const nombreElem = card.querySelector('h3');
+                    const codigoElem = card.querySelector('.card-code');
                     
-                    if (!hayResultadosFerre) {
-                        ferreSection.classList.add('hidden');
-                        ferreGrid.classList.add('hidden');
+                    if (!nombreElem) return;
+                    
+                    const nombre = nombreElem.textContent.toLowerCase();
+                    const codigo = codigoElem ? codigoElem.textContent.toLowerCase() : '';
+                    
+                    if (termino === '' || nombre.includes(termino) || codigo.includes(termino)) {
+                        card.style.display = '';
+                        hayResultados = true;
                     } else {
-                        ferreSection.classList.remove('hidden');
-                        ferreGrid.classList.remove('hidden');
+                        card.style.display = 'none';
+                    }
+                });
+                
+                // Mostrar/ocultar la sección correspondiente
+                if (sectionHeaders[index]) {
+                    if (termino === '' || hayResultados) {
+                        sectionHeaders[index].classList.remove('hidden');
+                        grid.classList.remove('hidden');
+                    } else {
+                        sectionHeaders[index].classList.add('hidden');
+                        grid.classList.add('hidden');
                     }
                 }
-                
-                // Actualizar contadores visuales
-                actualizarContadores();
-            }
+            });
             
-            function actualizarContadores() {
-                const autoVisibles = document.querySelectorAll('.grid:first-child .card-dpto[style=""]').length;
-                const ferreVisibles = document.querySelectorAll('.grid:last-child .card-dpto[style=""]').length;
-                
-                // Si no hay estilo inline, contar todos los que no están ocultos
-                const autoCards = document.querySelectorAll('.grid:first-child .card-dpto');
-                const autoCount = autoCards.length;
-                const autoHidden = document.querySelectorAll('.grid:first-child .card-dpto[style*="display: none"]').length;
-                const autoFinalCount = autoCount - autoHidden;
-                
-                const ferreCards = document.querySelectorAll('.grid:last-child .card-dpto');
-                const ferreCount = ferreCards.length;
-                const ferreHidden = document.querySelectorAll('.grid:last-child .card-dpto[style*="display: none"]').length;
-                const ferreFinalCount = ferreCount - ferreHidden;
-                
-                const autoBadge = document.querySelector('.section-header:first-of-type .badge');
-                const ferreBadge = document.querySelector('.section-header:last-of-type .badge');
-                
-                if (autoBadge) {
-                    autoBadge.textContent = autoFinalCount + ' departamentos';
-                }
-                if (ferreBadge) {
-                    ferreBadge.textContent = ferreFinalCount + ' departamentos';
-                }
-            }
+            // Actualizar contadores
+            actualizarContadores();
+        }
+        
+        function actualizarContadores() {
+            const grids = document.querySelectorAll('.grid');
+            const sectionHeaders = document.querySelectorAll('.section-header');
             
-            buscador.addEventListener('keyup', filtrarDepartamentos);
+            grids.forEach((grid, index) => {
+                const cards = grid.querySelectorAll('.card-dpto');
+                let visibles = 0;
+                
+                cards.forEach(card => {
+                    if (card.style.display !== 'none') {
+                        visibles++;
+                    }
+                });
+                
+                if (sectionHeaders[index]) {
+                    const badge = sectionHeaders[index].querySelector('.badge');
+                    if (badge) {
+                        const totalOriginal = cards.length;
+                        badge.textContent = visibles + ' departamentos';
+                        
+                        // Opcional: cambiar color si hay filtro activo
+                        if (buscador.value.trim() !== '' && visibles < totalOriginal) {
+                            badge.style.backgroundColor = '#f39c12';
+                        } else {
+                            badge.style.backgroundColor = '#037C79';
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Eventos
+        buscador.addEventListener('keyup', filtrarDepartamentos);
+        
+        if (limpiarBtn) {
             limpiarBtn.addEventListener('click', function() {
                 buscador.value = '';
                 filtrarDepartamentos();
                 buscador.focus();
             });
-        });
-    </script>
+        }
+        
+        // Ejecutar una vez al inicio para asegurar estado correcto
+        filtrarDepartamentos();
+        console.log('Buscador inicializado correctamente');
+    });
+</script>
 </body>
 </html>
