@@ -170,11 +170,14 @@ $total_general = $total_auto + $total_ferre;
         }
         
         .card-dpto .link {
-            display: inline-block;
             margin-top: 10px;
         }
         
-        .card-dpto .link a {
+        /* Botón Ver catálogo */
+        .btn-ver-catalogo {
+            background-color: #003272;
+            color: white;
+            border: 1px solid #003272;
             text-decoration: none;
             font-size: 0.9rem;
             padding: 6px 15px;
@@ -183,14 +186,35 @@ $total_general = $total_auto + $total_ferre;
             display: inline-flex;
             align-items: center;
             gap: 8px;
-            background-color: #003272;
-            color: white;
-            border: 1px solid #003272;
         }
         
-        .card-dpto .link a:hover {
+        .btn-ver-catalogo:hover {
             background-color: #037C79;
             border-color: #037C79;
+            color: white;
+            transform: translateY(-2px);
+        }
+        
+        /* Botón Ordenar catálogo - FUERA DEL MEDIA QUERY */
+        .btn-ordenar-catalogo {
+            background-color: #f39c12 !important;
+            color: white !important;
+            border: 1px solid #f39c12 !important;
+            text-decoration: none;
+            font-size: 0.9rem;
+            padding: 6px 15px;
+            border-radius: 20px;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn-ordenar-catalogo:hover {
+            background-color: #e67e22 !important;
+            border-color: #e67e22 !important;
+            color: white !important;
+            transform: translateY(-2px);
         }
         
         /* Pie de página */
@@ -223,38 +247,6 @@ $total_general = $total_auto + $total_ferre;
             
             .stats {
                 margin: 0 15px 20px 15px;
-            }
-
-            .btn-ordenar {
-                text-decoration: none;
-                font-size: 0.9rem;
-                padding: 6px 15px;
-                border-radius: 20px;
-                transition: all 0.2s;
-                display: inline-flex;
-                align-items: center;
-                gap: 8px;
-                background-color: #f39c12 !important;
-                color: white;
-                border: 1px solid #f39c12 !important;
-            }
-
-            .btn-ordenar:hover {
-                background-color: #e67e22 !important;
-                border-color: #e67e22  !important;
-                color: white;
-                transform: translateY(-2px);
-            }
-
-            .btn-ordenar-catalogo {
-                background-color: #f39c12 !important;
-                color: white !important;
-                border-color: #f39c12 !important;
-            }
-
-            .btn-ordenar-catalogo:hover {
-                background-color: #e67e22 !important;
-                border-color: #e67e22 !important;
             }
         }
     </style>
