@@ -243,6 +243,7 @@ $total_general = $total_auto + $total_ferre;
                 background-color: #e67e22;
                 border-color: #e67e22;
                 color: white;
+                transform: translateY(-2px);
             }
         }
     </style>
