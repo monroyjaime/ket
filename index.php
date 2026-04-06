@@ -41,8 +41,7 @@ foreach ($consult as $value)
     $_SESSION["ses_num"] = $sesion_num;
     $_SESSION["ses_id"] = $sesion_id;
 
-    // SOLO las columnas que sabemos que existen
-    $consult = $db->consultas("SELECT short_name, full_name, client, email, rol, admin, only_with_stock, do_pedido, do_presupuesto, do_update_db, do_orden_catalogo, do_update_foto FROM usuario WHERE num=".$numUsr);
+    $consult = $db->consultas("SELECT short_name, full_name, client, email, rol, admin, only_with_stock, do_pedido, do_presupuesto, do_update_db, do_orden_catalogo, do_update_foto, do_update_pdf FROM usuario WHERE num=".$numUsr);
     foreach ($consult as $value)
     {
       $shortName= $value->short_name;
@@ -57,6 +56,7 @@ foreach ($consult as $value)
       $doUpdDb = ($value->do_update_db == 'f')? 0 : 1;
       $doOrdenCatalogo = ($value->do_orden_catalogo == 'f')? 0 : 1;
       $doUpdateFoto = ($value->do_update_foto == 'f')? 0 : 1;
+      $doUpdatePdf = ($value->do_update_pdf == 'f')? 0 : 1;
     }
     $_SESSION["role"] = $role;
     $_SESSION["usr_short_name"] = $shortName;
@@ -65,9 +65,10 @@ foreach ($consult as $value)
     $_SESSION["only_stock"] = $onlyStock;
     $_SESSION["do_orden_catalogo"] = $doOrdenCatalogo;
     $_SESSION["do_update_foto"] = $doUpdateFoto;
+    $_SESSION["do_update_pdf"] = $doUpdatePdf;
 
     $icon_admin ='';
-    if($admin ==1 && ($doPedidos==1 || $doPresupuestos==1 || $doUpdDb==1 || $doOrdenCatalogo==1 || $doUpdateFoto==1))
+    if($admin ==1 && ($doPedidos==1 || $doPresupuestos==1 || $doUpdDb==1 || $doOrdenCatalogo==1 || $doUpdateFoto==1 || $doUpdatePdf==1))
     {
       $icon_admin   ='<li class="nav-item dropend">';
       $icon_admin  .=    '<a href="#" class="dropdown-toggle text-decoration-none text-dark" data-toggle="dropdown">';
@@ -94,6 +95,14 @@ foreach ($consult as $value)
         $icon_admin  .=        '<li>';
         $icon_admin  .=                '<a href="https://ketelectropartes.com/php/ui_importador_final.php" class="btn-link text-decoration-none text-dark p-2 rounded hover-bg-light d-block" id="btnsMenu">';
         $icon_admin  .=                    '<h5 class="d-inline ms-2">Actualizar DB.</h5>';
+        $icon_admin  .=                '</a>';
+        $icon_admin  .=        '</li>';
+      }
+      if($doUpdatePdf == 1)
+      {
+        $icon_admin  .=        '<li>';
+        $icon_admin  .=                '<a href="https://ketelectropartes.com/catalogo/actualizar_catalogos.php" class="btn-link text-decoration-none text-dark p-2 rounded hover-bg-light d-block" id="btnsMenu">';
+        $icon_admin  .=                    '<h5 class="d-inline ms-2">Actualizar PDFs</h5>';
         $icon_admin  .=                '</a>';
         $icon_admin  .=        '</li>';
       }
@@ -133,6 +142,7 @@ foreach ($consult as $value)
       $admin = $_SESSION["usr_admin"];
       $doOrdenCatalogo = $_SESSION["do_orden_catalogo"] ?? 0;
       $doUpdateFoto = $_SESSION["do_update_foto"] ?? 0;
+      $doUpdatePdf = $_SESSION["do_update_pdf"] ?? 0;
 
       $consult = $db->consultas("SELECT do_pedido, do_presupuesto, do_update_db FROM usuario WHERE num=".$numUsr);
       foreach ($consult as $value)
@@ -143,7 +153,7 @@ foreach ($consult as $value)
       }
       
       $icon_admin ='';
-      if($admin ==1 && ($doPedidos==1 || $doPresupuestos==1 || $doUpdDb==1 || $doOrdenCatalogo==1 || $doUpdateFoto==1))
+      if($admin ==1 && ($doPedidos==1 || $doPresupuestos==1 || $doUpdDb==1 || $doOrdenCatalogo==1 || $doUpdateFoto==1 || $doUpdatePdf==1))
       {
         $icon_admin   ='<li class="nav-item dropend">';
         $icon_admin  .=    '<a href="#" class="dropdown-toggle text-decoration-none text-dark" data-toggle="dropdown">';
@@ -170,6 +180,14 @@ foreach ($consult as $value)
           $icon_admin  .=        '<li>';
           $icon_admin  .=                '<a href="https://ketelectropartes.com/php/ui_importador_final.php" class="btn-link text-decoration-none text-dark p-2 rounded hover-bg-light d-block" id="btnsMenu">';
           $icon_admin  .=                    '<h5 class="d-inline ms-2">Actualizar DB.</h5>';
+          $icon_admin  .=                '</a>';
+          $icon_admin  .=        '</li>';
+        }
+        if($doUpdatePdf == 1)
+        {
+          $icon_admin  .=        '<li>';
+          $icon_admin  .=                '<a href="https://ketelectropartes.com/catalogo/actualizar_catalogos.php" class="btn-link text-decoration-none text-dark p-2 rounded hover-bg-light d-block" id="btnsMenu">';
+          $icon_admin  .=                    '<h5 class="d-inline ms-2">Actualizar PDFs</h5>';
           $icon_admin  .=                '</a>';
           $icon_admin  .=        '</li>';
         }
