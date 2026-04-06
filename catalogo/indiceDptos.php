@@ -245,6 +245,17 @@ $total_general = $total_auto + $total_ferre;
                 color: white;
                 transform: translateY(-2px);
             }
+
+            .btn-ordenar-catalogo {
+                background-color: #f39c12 !important;
+                color: white !important;
+                border-color: #f39c12 !important;
+            }
+
+            .btn-ordenar-catalogo:hover {
+                background-color: #e67e22 !important;
+                border-color: #e67e22 !important;
+            }
         }
     </style>
 </head>
@@ -295,7 +306,7 @@ $total_general = $total_auto + $total_ferre;
                     <i class="bi bi-eye-fill"></i> Ver catálogo
                 </a>
                 <?php if ($esAdmin): ?>
-                <a href="ordenar_catalogo.php?dpto_id=<?php echo $d->id; ?>&nombre=<?php echo urlencode($d->name); ?>" class="btn-ordenar">
+                <a href="ordenar_catalogo.php?dpto_id=<?php echo $d->id; ?>&nombre=<?php echo urlencode($d->name); ?>" class="btn-ordenar-catalogo">
                     <i class="bi bi-arrow-up-down"></i> Ordenar catálogo
                 </a>
                 <?php endif; ?>
