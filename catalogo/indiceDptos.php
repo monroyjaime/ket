@@ -294,19 +294,19 @@ $total_general = $total_auto + $total_ferre;
             <h3><?php echo htmlspecialchars($d->name); ?></h3>
             <div class="card-code">Código: <?php echo $d->code; ?> | ID: <?php echo $d->id; ?></div>
             <div class="link" style="display: flex; gap: 10px; flex-wrap: wrap;">
-                <a href="../catalogo/indexDptoAll2.php?dpto_id=<?php echo $d->id; ?>&line=1&prec=0&from=1" target="_blank" class="btn btn-primary btn-sm">
+                <a href="../catalogo/indexDptoAll2.php?dpto_id=<?php echo $d->id; ?>&line=1&prec=0&from=1" target="_blank" class="btn-ver-catalogo">
                     <i class="bi bi-eye-fill"></i> Ver catálogo
                 </a>
                 <?php if ($esAdmin): ?>
-                <a href="ordenar_catalogo.php?dpto_id=<?php echo $d->id; ?>&nombre=<?php echo urlencode($d->name); ?>" class="btn btn-warning btn-sm">
-                    <i class="bi bi-arrow-up-down"></i> Ordenar catálogo
+                <a href="ordenar_catalogo.php?dpto_id=<?php echo $d->id; ?>&nombre=<?php echo urlencode($d->name); ?>" class="btn-ordenar-catalogo">
+                    <i class="bi bi-grid-3x3-gap-fill"></i> Ordenar catálogo
                 </a>
                 <?php endif; ?>
             </div>
         </div>
         <?php endforeach; ?>
     </div>
-    
+
     <!-- Línea Ferretera -->
     <div class="section-header">
         <h2>🔩 Línea Ferretera</h2>
@@ -317,10 +317,15 @@ $total_general = $total_auto + $total_ferre;
         <div class="card-dpto">
             <h3><?php echo htmlspecialchars($d->name); ?></h3>
             <div class="card-code">Código: <?php echo $d->code; ?> | ID: <?php echo $d->id; ?></div>
-            <div class="link">
-                <a href="../catalogo/indexDptoAll2.php?dpto_id=<?php echo $d->id; ?>&line=1&prec=0&from=1" target="_blank">
+            <div class="link" style="display: flex; gap: 10px; flex-wrap: wrap;">
+                <a href="../catalogo/indexDptoAll2.php?dpto_id=<?php echo $d->id; ?>&line=1&prec=0&from=1" target="_blank" class="btn-ver-catalogo">
                     <i class="bi bi-eye-fill"></i> Ver catálogo
                 </a>
+                <?php if ($esAdmin): ?>
+                <a href="ordenar_catalogo.php?dpto_id=<?php echo $d->id; ?>&nombre=<?php echo urlencode($d->name); ?>" class="btn-ordenar-catalogo">
+                    <i class="bi bi-grid-3x3-gap-fill"></i> Ordenar catálogo
+                </a>
+                <?php endif; ?>
             </div>
         </div>
         <?php endforeach; ?>
