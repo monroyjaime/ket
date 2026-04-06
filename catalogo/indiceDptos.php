@@ -306,7 +306,7 @@ $total_general = $total_auto + $total_ferre;
                     <i class="bi bi-eye-fill"></i> Ver catálogo
                 </a>
                 <?php if ($esAdmin): ?>
-                <a href="ordenar_catalogo.php?dpto_id=<?php echo $d->id; ?>&nombre=<?php echo urlencode($d->name); ?>" class="btn-ordenar-catalogo">
+                <a href="ordenar_catalogo.php?dpto_id=<?php echo $d->id; ?>&nombre=<?php echo urlencode($d->name); ?>" class="btn btn-warning btn-sm">
                     <i class="bi bi-arrow-up-down"></i> Ordenar catálogo
                 </a>
                 <?php endif; ?>
