@@ -147,7 +147,9 @@ foreach ($consult1 as $index => $value1) {
                 $counters['dpto_code']++;
             }
         }
-
+        /*****
+        el orden ya no se actualizara en esta actualizacion, se gestionara mediante la opcion administrativa 
+        "Ordenar Catálogo""
         // 6. Actualizar orden
         if($value1->orden != $value2->orden) {
             if($db->querySet("UPDATE productos SET orden = ". $value1->orden." WHERE code ='".$value1->code."'") == 1) {
@@ -155,7 +157,8 @@ foreach ($consult1 as $index => $value1) {
                 $counters['orden']++;
             }
         }
-
+        ******/
+        
         // 7. Actualizar cost_oferta
         if(number_format(floatval($value1->cost_oferta),3) != number_format(floatval($value2->cost_oferta),3)) {
             if($db->querySet("UPDATE productos SET cost_oferta = ". $value1->cost_oferta." WHERE code ='".$value1->code."'") == 1) {
