@@ -41,9 +41,7 @@ foreach ($consult as $value)
     $_SESSION["ses_num"] = $sesion_num;
     $_SESSION["ses_id"] = $sesion_id;
 
-
-
-    $consult = $db->consultas("SELECT short_name, full_name, client, email, rol, admin, only_with_stock, do_pedido, do_presupuesto, do_update_db	 FROM usuario WHERE num=".$numUsr);
+    $consult = $db->consultas("SELECT short_name, full_name, client, email, rol, admin, only_with_stock, do_pedido, do_presupuesto, do_update_db, do_orden_catalogo, do_update_foto, do_update_pdf FROM usuario WHERE num=".$numUsr);
     foreach ($consult as $value)
     {
       $shortName= $value->short_name;
@@ -56,22 +54,113 @@ foreach ($consult as $value)
       $doPedidos = ($value->do_pedido == 'f')? 0 : 1;
       $doPresupuestos = ($value->do_presupuesto == 'f')? 0 : 1;
       $doUpdDb = ($value->do_update_db == 'f')? 0 : 1;
-
+      $doOrdenCatalogo = ($value->do_orden_catalogo == 'f')? 0 : 1;
+      $doUpdateFoto = ($value->do_update_foto == 'f')? 0 : 1;
+      $doUpdatePdf = ($value->do_update_pdf == 'f')? 0 : 1;
     }
     $_SESSION["role"] = $role;
     $_SESSION["usr_short_name"] = $shortName;
     $_SESSION["usr_full_name"] = $fullName;
     $_SESSION["usr_admin"] = $admin;
     $_SESSION["only_stock"] = $onlyStock;
+    $_SESSION["do_orden_catalogo"] = $doOrdenCatalogo;
+    $_SESSION["do_update_foto"] = $doUpdateFoto;
+    $_SESSION["do_update_pdf"] = $doUpdatePdf;
 
-    //$icon_admin = ($admin == 0)? '' : '<a href="./admin/" class="btn-link" id="btnsMenu"><i class="bi bi-pencil-square icon-dark-blue icon-large"></i></a>';
-    $icon_admin ='';
-      if($admin ==1 && ($doPedidos==1 || $doPresupuestos==1 || $doUpdDb==1))
+    $icon_admin = '';
+    if($admin == 1 && ($doPedidos==1 || $doPresupuestos==1 || $doUpdDb==1 || $doOrdenCatalogo==1 || $doUpdateFoto==1 || $doUpdatePdf==1))
+    {
+      $icon_admin   ='<li class="nav-item dropend">';
+      $icon_admin  .=    '<a href="#" class="dropdown-toggle text-decoration-none text-dark" data-toggle="dropdown">';
+      $icon_admin  .=        '<i class="bi bi-pencil-square icon-dark-blue icon-large" id="btnsMenu"></i>Admin...</a>';
+      $icon_admin  .=    '<ul id="admin-opt" class="dropdown-menu w-auto">';
+      
+      if($doPedidos==1)
+      {
+        $icon_admin  .=        '<li>';
+        $icon_admin  .=                '<a href="https://ketelectropartes.com/admin/pedidos" class="btn-link text-decoration-none text-dark p-2 rounded hover-bg-light d-block" id="btnsMenu">';
+        $icon_admin  .=                    '<h5 class="d-inline ms-2">Pedidos</h5>';
+        $icon_admin  .=                '</a>';
+        $icon_admin  .=        '</li>';
+      }
+      if($doPresupuestos == 1)
+      {
+        $icon_admin  .=        '<li>';
+        $icon_admin  .=                '<a href="https://ketelectropartes.com/admin/presupuestos" class="btn-link text-decoration-none text-dark p-2 rounded hover-bg-light d-block" id="btnsMenu">';
+        $icon_admin  .=                    '<h5 class="d-inline ms-2">Presupuestos</h5>';
+        $icon_admin  .=                '</a>';
+        $icon_admin  .=        '</li>';
+      }
+      if($doUpdDb == 1)
+      {
+        $icon_admin  .=        '<li>';
+        $icon_admin  .=                '<a href="https://ketelectropartes.com/php/ui_importador_final.php" class="btn-link text-decoration-none text-dark p-2 rounded hover-bg-light d-block" id="btnsMenu">';
+        $icon_admin  .=                    '<h5 class="d-inline ms-2">Actualizar DB</h5>';
+        $icon_admin  .=                '</a>';
+        $icon_admin  .=        '</li>';
+      }
+      if($doUpdatePdf == 1)
+      {
+        $icon_admin  .=        '<li>';
+        $icon_admin  .=                '<a href="https://ketelectropartes.com/catalogo/actualizar_catalogos.php" class="btn-link text-decoration-none text-dark p-2 rounded hover-bg-light d-block" id="btnsMenu">';
+        $icon_admin  .=                    '<h5 class="d-inline ms-2">Actualizar PDFs</h5>';
+        $icon_admin  .=                '</a>';
+        $icon_admin  .=        '</li>';
+      }
+      if($doUpdateFoto == 1)
+      {
+        $icon_admin  .=        '<li>';
+        $icon_admin  .=                '<a href="https://ketelectropartes.com/admin/fotos/" class="btn-link text-decoration-none text-dark p-2 rounded hover-bg-light d-block" id="btnsMenu">';
+        $icon_admin  .=                    '<h5 class="d-inline ms-2">Act. Fotos catálogo</h5>';
+        $icon_admin  .=                '</a>';
+        $icon_admin  .=        '</li>';
+      }
+      if($doOrdenCatalogo == 1)
+      {
+        $icon_admin  .=        '<li>';
+        $icon_admin  .=                '<a href="https://ketelectropartes.com/catalogo/indiceDptos.php" class="btn-link text-decoration-none text-dark p-2 rounded hover-bg-light d-block" id="btnsMenu">';
+        $icon_admin  .=                    '<h5 class="d-inline ms-2">Ordenar catálogo</h5>';
+        $icon_admin  .=                '</a>';
+        $icon_admin  .=        '</li>';
+      }
+      
+      $icon_admin  .=    '</ul>';
+      $icon_admin  .='</li>';
+    }
+    $sesionAlreadyActive = true;
+
+  }
+  else
+  {
+    $sesionAlreadyActive = (isset($_SESSION['ses_num']))? true : false;
+
+    if($sesionAlreadyActive)
+    {
+      $numUsr = $_SESSION["usr_num"];
+      $sesion_num = $_SESSION["ses_num"];
+      $sesion_id = $_SESSION["ses_id"];
+      $role = $_SESSION["role"];
+      $admin = $_SESSION["usr_admin"];
+
+      $consult = $db->consultas("SELECT do_pedido, do_presupuesto, do_update_db, do_orden_catalogo, do_update_foto, do_update_pdf FROM usuario WHERE num=".$numUsr);
+      foreach ($consult as $value)
+      {
+        $doPedidos = ($value->do_pedido == 'f')? 0 : 1;
+        $doPresupuestos = ($value->do_presupuesto == 'f')? 0 : 1;
+        $doUpdDb = ($value->do_update_db == 'f')? 0 : 1;
+        $doOrdenCatalogo = ($value->do_orden_catalogo == 'f')? 0 : 1;
+        $doUpdateFoto = ($value->do_update_foto == 'f')? 0 : 1;
+        $doUpdatePdf = ($value->do_update_pdf == 'f')? 0 : 1;
+      }
+      
+      $icon_admin = '';
+      if($admin ==1 && ($doPedidos==1 || $doPresupuestos==1 || $doUpdDb==1 || $doOrdenCatalogo==1 || $doUpdateFoto==1 || $doUpdatePdf==1))
       {
         $icon_admin   ='<li class="nav-item dropend">';
         $icon_admin  .=    '<a href="#" class="dropdown-toggle text-decoration-none text-dark" data-toggle="dropdown">';
         $icon_admin  .=        '<i class="bi bi-pencil-square icon-dark-blue icon-large" id="btnsMenu"></i>Admin...</a>';
         $icon_admin  .=    '<ul id="admin-opt" class="dropdown-menu w-auto">';
+        
         if($doPedidos==1)
         {
           $icon_admin  .=        '<li>';
@@ -92,140 +181,39 @@ foreach ($consult as $value)
         {
           $icon_admin  .=        '<li>';
           $icon_admin  .=                '<a href="https://ketelectropartes.com/php/ui_importador_final.php" class="btn-link text-decoration-none text-dark p-2 rounded hover-bg-light d-block" id="btnsMenu">';
-          $icon_admin  .=                    '<h5 class="d-inline ms-2">Actualizar DB.</h5>';
+          $icon_admin  .=                    '<h5 class="d-inline ms-2">Actualizar DB</h5>';
           $icon_admin  .=                '</a>';
           $icon_admin  .=        '</li>';
-
+        }
+        if($doUpdatePdf == 1)
+        {
           $icon_admin  .=        '<li>';
           $icon_admin  .=                '<a href="https://ketelectropartes.com/catalogo/actualizar_catalogos.php" class="btn-link text-decoration-none text-dark p-2 rounded hover-bg-light d-block" id="btnsMenu">';
-          $icon_admin  .=                    '<h5 class="d-inline ms-2">Actualizar PDFs.</h5>';
+          $icon_admin  .=                    '<h5 class="d-inline ms-2">Actualizar PDFs</h5>';
           $icon_admin  .=                '</a>';
           $icon_admin  .=        '</li>';
-
+        }
+        if($doUpdateFoto == 1)
+        {
           $icon_admin  .=        '<li>';
           $icon_admin  .=                '<a href="https://ketelectropartes.com/admin/fotos/" class="btn-link text-decoration-none text-dark p-2 rounded hover-bg-light d-block" id="btnsMenu">';
           $icon_admin  .=                    '<h5 class="d-inline ms-2">Act. Fotos catálogo</h5>';
           $icon_admin  .=                '</a>';
           $icon_admin  .=        '</li>';
-
+        }
+        if($doOrdenCatalogo == 1)
+        {
+          $icon_admin  .=        '<li>';
+          $icon_admin  .=                '<a href="https://ketelectropartes.com/catalogo/indiceDptos.php" class="btn-link text-decoration-none text-dark p-2 rounded hover-bg-light d-block" id="btnsMenu">';
+          $icon_admin  .=                    '<h5 class="d-inline ms-2">Ordenar catálogo</h5>';
+          $icon_admin  .=                '</a>';
+          $icon_admin  .=        '</li>';
         }
         
         $icon_admin  .=    '</ul>';
         $icon_admin  .='</li>';
-        /*
-        $icon_admin  =  '<li class="nav-item dropend">'; 
-        $icon_admin .=  '<a href="#" class="dropdown-toggle" data-toggle="dropdown"><i class="bi bi-pencil-square icon-dark-blue icon-large" id="btnsMenu"></i>Administrar...</a>';
-        $icon_admin .=  '<ul id="admin-opt" class="dropdown-menu">';
-        $icon_admin .=  '<li>';
-        $icon_admin .=  '<div class="row">';
-        $icon_admin .=  '<>';
-        $icon_admin .=  '</div>';
-        $icon_admin .=  '</li>';
-        $icon_admin .=  '</ul>';
-        $icon_admin .=  '</li>';
-        */
       }
-    $sesionAlreadyActive = true;
 
-  }
-  else
-  {
-    $sesionAlreadyActive = (isset($_SESSION['ses_num']))? true : false;
-
-/*    $consult = $db->consultas("SELECT COUNT(num) FROM sesion WHERE active='t' AND ip_client = '".$ip."'");
-    foreach ($consult as $value)
-      $sesionAlreadyActive = (intval($value->count) > 0)? true : false; */
-
-    if($sesionAlreadyActive)
-    {
-      $numUsr = $_SESSION["usr_num"];
-      $sesion_num = $_SESSION["ses_num"];
-      $sesion_id = $_SESSION["ses_id"];
-      $role = $_SESSION["role"];
-      $admin = $_SESSION["usr_admin"];
-
-      $consult = $db->consultas("SELECT do_pedido, do_presupuesto, do_update_db	 FROM usuario WHERE num=".$numUsr);
-      foreach ($consult as $value)
-      {
-        $doPedidos = ($value->do_pedido == 'f')? 0 : 1;
-        $doPresupuestos = ($value->do_presupuesto == 'f')? 0 : 1;
-        $doUpdDb = ($value->do_update_db == 'f')? 0 : 1;
-      }
-      
-
-      //$icon_admin = ($admin == 0)? '' : '<a href="./admin/" class="btn-link" id="btnsMenu"><i class="bi bi-pencil-square icon-dark-blue icon-large"></i></a>';
-        $icon_admin ='';
-            if($admin ==1&& ($doPedidos==1 || $doPresupuestos==1 || $doUpdDb==1))
-            {
-
-              $icon_admin   ='<li class="nav-item dropend">';
-              $icon_admin  .=    '<a href="#" class="dropdown-toggle text-decoration-none text-dark" data-toggle="dropdown">';
-              $icon_admin  .=        '<i class="bi bi-pencil-square icon-dark-blue icon-large" id="btnsMenu"></i>Admin...</a>';
-              $icon_admin  .=    '<ul id="admin-opt" class="dropdown-menu w-auto">';
-              if($doPedidos==1)
-              {
-                $icon_admin  .=        '<li>';
-                $icon_admin  .=                '<a href="https://ketelectropartes.com/admin/pedidos" class="btn-link text-decoration-none text-dark p-2 rounded hover-bg-light d-block" id="btnsMenu">';
-                $icon_admin  .=                    '<h5 class="d-inline ms-2">Pedidos</h5>';
-                $icon_admin  .=                '</a>';
-                $icon_admin  .=        '</li>';
-              }
-              if($doPresupuestos == 1)
-              {
-                $icon_admin  .=        '<li>';
-                $icon_admin  .=                '<a href="https://ketelectropartes.com/admin/presupuestos" class="btn-link text-decoration-none text-dark p-2 rounded hover-bg-light d-block" id="btnsMenu">';
-                $icon_admin  .=                    '<h5 class="d-inline ms-2">Presupuestos</h5>';
-                $icon_admin  .=                '</a>';
-                $icon_admin  .=        '</li>';
-              }
-              if($doUpdDb == 1)
-              {
-                $icon_admin  .=        '<li>';
-                $icon_admin  .=                '<a href="https://ketelectropartes.com/php/ui_importador_final.php" class="btn-link text-decoration-none text-dark p-2 rounded hover-bg-light d-block" id="btnsMenu">';
-                $icon_admin  .=                    '<h5 class="d-inline ms-2">Actualizar DB.</h5>';
-                $icon_admin  .=                '</a>';
-                $icon_admin  .=        '</li>';
-
-                $icon_admin  .=        '<li>';
-                $icon_admin  .=                '<a href="https://ketelectropartes.com/catalogo/actualizar_catalogos.php" class="btn-link text-decoration-none text-dark p-2 rounded hover-bg-light d-block" id="btnsMenu">';
-                $icon_admin  .=                    '<h5 class="d-inline ms-2">Actualizar PDFs.</h5>';
-                $icon_admin  .=                '</a>';
-                $icon_admin  .=        '</li>';
-
-                $icon_admin  .=        '<li>';
-                $icon_admin  .=                '<a href="https://ketelectropartes.com/admin/fotos/" class="btn-link text-decoration-none text-dark p-2 rounded hover-bg-light d-block" id="btnsMenu">';
-                $icon_admin  .=                    '<h5 class="d-inline ms-2">Act. Fotos catálogo</h5>';
-                $icon_admin  .=                '</a>';
-                $icon_admin  .=        '</li>';
-
-              }
-              
-              $icon_admin  .=    '</ul>';
-              $icon_admin  .='</li>';
-                /*
-                $icon_admin  =  '<li class="nav-item dropend">'; 
-                $icon_admin .=  '<a href="#" class="dropdown-toggle" data-toggle="dropdown"><i class="bi bi-pencil-square icon-dark-blue icon-large" id="btnsMenu"></i>Administrar...</a>';
-                $icon_admin .=  '<ul id="admin-opt" class="dropdown-menu">';
-                $icon_admin .=  '<li>';
-                $icon_admin .=  '<div class="row">';
-                $icon_admin .=  '<a href="./admin/" class="btn-link" id="btnsMenu"><i class="bi bi-file-text"></i><h5>Pedidos</h5></a>';
-                $icon_admin .=  '</div>';
-                $icon_admin .=  '<div class="row">';
-                $icon_admin .=  '<a href="#" class="btn-link" id="btnsMenu"><i class="bi bi-file-text"></i><h5>Presupuestos</h5></a>';
-                $icon_admin .=  '</div>';
-                $icon_admin .=  '</li>';
-                $icon_admin .=  '</ul>';
-                $icon_admin .=  '</li>';
-                */
-            }
-      /*$consult = $db->consultas("SELECT usuario, num, id FROM sesion WHERE active='t' AND ip_client = '".$ip."'");
-      foreach ($consult as $value)
-      {
-        $numUsr = intval($value->usuario);
-        $sesion_num = intval($value->num);
-        $sesion_id = intval($value->id);
-
-      }*/
       $consult = $db->consultas("SELECT short_name, full_name, client, email, rol FROM usuario WHERE num=".$numUsr);
       foreach ($consult as $value)
       {
@@ -266,7 +254,7 @@ foreach ($consult as $value)
       $form .=  '</form>';
       $form .= '</div>';
 
-      $shortNameUsr = $shortName; //$_SESSION["usr_short_name"];
+      $shortNameUsr = $shortName;
     }
     else
     {
@@ -300,9 +288,9 @@ foreach ($consult as $value)
     <head>
         <meta charset="utf-8"/>
         <meta name="viewport" content="initial-scale=1, maximum-scale=1">
-		    <title>Ket Home</title>
+        <title>Ket Home</title>
         <link rel="Shortcut Icon" href="../favicon.ico" type="image/x-icon" />
-        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-KK94CHFLLe+nY2dmCWGMq91rCGa5gtU4mk92HdvYe+M/SXH301p5ILy+dN9+nJOZ" crossorigin="anonymous">		
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-KK94CHFLLe+nY2dmCWGMq91rCGa5gtU4mk92HdvYe+M/SXH301p5ILy+dN9+nJOZ" crossorigin="anonymous">        
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">   
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ENjdO4Dr2bkBIFxQpeoTz1HIcje39Wm4jDKdf19U8gI4ddQ3GYNS7NTKfAdVQSZe" crossorigin="anonymous"></script>        
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script> 
@@ -322,11 +310,9 @@ foreach ($consult as $value)
           {
             switch(linea){
               case 1:
-                //urlString = "listas/indexL1.php?role_num="+rol;
                 urlString = "listas/index1.php?linea=1";
               break
               case 2:
-                //urlString = "listas/indexL2.php?role_num="+rol;
                 urlString = "listas/index1.php?linea=2";
 
               break
@@ -334,7 +320,7 @@ foreach ($consult as $value)
               window.location.href = urlString;
           }
 
-          function getCatalogoNormal(idDpto,role){   //,checkNum){   
+          function getCatalogoNormal(idDpto,role){   
               urlString =  "catalogo/indexDptoAll2.php?dpto_id="+idDpto+"&role_num="+role;
               window.location.href = urlString;
           }
@@ -359,15 +345,15 @@ foreach ($consult as $value)
               white-space: nowrap;
               padding: 10px 20px;
               text-decoration: none;
-              color: #333; /* Color del texto normal */
+              color: #333;
               display: block;
-              transition: background-color 0.3s ease, color 0.3s ease; /* Transición suave */
+              transition: background-color 0.3s ease, color 0.3s ease;
           }
 
           /* Efecto hover para cambiar color de fondo */
           #admin-opt .btn-link:hover {
-              background-color: #007bff !important; /* Color azul de fondo al hover */
-              color: white !important; /* Color del texto al hover */
+              background-color: #007bff !important;
+              color: white !important;
           }
 
           /* Opcional: Para mejorar la apariencia del texto h5 dentro del enlace */
@@ -406,16 +392,11 @@ foreach ($consult as $value)
             body {
               background-image: url("img/fondoOscuro1.jpg");
               background-size: contain;
-
               background-position-x: center;
-              
             }
           }
 
-          
-
           @media screen and (min-width: 769px) {
-
             .dropend:hover > .dropdown-menu {
               position: absolute;
               top: 0;
@@ -424,7 +405,6 @@ foreach ($consult as $value)
             .dropend .dropdown-toggle {
               margin-left: 0.5em;
             }
-            
           }
 
           .icon-large {
@@ -439,7 +419,6 @@ foreach ($consult as $value)
             padding-bottom:25px; 
             padding-left: 100px;
             padding-right:100px;
-
           }
 
           @media screen and (min-width: 769px) {
@@ -466,7 +445,6 @@ foreach ($consult as $value)
           #contact{
             padding-top: 25px;
             padding-left: 25px;
-
             font-family: Arial, sans-serif;
             color: #003272;
             font-weight: 800;
@@ -521,29 +499,13 @@ foreach ($consult as $value)
             color: #0b6af3;
           }
 
-          
-
-
           .posicion{
             top: 80px;
           }
-          /* @media(max-width:768px){
-              #login-dp{
-                  background-color: inherit;
-                  color: #fff;
-              }
-              #login-dp .bottom{
-                  background-color: inherit;
-                  border-top:0 none;
-              }
-          } */
-
-
         </style>
-	</head>	
-	<body >
+    </head> 
+    <body>
  
-
   <nav class="navbar navbar-expand-sm navbar-light fixed-top" style="background-color: #99b9d7;">
   <div class="container-fluid">
      <!-- Brand -->
@@ -564,11 +526,7 @@ foreach ($consult as $value)
     
     <div class="collapse navbar-collapse" id="navbarSupportedContent">
       <ul class="navbar-nav me-auto mb-2 mb-lg-0">              
-
-<!--       <ul class="nav navbar-nav navbar-right"> 
-        <li class="dropdown">   -->
       <li class="nav-item dropend"> 
-<!--        <a href="#" class="dropdown-toggle" data-toggle="dropdown"><b>Login</b> <span class="caret"></span></a> -->
           <a href="#" class="dropdown-toggle" data-toggle="dropdown"><i class="bi bi-person-circle icon-dark-blue icon-large" id="btnsMenu"></i><?php echo $shortNameUsr; ?></a>
           <ul id="login-dp" class="dropdown-menu">
             <li>
@@ -592,14 +550,9 @@ foreach ($consult as $value)
   </div>
 </nav>
 
-
-
-
 <!-- main content -->
 
-
 <div class="buttom text-center">
-
 
 <div id="demo" class="carousel slide" data-bs-ride="carousel">
  
@@ -634,25 +587,7 @@ foreach ($consult as $value)
   </ol>
 </div>
 
-<!--
-  <div class="position-sticky posicion">
-      <div class="position-relative">
-        <div class="position-absolute botton-50 end-0">
-         <h6 class="azul-claro">Haga aqui su pedido</h6>  
-          <a href="https://wa.me/584143161207" class="btn-link me-1" ><i class="bi bi-whatsapp icon-large"></i></a>
-          <br>
-          <a href="https://www.instagram.com/ketccs/" class="btn-link me-1"><i class="bi bi-instagram icon-large"></i></a>
-        </div>
-
-      </div>
--->      
-
-      
-    
-  </div>
-
-
-
+</div>
 
 <div class="col text-center">
   <div class="row row-cols-1 row-cols-sm-3 g-3 ">
@@ -668,18 +603,12 @@ foreach ($consult as $value)
   </div>        
 </div>
 
-
-
-
-
-</div>
-
 <div id="contactinfo" class="container-fluid">
   <div class="row">
 
     <div class="col-sm">
     <a href="https://wa.me/584143161207" class="btn-link me-1" ><i class="bi bi-whatsapp icon-large" style="color: #25d366;"></i></a>
-    <a href="https://wa.me/584143161207" style="color: #04772f;"></i>---Haga su pedido aqui</a>
+    <a href="https://wa.me/584143161207" style="color: #04772f;">---Haga su pedido aqui</a>
 
     </div>
 
@@ -703,7 +632,6 @@ foreach ($consult as $value)
       
     </div>
 
-
     <div class="col-sm">
       <a href="https://wa.me/584143161207" style="color: #04772f;"></i>Haga su pedido aqui---</a>
       <a href="https://wa.me/584143161207" class="btn-link me-1" ><i class="bi bi-whatsapp icon-large" style="color: #25d366;"></i></a>
@@ -711,15 +639,7 @@ foreach ($consult as $value)
 
   </div>  
 
-  
-
 </div>
 
-
-
-<!-- <script type="text/javascript" src="https://smartarget.online/loader.js?u=8b36b710663e9c3c9e0d1c99e724e6d2065cca9b"></script> -->
-
- 
-
   </body>
-  </html>
+</html>
