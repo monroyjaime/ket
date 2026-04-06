@@ -216,6 +216,49 @@ $total_general = $total_auto + $total_ferre;
             color: white !important;
             transform: translateY(-2px);
         }
+
+        /* Buscador */
+        .search-container {
+            margin-bottom: 20px;
+        }
+
+        .search-container .input-group {
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            border-radius: 30px;
+            overflow: hidden;
+        }
+
+        .search-container .input-group-text {
+            background-color: white;
+            border-right: none;
+            color: #037C79;
+        }
+
+        .search-container .form-control {
+            border-left: none;
+            border-right: none;
+        }
+
+        .search-container .form-control:focus {
+            box-shadow: none;
+            border-color: #ced4da;
+        }
+
+        .search-container .btn-outline-secondary {
+            border-left: none;
+            color: #999;
+        }
+
+        .search-container .btn-outline-secondary:hover {
+            background-color: transparent;
+            color: #dc3545;
+        }
+
+        /* Ocultar secciones vacías */
+        .section-header.hidden,
+        .grid.hidden {
+            display: none;
+        }
         
         /* Pie de página */
         .footer {
@@ -282,6 +325,17 @@ $total_general = $total_auto + $total_ferre;
            <strong>🔩 Ferretera:</strong> <?php echo $total_ferre; ?> departamentos</p>
         <p><em>Seleccione un departamento para ver su catálogo web</em></p>
     </div>
+
+    <!-- Buscador -->
+    <div class="search-container" style="margin: 0 20px 20px 20px;">
+        <div class="input-group" style="max-width: 400px; margin: 0 auto;">
+            <span class="input-group-text"><i class="bi bi-search"></i></span>
+            <input type="text" id="buscadorDptos" class="form-control" placeholder="Buscar departamento...">
+            <button class="btn btn-outline-secondary" type="button" id="limpiarBusqueda">
+                <i class="bi bi-x-circle"></i>
+            </button>
+        </div>
+    </div>
     
     <!-- Línea Automotriz -->
     <div class="section-header">
@@ -339,5 +393,110 @@ $total_general = $total_auto + $total_ferre;
         </p>
         <p>⚙️ Catálogos web KET</p>
     </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const buscador = document.getElementById('buscadorDptos');
+            const limpiarBtn = document.getElementById('limpiarBusqueda');
+            const secciones = document.querySelectorAll('.section-header');
+            const grids = document.querySelectorAll('.grid');
+            
+            function filtrarDepartamentos() {
+                const termino = buscador.value.toLowerCase().trim();
+                let hayResultadosAuto = false;
+                let hayResultadosFerre = false;
+                
+                // Filtrar departamentos en Automotriz (primer grid)
+                const autoCards = document.querySelectorAll('.grid:first-child .card-dpto');
+                autoCards.forEach(card => {
+                    const nombre = card.querySelector('h3').textContent.toLowerCase();
+                    const codigo = card.querySelector('.card-code').textContent.toLowerCase();
+                    if (nombre.includes(termino) || codigo.includes(termino) || termino === '') {
+                        card.style.display = '';
+                        hayResultadosAuto = true;
+                    } else {
+                        card.style.display = 'none';
+                    }
+                });
+                
+                // Filtrar departamentos en Ferretera (segundo grid)
+                const ferreCards = document.querySelectorAll('.grid:last-child .card-dpto');
+                ferreCards.forEach(card => {
+                    const nombre = card.querySelector('h3').textContent.toLowerCase();
+                    const codigo = card.querySelector('.card-code').textContent.toLowerCase();
+                    if (nombre.includes(termino) || codigo.includes(termino) || termino === '') {
+                        card.style.display = '';
+                        hayResultadosFerre = true;
+                    } else {
+                        card.style.display = 'none';
+                    }
+                });
+                
+                // Mostrar/ocultar secciones según resultados
+                const autoSection = document.querySelector('.section-header:first-of-type');
+                const autoGrid = document.querySelector('.grid:first-of-type');
+                const ferreSection = document.querySelector('.section-header:last-of-type');
+                const ferreGrid = document.querySelector('.grid:last-of-type');
+                
+                if (termino === '') {
+                    autoSection.classList.remove('hidden');
+                    autoGrid.classList.remove('hidden');
+                    ferreSection.classList.remove('hidden');
+                    ferreGrid.classList.remove('hidden');
+                } else {
+                    if (!hayResultadosAuto) {
+                        autoSection.classList.add('hidden');
+                        autoGrid.classList.add('hidden');
+                    } else {
+                        autoSection.classList.remove('hidden');
+                        autoGrid.classList.remove('hidden');
+                    }
+                    
+                    if (!hayResultadosFerre) {
+                        ferreSection.classList.add('hidden');
+                        ferreGrid.classList.add('hidden');
+                    } else {
+                        ferreSection.classList.remove('hidden');
+                        ferreGrid.classList.remove('hidden');
+                    }
+                }
+                
+                // Actualizar contadores visuales
+                actualizarContadores();
+            }
+            
+            function actualizarContadores() {
+                const autoVisibles = document.querySelectorAll('.grid:first-child .card-dpto[style=""]').length;
+                const ferreVisibles = document.querySelectorAll('.grid:last-child .card-dpto[style=""]').length;
+                
+                // Si no hay estilo inline, contar todos los que no están ocultos
+                const autoCards = document.querySelectorAll('.grid:first-child .card-dpto');
+                const autoCount = autoCards.length;
+                const autoHidden = document.querySelectorAll('.grid:first-child .card-dpto[style*="display: none"]').length;
+                const autoFinalCount = autoCount - autoHidden;
+                
+                const ferreCards = document.querySelectorAll('.grid:last-child .card-dpto');
+                const ferreCount = ferreCards.length;
+                const ferreHidden = document.querySelectorAll('.grid:last-child .card-dpto[style*="display: none"]').length;
+                const ferreFinalCount = ferreCount - ferreHidden;
+                
+                const autoBadge = document.querySelector('.section-header:first-of-type .badge');
+                const ferreBadge = document.querySelector('.section-header:last-of-type .badge');
+                
+                if (autoBadge) {
+                    autoBadge.textContent = autoFinalCount + ' departamentos';
+                }
+                if (ferreBadge) {
+                    ferreBadge.textContent = ferreFinalCount + ' departamentos';
+                }
+            }
+            
+            buscador.addEventListener('keyup', filtrarDepartamentos);
+            limpiarBtn.addEventListener('click', function() {
+                buscador.value = '';
+                filtrarDepartamentos();
+                buscador.focus();
+            });
+        });
+    </script>
 </body>
 </html>
