@@ -234,14 +234,14 @@ $total_general = $total_auto + $total_ferre;
                 display: inline-flex;
                 align-items: center;
                 gap: 8px;
-                background-color: #f39c12;
+                background-color: #f39c12 !important;
                 color: white;
-                border: 1px solid #f39c12;
+                border: 1px solid #f39c12 !important;
             }
 
             .btn-ordenar:hover {
-                background-color: #e67e22;
-                border-color: #e67e22;
+                background-color: #e67e22 !important;
+                border-color: #e67e22  !important;
                 color: white;
                 transform: translateY(-2px);
             }
