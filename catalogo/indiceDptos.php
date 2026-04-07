@@ -3,10 +3,8 @@ require_once("../php/dbcat.php");
 session_start();
 $db = new DB();
 
-// Verificar si es administrador
-$isAdmin = isset($_SESSION['usr_admin']) && $_SESSION['usr_admin'] == 1;
-$role = isset($_SESSION['role']) ? intval($_SESSION['role']) : -1;
-$esAdmin = ($role == 1 && $isAdmin);
+// Verificar permisos específicos (NO usar rol)
+$puedeOrdenarCatalogo = isset($_SESSION['do_orden_catalogo']) && $_SESSION['do_orden_catalogo'] == 1;
 
 // Obtener todos los departamentos con catalogo_orden > 0
 $query = "
@@ -111,6 +109,45 @@ $total_general = $total_auto + $total_ferre;
             color: #003272;
         }
         
+        /* Buscador */
+        .search-container {
+            margin: 0 20px 20px 20px;
+        }
+        
+        .search-container .input-group {
+            max-width: 400px;
+            margin: 0 auto;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            border-radius: 30px;
+            overflow: hidden;
+        }
+        
+        .search-container .input-group-text {
+            background-color: white;
+            border-right: none;
+            color: #037C79;
+        }
+        
+        .search-container .form-control {
+            border-left: none;
+            border-right: none;
+        }
+        
+        .search-container .form-control:focus {
+            box-shadow: none;
+            border-color: #ced4da;
+        }
+        
+        .search-container .btn-outline-secondary {
+            border-left: none;
+            color: #999;
+        }
+        
+        .search-container .btn-outline-secondary:hover {
+            background-color: transparent;
+            color: #dc3545;
+        }
+        
         /* Secciones */
         .section-header {
             background-color: #e8f4f4;
@@ -130,6 +167,11 @@ $total_general = $total_auto + $total_ferre;
             margin-left: 10px;
             font-size: 0.9rem;
             padding: 5px 12px;
+        }
+        
+        .section-header.hidden,
+        .grid.hidden {
+            display: none;
         }
         
         /* Grid de departamentos */
@@ -195,11 +237,11 @@ $total_general = $total_auto + $total_ferre;
             transform: translateY(-2px);
         }
         
-        /* Botón Ordenar catálogo - FUERA DEL MEDIA QUERY */
+        /* Botón Ordenar catálogo */
         .btn-ordenar-catalogo {
-            background-color: #f39c12 !important;
-            color: white !important;
-            border: 1px solid #f39c12 !important;
+            background-color: #f39c12;
+            color: white;
+            border: 1px solid #f39c12;
             text-decoration: none;
             font-size: 0.9rem;
             padding: 6px 15px;
@@ -211,53 +253,10 @@ $total_general = $total_auto + $total_ferre;
         }
         
         .btn-ordenar-catalogo:hover {
-            background-color: #e67e22 !important;
-            border-color: #e67e22 !important;
-            color: white !important;
+            background-color: #e67e22;
+            border-color: #e67e22;
+            color: white;
             transform: translateY(-2px);
-        }
-
-        /* Buscador */
-        .search-container {
-            margin-bottom: 20px;
-        }
-
-        .search-container .input-group {
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-            border-radius: 30px;
-            overflow: hidden;
-        }
-
-        .search-container .input-group-text {
-            background-color: white;
-            border-right: none;
-            color: #037C79;
-        }
-
-        .search-container .form-control {
-            border-left: none;
-            border-right: none;
-        }
-
-        .search-container .form-control:focus {
-            box-shadow: none;
-            border-color: #ced4da;
-        }
-
-        .search-container .btn-outline-secondary {
-            border-left: none;
-            color: #999;
-        }
-
-        .search-container .btn-outline-secondary:hover {
-            background-color: transparent;
-            color: #dc3545;
-        }
-
-        /* Ocultar secciones vacías */
-        .section-header.hidden,
-        .grid.hidden {
-            display: none;
         }
         
         /* Pie de página */
@@ -291,6 +290,10 @@ $total_general = $total_auto + $total_ferre;
             .stats {
                 margin: 0 15px 20px 15px;
             }
+            
+            .search-container {
+                margin: 0 15px 20px 15px;
+            }
         }
     </style>
 </head>
@@ -299,7 +302,7 @@ $total_general = $total_auto + $total_ferre;
     <div class="top-bar">
         <div class="row">
             <div class="col text-start">
-                <a href="../listas/index.php" class="back-icon" title="Volver al inicio">
+                <a href="../index.php" class="back-icon" title="Volver al inicio">
                     <i class="bi bi-arrow-left-circle-fill"></i>
                 </a>
             </div>
@@ -325,10 +328,10 @@ $total_general = $total_auto + $total_ferre;
            <strong>🔩 Ferretera:</strong> <?php echo $total_ferre; ?> departamentos</p>
         <p><em>Seleccione un departamento para ver su catálogo web</em></p>
     </div>
-
+    
     <!-- Buscador -->
-    <div class="search-container" style="margin: 0 20px 20px 20px;">
-        <div class="input-group" style="max-width: 400px; margin: 0 auto;">
+    <div class="search-container">
+        <div class="input-group">
             <span class="input-group-text"><i class="bi bi-search"></i></span>
             <input type="text" id="buscadorDptos" class="form-control" placeholder="Buscar departamento...">
             <button class="btn btn-outline-secondary" type="button" id="limpiarBusqueda">
@@ -351,16 +354,16 @@ $total_general = $total_auto + $total_ferre;
                 <a href="../catalogo/indexDptoAll2.php?dpto_id=<?php echo $d->id; ?>&line=1&prec=0&from=1" target="_blank" class="btn-ver-catalogo">
                     <i class="bi bi-eye-fill"></i> Ver catálogo
                 </a>
-                <?php if ($esAdmin): ?>
+                <?php if ($puedeOrdenarCatalogo): ?>
                 <a href="ordenar_catalogo.php?dpto_id=<?php echo $d->id; ?>&nombre=<?php echo urlencode($d->name); ?>" class="btn-ordenar-catalogo">
-                    <i class="bi bi-grid-3x3-gap-fill"></i> Ordenar catálogo
+                    <i class="bi bi-arrow-up-down"></i> Ordenar catálogo
                 </a>
                 <?php endif; ?>
             </div>
         </div>
         <?php endforeach; ?>
     </div>
-
+    
     <!-- Línea Ferretera -->
     <div class="section-header">
         <h2>🔩 Línea Ferretera</h2>
@@ -375,9 +378,9 @@ $total_general = $total_auto + $total_ferre;
                 <a href="../catalogo/indexDptoAll2.php?dpto_id=<?php echo $d->id; ?>&line=1&prec=0&from=1" target="_blank" class="btn-ver-catalogo">
                     <i class="bi bi-eye-fill"></i> Ver catálogo
                 </a>
-                <?php if ($esAdmin): ?>
+                <?php if ($puedeOrdenarCatalogo): ?>
                 <a href="ordenar_catalogo.php?dpto_id=<?php echo $d->id; ?>&nombre=<?php echo urlencode($d->name); ?>" class="btn-ordenar-catalogo">
-                    <i class="bi bi-grid-3x3-gap-fill"></i> Ordenar catálogo
+                    <i class="bi bi-arrow-up-down"></i> Ordenar catálogo
                 </a>
                 <?php endif; ?>
             </div>
@@ -393,120 +396,101 @@ $total_general = $total_auto + $total_ferre;
         </p>
         <p>⚙️ Catálogos web KET</p>
     </div>
+
     <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        console.log('DOM cargado - Inicializando buscador');
-        
-        const buscador = document.getElementById('buscadorDptos');
-        const limpiarBtn = document.getElementById('limpiarBusqueda');
-        
-        // Verificar que los elementos existen
-        if (!buscador) {
-            console.error('No se encontró el elemento buscadorDptos');
-            return;
-        }
-        
-        if (!limpiarBtn) {
-            console.error('No se encontró el elemento limpiarBusqueda');
-        }
-        
-        function filtrarDepartamentos() {
-            const termino = buscador.value.toLowerCase().trim();
-            console.log('Filtrando por:', termino);
+        document.addEventListener('DOMContentLoaded', function() {
+            const buscador = document.getElementById('buscadorDptos');
+            const limpiarBtn = document.getElementById('limpiarBusqueda');
             
-            // Encontrar grids y secciones
-            const grids = document.querySelectorAll('.grid');
-            const sectionHeaders = document.querySelectorAll('.section-header');
+            if (!buscador) return;
             
-            if (grids.length === 0) {
-                console.error('No se encontraron elementos .grid');
-                return;
-            }
-            
-            // Procesar cada grid por separado
-            grids.forEach((grid, index) => {
-                const cards = grid.querySelectorAll('.card-dpto');
-                let hayResultados = false;
+            function filtrarDepartamentos() {
+                const termino = buscador.value.toLowerCase().trim();
                 
-                cards.forEach(card => {
-                    const nombreElem = card.querySelector('h3');
-                    const codigoElem = card.querySelector('.card-code');
+                // Procesar cada grid
+                const grids = document.querySelectorAll('.grid');
+                const sectionHeaders = document.querySelectorAll('.section-header');
+                
+                grids.forEach((grid, index) => {
+                    const cards = grid.querySelectorAll('.card-dpto');
+                    let hayResultados = false;
                     
-                    if (!nombreElem) return;
-                    
-                    const nombre = nombreElem.textContent.toLowerCase();
-                    const codigo = codigoElem ? codigoElem.textContent.toLowerCase() : '';
-                    
-                    if (termino === '' || nombre.includes(termino) || codigo.includes(termino)) {
-                        card.style.display = '';
-                        hayResultados = true;
-                    } else {
-                        card.style.display = 'none';
-                    }
-                });
-                
-                // Mostrar/ocultar la sección correspondiente
-                if (sectionHeaders[index]) {
-                    if (termino === '' || hayResultados) {
-                        sectionHeaders[index].classList.remove('hidden');
-                        grid.classList.remove('hidden');
-                    } else {
-                        sectionHeaders[index].classList.add('hidden');
-                        grid.classList.add('hidden');
-                    }
-                }
-            });
-            
-            // Actualizar contadores
-            actualizarContadores();
-        }
-        
-        function actualizarContadores() {
-            const grids = document.querySelectorAll('.grid');
-            const sectionHeaders = document.querySelectorAll('.section-header');
-            
-            grids.forEach((grid, index) => {
-                const cards = grid.querySelectorAll('.card-dpto');
-                let visibles = 0;
-                
-                cards.forEach(card => {
-                    if (card.style.display !== 'none') {
-                        visibles++;
-                    }
-                });
-                
-                if (sectionHeaders[index]) {
-                    const badge = sectionHeaders[index].querySelector('.badge');
-                    if (badge) {
-                        const totalOriginal = cards.length;
-                        badge.textContent = visibles + ' departamentos';
+                    cards.forEach(card => {
+                        const nombreElem = card.querySelector('h3');
+                        const codigoElem = card.querySelector('.card-code');
                         
-                        // Opcional: cambiar color si hay filtro activo
-                        if (buscador.value.trim() !== '' && visibles < totalOriginal) {
-                            badge.style.backgroundColor = '#f39c12';
+                        if (!nombreElem) return;
+                        
+                        const nombre = nombreElem.textContent.toLowerCase();
+                        const codigo = codigoElem ? codigoElem.textContent.toLowerCase() : '';
+                        
+                        if (termino === '' || nombre.includes(termino) || codigo.includes(termino)) {
+                            card.style.display = '';
+                            hayResultados = true;
                         } else {
-                            badge.style.backgroundColor = '#037C79';
+                            card.style.display = 'none';
+                        }
+                    });
+                    
+                    // Mostrar/ocultar la sección correspondiente
+                    if (sectionHeaders[index]) {
+                        if (termino === '' || hayResultados) {
+                            sectionHeaders[index].classList.remove('hidden');
+                            grid.classList.remove('hidden');
+                        } else {
+                            sectionHeaders[index].classList.add('hidden');
+                            grid.classList.add('hidden');
                         }
                     }
-                }
-            });
-        }
-        
-        // Eventos
-        buscador.addEventListener('keyup', filtrarDepartamentos);
-        
-        if (limpiarBtn) {
-            limpiarBtn.addEventListener('click', function() {
-                buscador.value = '';
-                filtrarDepartamentos();
-                buscador.focus();
-            });
-        }
-        
-        // Ejecutar una vez al inicio para asegurar estado correcto
-        filtrarDepartamentos();
-        console.log('Buscador inicializado correctamente');
-    });
-</script>
+                });
+                
+                // Actualizar contadores
+                actualizarContadores();
+            }
+            
+            function actualizarContadores() {
+                const grids = document.querySelectorAll('.grid');
+                const sectionHeaders = document.querySelectorAll('.section-header');
+                
+                grids.forEach((grid, index) => {
+                    const cards = grid.querySelectorAll('.card-dpto');
+                    let visibles = 0;
+                    
+                    cards.forEach(card => {
+                        if (card.style.display !== 'none') {
+                            visibles++;
+                        }
+                    });
+                    
+                    if (sectionHeaders[index]) {
+                        const badge = sectionHeaders[index].querySelector('.badge');
+                        if (badge) {
+                            badge.textContent = visibles + ' departamentos';
+                            
+                            // Cambiar color si hay filtro activo
+                            if (buscador.value.trim() !== '' && visibles < cards.length) {
+                                badge.style.backgroundColor = '#f39c12';
+                            } else {
+                                badge.style.backgroundColor = '#037C79';
+                            }
+                        }
+                    }
+                });
+            }
+            
+            buscador.addEventListener('keyup', filtrarDepartamentos);
+            
+            if (limpiarBtn) {
+                limpiarBtn.addEventListener('click', function() {
+                    buscador.value = '';
+                    filtrarDepartamentos();
+                    buscador.focus();
+                });
+            }
+            
+            // Ejecutar al inicio
+            filtrarDepartamentos();
+        });
+    </script>
 </body>
 </html>
