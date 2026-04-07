@@ -7,9 +7,9 @@ header('Content-Type: application/json');
 
 // Verificar autenticación de administrador
 $isAdmin = isset($_SESSION['usr_admin']) ? $_SESSION['usr_admin'] : 0;
-$role = isset($_SESSION['role']) ? intval($_SESSION['role']) : -1;
+$puedeOrdenarCatalogo = isset($_SESSION['do_orden_catalogo'])? $_SESSION['do_orden_catalogo'] : 0;
 
-if ($role != 1 || $isAdmin != 1) {
+if ($puedeOrdenarCatalogo != 1 || $isAdmin != 1) {
     echo json_encode(['success' => false, 'message' => 'No autorizado']);
     exit;
 }

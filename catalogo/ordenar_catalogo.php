@@ -5,9 +5,8 @@ require_once("../php/dbcat.php");
 
 // Verificar autenticación de administrador
 $isAdmin = isset($_SESSION['usr_admin']) ? $_SESSION['usr_admin'] : 0;
-$role = isset($_SESSION['role']) ? intval($_SESSION['role']) : -1;
-
-if ($role != 1 || $isAdmin != 1) {
+$puedeOrdenarCatalogo = isset($_SESSION['do_orden_catalogo'])? $_SESSION['do_orden_catalogo'] : 0;
+if ($puedeOrdenarCatalogo != 1 || $isAdmin != 1) {
     header('Location: ../index.php');
     exit;
 }
