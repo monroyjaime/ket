@@ -6,6 +6,7 @@ $db = new DB();
 $clientNum= 0;
 $vendedorNum= 0;
 
+$isAdmin = isset($_SESSION['usr_admin']) ? $_SESSION['usr_admin'] : 0;
 $tipoPrecio = (isset($_SESSION['prec']))? intval($_SESSION['prec']) : 0;  
 $numUsr = (isset($_SESSION['usr_num']))? intval($_SESSION['usr_num']) : -1;
 $role = (isset($_SESSION['role']))? intval($_SESSION['role']) : -1;
@@ -96,6 +97,10 @@ if($numUsr > 0 && $ableToPedido == 't')
 }
 
 $stockColumn='';
+
+if($isAdmin == 1 && $onlyStock == 1)
+      $stockColumn =  '<th data-field="current_stock" data-halign="center" data-align="right" >STOCK</th>';
+
 if ($role > -1 && $role < 2)
   $stockColumn =  '<th data-field="current_stock" data-halign="center" data-align="right" >STOCK</th>';
 elseif($role == 5)
