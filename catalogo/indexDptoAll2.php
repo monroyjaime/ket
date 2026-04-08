@@ -115,12 +115,38 @@ $backCond = '<a href="#" onClick="backHome(' . $role . ',' . $line . ',' . $tipo
             box-shadow: 0 6px 12px rgba(0,0,0,0.15);
         }
         
+        /* Título en franja verde agua */
+        .title-banner {
+            background-color: #037c79;
+            padding: 12px 0;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .title-banner h1 {
+            color: white;
+            margin: 0;
+            font-size: 1.8rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+        }
+        .title-banner h1 i {
+            font-size: 2rem;
+        }
+        
         /* Media queries para botón responsive */
         @media (max-width: 768px) {
             #btnCambiarPrecio {
                 font-size: 0.8rem;
                 padding: 4px 12px !important;
                 white-space: nowrap;
+            }
+            .title-banner h1 {
+                font-size: 1.3rem;
+            }
+            .title-banner {
+                padding: 8px 0;
             }
         }
         
@@ -129,12 +155,15 @@ $backCond = '<a href="#" onClick="backHome(' . $role . ',' . $line . ',' . $tipo
                 font-size: 0.7rem;
                 padding: 3px 8px !important;
             }
+            .title-banner h1 {
+                font-size: 1rem;
+            }
         }
     </style>
 </head>
 <body>
-    <!-- BARRA SUPERIOR CON BOTÓN CENTRAL Y PADDING SUPERIOR -->
-    <div class="w-100 p-0" style="background-color: #CCC; padding-top: 8px;">
+    <!-- BARRA SUPERIOR CON MÁS PADDING SUPERIOR -->
+    <div class="w-100 p-0" style="background-color: #CCC; padding-top: 12px; padding-bottom: 4px;">
         <div class="row align-items-start" style="min-height: 50px;">
             <div class="col text-start" style="padding-left: 20px;">
                 <?php echo $backCond; ?>
@@ -159,18 +188,18 @@ $backCond = '<a href="#" onClick="backHome(' . $role . ',' . $line . ',' . $tipo
         </div>
     </div>
     
-    <!-- CONTENIDO PRINCIPAL -->
+    <!-- TÍTULO CENTRADO EN FRANJA VERDE AGUA -->
+    <div class="title-banner">
+        <h1>
+            <i class="bi bi-grid-3x3-gap-fill"></i>
+            Catálogo de <?php echo htmlspecialchars($currCatName); ?>
+            <i class="bi bi-file-pdf-fill" style="color: #ff9999; cursor: pointer;" 
+               onclick="window.open('<?php echo ($line == 1) ? "/pdfs/catalogo_automotriz/catalogo_dptos_{$dptoId}.pdf" : "/pdfs/catalogo_ferretero/catalogo_dptos_{$dptoId}.pdf"; ?>', '_blank')"></i>
+        </h1>
+    </div>
+    
+    <!-- CONTENIDO PRINCIPAL (grid de productos) -->
     <div class="w-100 p-3" style="background-color: #DDD;">
-        <div class="d-flex justify-content-start align-items-center gap-3 mb-3">
-            <h2 class="mb-0">Catálogo de <?php echo htmlspecialchars($currCatName); ?></h2>
-            <?php 
-            $ruta_pdf = ($line == 1) ? "/pdfs/catalogo_automotriz/catalogo_dptos_{$dptoId}.pdf" : "/pdfs/catalogo_ferretero/catalogo_dptos_{$dptoId}.pdf";
-            ?>
-            <a href="<?php echo $ruta_pdf; ?>" target="_blank" title="Ver catálogo en PDF">
-                <i class="bi bi-file-pdf-fill" style="font-size: 1.8rem; color: #dc3545;"></i>
-            </a>
-        </div>
-        
         <div id="productos-container">
             <?php echo $gridProductosHtml; ?>
         </div>
