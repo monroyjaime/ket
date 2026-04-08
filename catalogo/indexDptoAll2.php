@@ -27,6 +27,7 @@ $currCatName = '';
 foreach ($consult as $value) { $currCatName = $value->name; }
 
 // Función para generar SOLO el grid de productos
+// Modificar la función generarGridProductos con el nuevo diseño
 function generarGridProductos($db, $dptoId, $tipoPrecio, $role) {
     $strTipoPrecio = ($tipoPrecio == 0) ? "cost_max" : "cost_mayor";
     $labelTipoPrecio = ($tipoPrecio == 0) ? "Precio" : "Precio Mayorista";
@@ -43,26 +44,44 @@ function generarGridProductos($db, $dptoId, $tipoPrecio, $role) {
     
     $productos = $db->consultas($query);
     
-    $html = '<div class="row row-cols-1 row-cols-sm-4 g-4 mt-2" id="productos-grid">';
+    $html = '<div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4 mt-2" id="productos-grid">';
     
     foreach ($productos as $p) {
         $precio = floatval($p->precio);
         $imgUrl = $currCatImgRoute . $p->photo_url;
         
-        $html .= '<div class="col" style="background-color: #DDD;">';
-        $html .= '<div class="card h-100 text-bg-light">';
-        $html .= '<div class="card-header" style="background-color: #037C79;">';
-        $html .= '<h3 style="color: #FFF;">' . htmlspecialchars($p->code) . '</h3>';
-        $html .= '</div>';
-        $html .= '<img src="' . $imgUrl . '" class="card-img-top" alt="' . htmlspecialchars($p->code) . '">';
-        $html .= '<div class="card-body" style="background-color: #0CC;">';
-        $html .= '<h6 class="card-text">' . htmlspecialchars($p->name) . '</h6>';
+        $html .= '<div class="col">';
+        $html .= '<div class="card h-100 shadow-sm" style="border-radius: 12px; overflow: hidden; transition: transform 0.3s, box-shadow 0.3s;">';
         
+        // Header con código (fondo oscuro)
+        $html .= '<div class="card-header text-center" style="background-color: #003272; border-bottom: none;">';
+        $html .= '<h5 class="mb-0" style="color: white; font-weight: bold;">' . htmlspecialchars($p->code) . '</h5>';
+        $html .= '</div>';
+        
+        // Imagen
+        $html .= '<div class="text-center p-3" style="background-color: #f8f9fa;">';
+        $html .= '<img src="' . $imgUrl . '" class="img-fluid" alt="' . htmlspecialchars($p->code) . '" style="max-height: 150px; object-fit: contain;">';
+        $html .= '</div>';
+        
+        // Body con descripción
+        $html .= '<div class="card-body" style="background-color: white;">';
+        $html .= '<p class="card-text text-center" style="font-size: 0.85rem; color: #333; min-height: 60px;">' . htmlspecialchars($p->name) . '</p>';
+        $html .= '</div>';
+        
+        // Footer con precio (solo si role > -1)
         if ($role > -1) {
-            $html .= '<h5 class="card-text precio-label">' . $labelTipoPrecio . ': $' . number_format($precio, 3, ",", ".") . '</h5>';
-            $html .= '<h6 class="card-text">Unidad: ' . htmlspecialchars($p->unit) . '</h6>';
+            $html .= '<div class="card-footer text-center" style="background-color: #e8f4f4; border-top: 2px solid #037C79;">';
+            $html .= '<h6 class="mb-1" style="color: #666; font-size: 0.75rem;">' . $labelTipoPrecio . '</h6>';
+            $html .= '<h5 class="mb-0" style="color: #003272; font-weight: bold;">$' . number_format($precio, 3, ",", ".") . '</h5>';
+            $html .= '<small class="text-muted">Unidad: ' . htmlspecialchars($p->unit) . '</small>';
+            $html .= '</div>';
+        } else {
+            $html .= '<div class="card-footer text-center" style="background-color: #e8f4f4; border-top: 2px solid #037C79;">';
+            $html .= '<small class="text-muted">Unidad: ' . htmlspecialchars($p->unit) . '</small>';
+            $html .= '</div>';
         }
-        $html .= '</div></div></div>';
+        
+        $html .= '</div></div>';
     }
     $html .= '</div>';
     return $html;
@@ -108,11 +127,35 @@ $backCond = '<a href="#" onClick="backHome(' . $role . ',' . $line . ',' . $tipo
             box-shadow: 0 4px 8px rgba(0,0,0,0.2);
         }
         .card {
-            transition: transform 0.2s;
+            border-radius: 12px !important;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
+
         .card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+            transform: translateY(-8px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15) !important;
+        }
+
+        .card-header {
+            padding: 12px 8px;
+        }
+
+        .card-body {
+            padding: 15px 10px;
+        }
+
+        .card-footer {
+            padding: 10px;
+        }
+
+        /* Precio en footer */
+        .card-footer h5 {
+            font-size: 1.1rem;
+            font-weight: bold;
+        }
+
+        .card-footer small {
+            font-size: 0.7rem;
         }
         
         /* Título en franja verde agua */
@@ -148,6 +191,28 @@ $backCond = '<a href="#" onClick="backHome(' . $role . ',' . $line . ',' . $tipo
             .title-banner {
                 padding: 8px 0;
             }
+             .card-header h5 {
+                font-size: 0.9rem;
+            }
+            
+            .card-body p {
+                font-size: 0.75rem;
+                min-height: 50px;
+            }
+            
+            .card-footer h5 {
+                font-size: 0.95rem;
+            }
+            
+            .card-footer small {
+                font-size: 0.65rem;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .row-cols-1 > .col {
+                padding: 0 8px;
+            }
         }
         
         @media (max-width: 480px) {
@@ -158,32 +223,34 @@ $backCond = '<a href="#" onClick="backHome(' . $role . ',' . $line . ',' . $tipo
             .title-banner h1 {
                 font-size: 1rem;
             }
+            
         }
     </style>
 </head>
 <body>
-    <!-- BARRA SUPERIOR CON MÁS PADDING SUPERIOR -->
-    <div class="w-100 p-0" style="background-color: #CCC; padding-top: 12px; padding-bottom: 4px;">
-        <div class="row align-items-start" style="min-height: 50px;">
-            <div class="col text-start" style="padding-left: 20px;">
-                <?php echo $backCond; ?>
-            </div>
-            
-            <?php if ($role == 1 || $role == 2): ?>
-            <div class="col text-center">
-                <button id="btnCambiarPrecio" class="btn btn-sm" 
-                        style="background-color: #037C79; color: white; border-radius: 25px; padding: 6px 25px; box-shadow: 0 2px 4px rgba(0,0,0,0.2);"
-                        data-current="<?php echo $tipoPrecio; ?>">
-                    <i class="bi bi-arrow-repeat"></i> 
-                    <?php echo ($tipoPrecio == 0) ? 'Ver Precio Mayorista' : 'Ver Precio Minorista'; ?>
-                </button>
-            </div>
-            <?php else: ?>
-            <div class="col text-center"></div>
-            <?php endif; ?>
-            
-            <div class="col text-end" style="padding-right: 15px;">
-                <img src="../catalogo/images/logoMini.png" class="img-fluid" alt="logo" style="max-height: 40px;" />
+    <!-- BARRA SUPERIOR - Versión corregida -->
+    <div class="w-100" style="background-color: #CCC; padding: 12px 0;">
+        <div class="container-fluid">
+            <div class="row align-items-center">
+                <div class="col text-start" style="padding-left: 20px;">
+                    <?php echo $backCond; ?>
+                </div>
+                
+                <?php if ($role == 1 || $role == 2): ?>
+                <div class="col text-center">
+                    <button id="btnCambiarPrecio" class="btn" 
+                            style="background-color: #037C79; color: white; border-radius: 25px; padding: 8px 25px; font-weight: bold; border: none; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
+                        <i class="bi bi-arrow-repeat"></i> 
+                        <?php echo ($tipoPrecio == 0) ? 'Ver Precio Mayorista' : 'Ver Precio Minorista'; ?>
+                    </button>
+                </div>
+                <?php else: ?>
+                <div class="col text-center"></div>
+                <?php endif; ?>
+                
+                <div class="col text-end" style="padding-right: 15px;">
+                    <img src="../catalogo/images/logoMini.png" class="img-fluid" alt="logo" style="max-height: 40px;" />
+                </div>
             </div>
         </div>
     </div>
