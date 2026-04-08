@@ -13,7 +13,6 @@ if ($role == 3) {
 } elseif ($role == 4) {
     $tipoPrecio = 1; // Mayorista
 } else {
-    // Roles 1, 2 o -1: empezamos con minorista (0)
     $tipoPrecio = 0;
 }
 
@@ -27,12 +26,11 @@ $consult = $db->consultas("SELECT name FROM departamentos WHERE id=" . $dptoId);
 $currCatName = '';
 foreach ($consult as $value) { $currCatName = $value->name; }
 
-// --- FUNCIÓN para generar SOLO el grid de productos (sin encabezados) ---
+// Función para generar SOLO el grid de productos
 function generarGridProductos($db, $dptoId, $tipoPrecio, $role) {
     $strTipoPrecio = ($tipoPrecio == 0) ? "cost_max" : "cost_mayor";
     $labelTipoPrecio = ($tipoPrecio == 0) ? "Precio" : "Precio Mayorista";
     
-    // Ruta de imágenes
     $consult = $db->consultas("SELECT img_route FROM departamentos WHERE id=" . $dptoId);
     $currCatImgRoute = '';
     foreach ($consult as $value) { $currCatImgRoute = $value->img_route; }
@@ -70,27 +68,18 @@ function generarGridProductos($db, $dptoId, $tipoPrecio, $role) {
     return $html;
 }
 
-// --- SI ES PETICIÓN AJAX, SOLO DEVOLVEMOS EL GRID ---
+// Si es petición AJAX, solo devolvemos el grid
 if (isset($_GET['ajax']) && $_GET['ajax'] == 1 && isset($_GET['prec'])) {
     $tipoPrecioAjax = intval($_GET['prec']);
     echo generarGridProductos($db, $dptoId, $tipoPrecioAjax, $role);
     exit;
 }
 
-// --- GENERAR CONTENIDO INICIAL COMPLETO ---
+// Generar contenido inicial
 $gridProductosHtml = generarGridProductos($db, $dptoId, $tipoPrecio, $role);
 
-// Botón de cambio (solo para roles 1 y 2)
-$botonCambioPrecio = '';
-if ($role == 1 || $role == 2) {
-    $botonTexto = ($tipoPrecio == 0) ? 'Cambiar a Mayorista' : 'Cambiar a Minorista';
-    $botonCambioPrecio = '<button id="btnCambiarPrecio" class="btn btn-sm btn-outline-light ms-3" data-current="' . $tipoPrecio . '">
-                            <i class="bi bi-arrow-repeat"></i> ' . $botonTexto . '
-                          </button>';
-}
-
 // Flecha de retroceso
-$backCond = '<a href="#" onClick="backHome(' . $role . ',' . $line . ',' . $tipoPrecio . ',' . $comeFrom . ')" title="Pag. Prev."><i class="bi bi-arrow-left-circle-fill icon-dark-blue icon-large"></i></a>';
+$backCond = '<a href="#" onClick="backHome(' . $role . ',' . $line . ',' . $tipoPrecio . ',' . $comeFrom . ')" title="Volver"><i class="bi bi-arrow-left-circle-fill icon-dark-blue icon-large"></i></a>';
 ?>
 <!DOCTYPE html>
 <html>
@@ -106,44 +95,65 @@ $backCond = '<a href="#" onClick="backHome(' . $role . ',' . $line . ',' . $tipo
     <style>
         .icon-large { font-size: 25px; }
         .icon-dark-blue { color: #003272; }
-        .d-flex { display: flex; }
-        .justify-content-center { justify-content: center; }
-        .align-items-center { align-items: center; }
-        .gap-3 { gap: 1rem; }
-        .mb-0 { margin-bottom: 0; }
-        .mt-2 { margin-top: 0.5rem; }
-        #btnCambiarPrecio { transition: all 0.2s; }
-        #btnCambiarPrecio:hover { transform: scale(1.02); background-color: #037C79; border-color: white; }
+        #btnCambiarPrecio {
+            transition: all 0.3s ease;
+            border: none;
+            font-weight: bold;
+            letter-spacing: 0.5px;
+        }
+        #btnCambiarPrecio:hover {
+            transform: scale(1.05);
+            background-color: #025a58 !important;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        .card {
+            transition: transform 0.2s;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+        }
     </style>
 </head>
 <body>
+    <!-- BARRA SUPERIOR CON BOTÓN CENTRAL -->
     <div class="w-100 p-0" style="background-color: #CCC;">
-        <div class="row align-items-start" style="max-height: 50px;">
-            <div class="col text-start" style="max-height: 40px; padding-left: 20px;">
+        <div class="row align-items-start" style="min-height: 50px;">
+            <div class="col text-start" style="padding-left: 20px;">
                 <?php echo $backCond; ?>
             </div>
-            <div class="col text-end" style="max-height: 40px;">
-                <img src="../catalogo/images/logoMini.png" class="img-fluid" alt="logo" />
+            
+            <?php if ($role == 1 || $role == 2): ?>
+            <div class="col text-center">
+                <button id="btnCambiarPrecio" class="btn btn-sm" 
+                        style="background-color: #037C79; color: white; border-radius: 25px; padding: 6px 25px; box-shadow: 0 2px 4px rgba(0,0,0,0.2);"
+                        data-current="<?php echo $tipoPrecio; ?>">
+                    <i class="bi bi-arrow-repeat"></i> 
+                    <?php echo ($tipoPrecio == 0) ? 'Ver Precio Mayorista' : 'Ver Precio Minorista'; ?>
+                </button>
+            </div>
+            <?php else: ?>
+            <div class="col text-center"></div>
+            <?php endif; ?>
+            
+            <div class="col text-end" style="padding-right: 15px;">
+                <img src="../catalogo/images/logoMini.png" class="img-fluid" alt="logo" style="max-height: 40px;" />
             </div>
         </div>
     </div>
     
+    <!-- CONTENIDO PRINCIPAL -->
     <div class="w-100 p-3" style="background-color: #DDD;">
-        <!-- Encabezado con título y botón -->
-        <div class="d-flex justify-content-between align-items-center flex-wrap">
-            <div class="d-flex align-items-center gap-3">
-                <h2 class="mb-0">Catálogo de <?php echo htmlspecialchars($currCatName); ?></h2>
-                <?php 
-                $ruta_pdf = ($line == 1) ? "/pdfs/catalogo_automotriz/catalogo_dptos_{$dptoId}.pdf" : "/pdfs/catalogo_ferretero/catalogo_dptos_{$dptoId}.pdf";
-                ?>
-                <a href="<?php echo $ruta_pdf; ?>" target="_blank" title="Ver catálogo en PDF">
-                    <i class="bi bi-file-pdf-fill" style="font-size: 1.8rem; color: #dc3545;"></i>
-                </a>
-            </div>
-            <?php echo $botonCambioPrecio; ?>
+        <div class="d-flex justify-content-start align-items-center gap-3 mb-3">
+            <h2 class="mb-0">Catálogo de <?php echo htmlspecialchars($currCatName); ?></h2>
+            <?php 
+            $ruta_pdf = ($line == 1) ? "/pdfs/catalogo_automotriz/catalogo_dptos_{$dptoId}.pdf" : "/pdfs/catalogo_ferretero/catalogo_dptos_{$dptoId}.pdf";
+            ?>
+            <a href="<?php echo $ruta_pdf; ?>" target="_blank" title="Ver catálogo en PDF">
+                <i class="bi bi-file-pdf-fill" style="font-size: 1.8rem; color: #dc3545;"></i>
+            </a>
         </div>
         
-        <!-- Contenedor de productos (se reemplazará vía AJAX) -->
         <div id="productos-container">
             <?php echo $gridProductosHtml; ?>
         </div>
@@ -162,7 +172,6 @@ $backCond = '<a href="#" onClick="backHome(' . $role . ',' . $line . ',' . $tipo
     }
 
     <?php if ($role == 1 || $role == 2): ?>
-    // Lógica AJAX para cambiar precio
     let currentPrecio = <?php echo $tipoPrecio; ?>;
     const dptoId = <?php echo $dptoId; ?>;
     const role = <?php echo $role; ?>;
@@ -174,11 +183,9 @@ $backCond = '<a href="#" onClick="backHome(' . $role . ',' . $line . ',' . $tipo
         const btn = $(this);
         const originalHtml = btn.html();
         
-        // Mostrar loading
         btn.html('<i class="bi bi-hourglass-split"></i> Cargando...');
         btn.prop('disabled', true);
         
-        // Llamada AJAX
         $.ajax({
             url: window.location.pathname,
             method: 'GET',
@@ -190,15 +197,13 @@ $backCond = '<a href="#" onClick="backHome(' . $role . ',' . $line . ',' . $tipo
                 prec: newPrecio
             },
             success: function(response) {
-                // Reemplazar SOLO el contenido del contenedor
                 $('#productos-container').html(response);
                 currentPrecio = newPrecio;
                 
-                // Actualizar texto del botón
                 if (currentPrecio == 0) {
-                    btn.html('<i class="bi bi-arrow-repeat"></i> Cambiar a Mayorista');
+                    btn.html('<i class="bi bi-arrow-repeat"></i> Ver Precio Mayorista');
                 } else {
-                    btn.html('<i class="bi bi-arrow-repeat"></i> Cambiar a Minorista');
+                    btn.html('<i class="bi bi-arrow-repeat"></i> Ver Precio Minorista');
                 }
                 btn.prop('disabled', false);
             },
