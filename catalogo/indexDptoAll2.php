@@ -95,6 +95,7 @@ $backCond = '<a href="#" onClick="backHome(' . $role . ',' . $line . ',' . $tipo
     <style>
         .icon-large { font-size: 25px; }
         .icon-dark-blue { color: #003272; }
+        
         #btnCambiarPrecio {
             transition: all 0.3s ease;
             border: none;
@@ -113,11 +114,27 @@ $backCond = '<a href="#" onClick="backHome(' . $role . ',' . $line . ',' . $tipo
             transform: translateY(-5px);
             box-shadow: 0 6px 12px rgba(0,0,0,0.15);
         }
+        
+        /* Media queries para botón responsive */
+        @media (max-width: 768px) {
+            #btnCambiarPrecio {
+                font-size: 0.8rem;
+                padding: 4px 12px !important;
+                white-space: nowrap;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            #btnCambiarPrecio {
+                font-size: 0.7rem;
+                padding: 3px 8px !important;
+            }
+        }
     </style>
 </head>
 <body>
-    <!-- BARRA SUPERIOR CON BOTÓN CENTRAL -->
-    <div class="w-100 p-0" style="background-color: #CCC;">
+    <!-- BARRA SUPERIOR CON BOTÓN CENTRAL Y PADDING SUPERIOR -->
+    <div class="w-100 p-0" style="background-color: #CCC; padding-top: 8px;">
         <div class="row align-items-start" style="min-height: 50px;">
             <div class="col text-start" style="padding-left: 20px;">
                 <?php echo $backCond; ?>
@@ -178,10 +195,36 @@ $backCond = '<a href="#" onClick="backHome(' . $role . ',' . $line . ',' . $tipo
     const line = <?php echo $line; ?>;
     const comeFrom = <?php echo $comeFrom; ?>;
 
+    // Función para ajustar el texto del botón según el ancho de pantalla
+    function ajustarTextoBoton() {
+        const btn = document.getElementById('btnCambiarPrecio');
+        if (!btn) return;
+        
+        const esMovil = window.innerWidth <= 768;
+        const esMovilPeq = window.innerWidth <= 480;
+        const currentPrecioVal = parseInt(btn.getAttribute('data-current'));
+        
+        if (esMovilPeq) {
+            // Texto ultra corto para móviles pequeños
+            btn.innerHTML = currentPrecioVal == 0 ? 
+                '<i class="bi bi-arrow-repeat"></i> Mayorista' : 
+                '<i class="bi bi-arrow-repeat"></i> Minorista';
+        } else if (esMovil) {
+            // Texto corto para tablets/móviles
+            btn.innerHTML = currentPrecioVal == 0 ? 
+                '<i class="bi bi-arrow-repeat"></i> Ver Mayorista' : 
+                '<i class="bi bi-arrow-repeat"></i> Ver Minorista';
+        } else {
+            // Texto completo en desktop
+            btn.innerHTML = currentPrecioVal == 0 ? 
+                '<i class="bi bi-arrow-repeat"></i> Ver Precio Mayorista' : 
+                '<i class="bi bi-arrow-repeat"></i> Ver Precio Minorista';
+        }
+    }
+
     $('#btnCambiarPrecio').on('click', function() {
         const newPrecio = (currentPrecio == 0) ? 1 : 0;
         const btn = $(this);
-        const originalHtml = btn.html();
         
         btn.html('<i class="bi bi-hourglass-split"></i> Cargando...');
         btn.prop('disabled', true);
@@ -199,12 +242,8 @@ $backCond = '<a href="#" onClick="backHome(' . $role . ',' . $line . ',' . $tipo
             success: function(response) {
                 $('#productos-container').html(response);
                 currentPrecio = newPrecio;
-                
-                if (currentPrecio == 0) {
-                    btn.html('<i class="bi bi-arrow-repeat"></i> Ver Precio Mayorista');
-                } else {
-                    btn.html('<i class="bi bi-arrow-repeat"></i> Ver Precio Minorista');
-                }
+                $('#btnCambiarPrecio').attr('data-current', currentPrecio);
+                ajustarTextoBoton();
                 btn.prop('disabled', false);
             },
             error: function(xhr, status, error) {
@@ -212,6 +251,14 @@ $backCond = '<a href="#" onClick="backHome(' . $role . ',' . $line . ',' . $tipo
                 alert('Error al cambiar el precio. Recargue la página.');
                 location.reload();
             }
+        });
+    });
+    
+    // Ejecutar ajuste de texto al cargar y al redimensionar
+    $(document).ready(function() {
+        ajustarTextoBoton();
+        $(window).resize(function() {
+            ajustarTextoBoton();
         });
     });
     <?php endif; ?>
