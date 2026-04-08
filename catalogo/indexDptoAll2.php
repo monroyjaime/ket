@@ -28,6 +28,8 @@ foreach ($consult as $value) { $currCatName = $value->name; }
 
 // Función para generar SOLO el grid de productos
 // Modificar la función generarGridProductos con el nuevo diseño
+
+// Modificar la función generarGridProductos con el nuevo diseño
 function generarGridProductos($db, $dptoId, $tipoPrecio, $role) {
     $strTipoPrecio = ($tipoPrecio == 0) ? "cost_max" : "cost_mayor";
     $labelTipoPrecio = ($tipoPrecio == 0) ? "Precio" : "Precio Mayorista";
@@ -51,37 +53,35 @@ function generarGridProductos($db, $dptoId, $tipoPrecio, $role) {
         $imgUrl = $currCatImgRoute . $p->photo_url;
         
         $html .= '<div class="col">';
-        $html .= '<div class="card h-100 shadow-sm" style="border-radius: 12px; overflow: hidden; transition: transform 0.3s, box-shadow 0.3s;">';
+        $html .= '<div class="card h-100 shadow-sm" style="border-radius: 12px; overflow: hidden; transition: transform 0.3s, box-shadow 0.3s; cursor: pointer;">';
         
-        // Header con código (fondo oscuro)
-        $html .= '<div class="card-header text-center" style="background-color: #003272; border-bottom: none;">';
-        $html .= '<h5 class="mb-0" style="color: white; font-weight: bold;">' . htmlspecialchars($p->code) . '</h5>';
+        // Header con código (pegado arriba)
+        $html .= '<div class="card-header text-center" style="background-color: #003272; border-bottom: none; padding: 10px;">';
+        $html .= '<h5 class="mb-0" style="color: white; font-weight: bold; font-size: 1rem;">' . htmlspecialchars($p->code) . '</h5>';
         $html .= '</div>';
         
-        // Imagen a ancho completo
-        $html .= '<div style="background-color: #f8f9fa;">';
-        $html .= '<img src="' . $imgUrl . '" class="w-100" alt="' . htmlspecialchars($p->code) . '" style="height: 200px; object-fit: contain; display: block;">';
+        // Imagen - ocupa todo el espacio disponible
+        $html .= '<div style="background-color: #f8f9fa; flex: 1; display: flex; align-items: center; justify-content: center; min-height: 200px;">';
+        $html .= '<img src="' . $imgUrl . '" class="img-fluid" alt="' . htmlspecialchars($p->code) . '" style="max-height: 180px; width: auto; max-width: 100%; object-fit: contain; padding: 15px;">';
         $html .= '</div>';
         
-        // Body con descripción
-        $html .= '<div class="card-body" style="background-color: white;">';
-        $html .= '<p class="card-text text-center" style="font-size: 0.85rem; color: #333; min-height: 60px;">' . htmlspecialchars($p->name) . '</p>';
-        $html .= '</div>';
+        // Footer con toda la información (descripción, precio, unidad)
+        $html .= '<div class="card-footer" style="background-color: #e8f4f4; border-top: 3px solid #037C79; padding: 12px;">';
+        $html .= '<p class="card-text text-center mb-2" style="font-size: 0.8rem; color: #333; font-weight: 500; min-height: 40px;">' . htmlspecialchars($p->name) . '</p>';
         
-        // Footer con precio
         if ($role > -1) {
-            $html .= '<div class="card-footer text-center" style="background-color: #e8f4f4; border-top: 2px solid #037C79;">';
-            $html .= '<h6 class="mb-1" style="color: #666; font-size: 0.75rem;">' . $labelTipoPrecio . '</h6>';
-            $html .= '<h5 class="mb-0" style="color: #003272; font-weight: bold;">$' . number_format($precio, 3, ",", ".") . '</h5>';
-            $html .= '<small class="text-muted">Unidad: ' . htmlspecialchars($p->unit) . '</small>';
+            $html .= '<div class="text-center">';
+            $html .= '<small style="color: #666; font-size: 0.7rem;">' . $labelTipoPrecio . '</small>';
+            $html .= '<h5 class="mb-1" style="color: #003272; font-weight: bold; font-size: 1.1rem;">$' . number_format($precio, 3, ",", ".") . '</h5>';
+            $html .= '<small class="text-muted" style="font-size: 0.7rem;">Unidad: ' . htmlspecialchars($p->unit) . '</small>';
             $html .= '</div>';
         } else {
-            $html .= '<div class="card-footer text-center" style="background-color: #e8f4f4; border-top: 2px solid #037C79;">';
-            $html .= '<small class="text-muted">Unidad: ' . htmlspecialchars($p->unit) . '</small>';
+            $html .= '<div class="text-center">';
+            $html .= '<small class="text-muted" style="font-size: 0.7rem;">Unidad: ' . htmlspecialchars($p->unit) . '</small>';
             $html .= '</div>';
         }
         
-        $html .= '</div></div>';
+        $html .= '</div></div></div>';
     }
     $html .= '</div>';
     return $html;
@@ -137,32 +137,56 @@ $backCond = '<a href="#" onClick="backHome(' . $role . ',' . $line . ',' . $tipo
         }
 
         .card-header {
-            padding: 12px 8px;
+            padding: 10px !important;
         }
 
-        .card-body {
-            padding: 15px 10px;
+        .card-header h5 {
+            font-size: 1rem;
+            font-weight: bold;
+            margin: 0;
+        }
+
+        /* Contenedor de la imagen - ocupa todo el espacio disponible */
+        .card > div[style*="background-color: #f8f9fa"] {
+            background-color: #f8f9fa;
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 200px;
+        }
+
+        .card img {
+            max-height: 180px;
+            width: auto;
+            max-width: 100%;
+            object-fit: contain;
+            padding: 15px;
         }
 
         .card-footer {
-            padding: 10px;
+            background-color: #e8f4f4;
+            border-top: 3px solid #037C79;
+            padding: 12px;
         }
 
-        /* Contenedor de la imagen */
-        .card img.w-100 {
-            height: 200px;
-            object-fit: contain;
-            background-color: #f8f9fa;
-        }
-
-        /* Precio en footer */
-        .card-footer h5 {
-            font-size: 1.1rem;
-            font-weight: bold;
+        .card-footer p {
+            font-size: 0.8rem;
+            color: #333;
+            font-weight: 500;
+            margin-bottom: 8px;
+            min-height: 40px;
         }
 
         .card-footer small {
             font-size: 0.7rem;
+        }
+
+        .card-footer h5 {
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: #003272;
+            margin-bottom: 4px;
         }
         
         /* Título en franja verde agua */
@@ -198,35 +222,42 @@ $backCond = '<a href="#" onClick="backHome(' . $role . ',' . $line . ',' . $tipo
             .title-banner {
                 padding: 8px 0;
             }
-             .card-header h5 {
-                font-size: 0.9rem;
+              .card-header h5 {
+                font-size: 0.85rem;
             }
             
-            .card-body p {
-                font-size: 0.75rem;
-                min-height: 50px;
+            .card > div[style*="background-color: #f8f9fa"] {
+                min-height: 150px;
+            }
+            
+            .card img {
+                max-height: 130px;
+                padding: 10px;
+            }
+            
+            .card-footer p {
+                font-size: 0.7rem;
+                min-height: 35px;
             }
             
             .card-footer h5 {
                 font-size: 0.95rem;
             }
-            
-            .card-footer small {
-                font-size: 0.65rem;
-            }
-            
-            .card img.w-100 {
-                height: 150px;
-            }
         }
 
         @media (max-width: 576px) {
-            .row-cols-1 > .col {
-                padding: 0 8px;
+           .card > div[style*="background-color: #f8f9fa"] {
+                min-height: 120px;
             }
             
-            .card img.w-100 {
-                height: 120px;
+            .card img {
+                max-height: 100px;
+                padding: 8px;
+            }
+            
+            .card-footer p {
+                font-size: 0.65rem;
+                min-height: 30px;
             }
         }
         
