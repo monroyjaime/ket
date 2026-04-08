@@ -58,9 +58,9 @@ function generarGridProductos($db, $dptoId, $tipoPrecio, $role) {
         $html .= '<h5 class="mb-0" style="color: white; font-weight: bold;">' . htmlspecialchars($p->code) . '</h5>';
         $html .= '</div>';
         
-        // Imagen
-        $html .= '<div class="text-center p-3" style="background-color: #f8f9fa;">';
-        $html .= '<img src="' . $imgUrl . '" class="img-fluid" alt="' . htmlspecialchars($p->code) . '" style="max-height: 150px; object-fit: contain;">';
+        // Imagen a ancho completo
+        $html .= '<div style="background-color: #f8f9fa;">';
+        $html .= '<img src="' . $imgUrl . '" class="w-100" alt="' . htmlspecialchars($p->code) . '" style="height: 200px; object-fit: contain; display: block;">';
         $html .= '</div>';
         
         // Body con descripción
@@ -68,7 +68,7 @@ function generarGridProductos($db, $dptoId, $tipoPrecio, $role) {
         $html .= '<p class="card-text text-center" style="font-size: 0.85rem; color: #333; min-height: 60px;">' . htmlspecialchars($p->name) . '</p>';
         $html .= '</div>';
         
-        // Footer con precio (solo si role > -1)
+        // Footer con precio
         if ($role > -1) {
             $html .= '<div class="card-footer text-center" style="background-color: #e8f4f4; border-top: 2px solid #037C79;">';
             $html .= '<h6 class="mb-1" style="color: #666; font-size: 0.75rem;">' . $labelTipoPrecio . '</h6>';
@@ -148,6 +148,13 @@ $backCond = '<a href="#" onClick="backHome(' . $role . ',' . $line . ',' . $tipo
             padding: 10px;
         }
 
+        /* Contenedor de la imagen */
+        .card img.w-100 {
+            height: 200px;
+            object-fit: contain;
+            background-color: #f8f9fa;
+        }
+
         /* Precio en footer */
         .card-footer h5 {
             font-size: 1.1rem;
@@ -207,11 +214,19 @@ $backCond = '<a href="#" onClick="backHome(' . $role . ',' . $line . ',' . $tipo
             .card-footer small {
                 font-size: 0.65rem;
             }
+            
+            .card img.w-100 {
+                height: 150px;
+            }
         }
 
         @media (max-width: 576px) {
             .row-cols-1 > .col {
                 padding: 0 8px;
+            }
+            
+            .card img.w-100 {
+                height: 120px;
             }
         }
         
