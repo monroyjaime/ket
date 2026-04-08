@@ -7,60 +7,61 @@ $line = 1;
 $role = (isset($_SESSION['role'])) ? intval($_SESSION['role']) : -1;
 $comeFrom = 0;
 
-// --- 1. LÓGICA DE PRECIO INICIAL (basada en el rol) ---
-// Rol 3 (minorista) -> precio 0, Rol 4 (mayorista) -> precio 1
+// Determinar tipo de precio inicial según el rol
 if ($role == 3) {
     $tipoPrecio = 0; // Minorista
 } elseif ($role == 4) {
     $tipoPrecio = 1; // Mayorista
 } else {
-    // Roles 1, 2 o indefinido (-1): por defecto mostrar minorista (0)
-    // El usuario con rol 1/2 podrá cambiar con el botón.
+    // Roles 1, 2 o -1: empezamos con minorista (0)
     $tipoPrecio = 0;
 }
 
-// Obtener parámetros GET (dpto_id, line, from)
+// Obtener parámetros GET
 if (isset($_GET['line'])) $line = intval($_GET['line']);
 if (isset($_GET['from'])) $comeFrom = intval($_GET['from']);
-
 $dptoId = (isset($_GET['dpto_id'])) ? intval($_GET['dpto_id']) : 1;
 
-// --- 2. FUNCIÓN para generar el HTML de los productos (la reutilizaremos para AJAX) ---
+// Obtener nombre del departamento
+$consult = $db->consultas("SELECT name FROM departamentos WHERE id=" . $dptoId);
+$currCatName = '';
+foreach ($consult as $value) { $currCatName = $value->name; }
+
+// --- FUNCIÓN para generar SOLO el grid de productos (sin encabezados) ---
 function generarGridProductos($db, $dptoId, $tipoPrecio, $role) {
     $strTipoPrecio = ($tipoPrecio == 0) ? "cost_max" : "cost_mayor";
     $labelTipoPrecio = ($tipoPrecio == 0) ? "Precio" : "Precio Mayorista";
     
-    // Obtener datos del departamento para la ruta de imágenes
-    $consult = $db->consultas("SELECT name, img_route FROM departamentos WHERE id=" . $dptoId);
+    // Ruta de imágenes
+    $consult = $db->consultas("SELECT img_route FROM departamentos WHERE id=" . $dptoId);
     $currCatImgRoute = '';
-    foreach ($consult as $value) {
-        $currCatImgRoute = $value->img_route;
-    }
+    foreach ($consult as $value) { $currCatImgRoute = $value->img_route; }
     
-    $query = "SELECT id, code, name, photo_url, " . $strTipoPrecio . " AS precio, unit, current_stock 
+    $query = "SELECT code, name, photo_url, " . $strTipoPrecio . " AS precio, unit 
               FROM productos 
               WHERE show='t' AND dpto_id = " . $dptoId . " 
               AND photo_url != 'empty.jpg' AND " . $strTipoPrecio . " > 0 
               ORDER BY orden, code";
     
     $productos = $db->consultas($query);
-    $html = '<div class="row row-cols-1 row-cols-sm-4 g-4 mt-2">';
+    
+    $html = '<div class="row row-cols-1 row-cols-sm-4 g-4 mt-2" id="productos-grid">';
     
     foreach ($productos as $p) {
-        $productVal_cost = floatval($p->precio);
-        $currUrl = $currCatImgRoute . $p->photo_url;
+        $precio = floatval($p->precio);
+        $imgUrl = $currCatImgRoute . $p->photo_url;
         
         $html .= '<div class="col" style="background-color: #DDD;">';
         $html .= '<div class="card h-100 text-bg-light">';
         $html .= '<div class="card-header" style="background-color: #037C79;">';
         $html .= '<h3 style="color: #FFF;">' . htmlspecialchars($p->code) . '</h3>';
         $html .= '</div>';
-        $html .= '<img src="' . $currUrl . '" class="card-img-top" alt="' . htmlspecialchars($p->code) . '">';
+        $html .= '<img src="' . $imgUrl . '" class="card-img-top" alt="' . htmlspecialchars($p->code) . '">';
         $html .= '<div class="card-body" style="background-color: #0CC;">';
         $html .= '<h6 class="card-text">' . htmlspecialchars($p->name) . '</h6>';
         
         if ($role > -1) {
-            $html .= '<h5 class="card-text precio-label" data-tipo="' . $tipoPrecio . '">' . $labelTipoPrecio . ': $' . number_format($productVal_cost, 3, ",", ".") . '</h5>';
+            $html .= '<h5 class="card-text precio-label">' . $labelTipoPrecio . ': $' . number_format($precio, 3, ",", ".") . '</h5>';
             $html .= '<h6 class="card-text">Unidad: ' . htmlspecialchars($p->unit) . '</h6>';
         }
         $html .= '</div></div></div>';
@@ -69,19 +70,22 @@ function generarGridProductos($db, $dptoId, $tipoPrecio, $role) {
     return $html;
 }
 
-// --- 3. GENERAR EL CONTENIDO INICIAL ---
+// --- SI ES PETICIÓN AJAX, SOLO DEVOLVEMOS EL GRID ---
+if (isset($_GET['ajax']) && $_GET['ajax'] == 1 && isset($_GET['prec'])) {
+    $tipoPrecioAjax = intval($_GET['prec']);
+    echo generarGridProductos($db, $dptoId, $tipoPrecioAjax, $role);
+    exit;
+}
+
+// --- GENERAR CONTENIDO INICIAL COMPLETO ---
 $gridProductosHtml = generarGridProductos($db, $dptoId, $tipoPrecio, $role);
 
-// Obtener nombre del departamento para el título
-$consult = $db->consultas("SELECT name FROM departamentos WHERE id=" . $dptoId);
-$currCatName = '';
-foreach ($consult as $value) { $currCatName = $value->name; }
-
-// Preparar botón de "Cambiar Precio" (solo para roles 1 y 2)
+// Botón de cambio (solo para roles 1 y 2)
 $botonCambioPrecio = '';
 if ($role == 1 || $role == 2) {
-    $botonCambioPrecio = '<button id="btnCambiarPrecio" class="btn btn-sm btn-outline-light ms-3" data-current="0">
-                            <i class="bi bi-arrow-repeat"></i> Cambiar a Mayorista
+    $botonTexto = ($tipoPrecio == 0) ? 'Cambiar a Mayorista' : 'Cambiar a Minorista';
+    $botonCambioPrecio = '<button id="btnCambiarPrecio" class="btn btn-sm btn-outline-light ms-3" data-current="' . $tipoPrecio . '">
+                            <i class="bi bi-arrow-repeat"></i> ' . $botonTexto . '
                           </button>';
 }
 
@@ -98,7 +102,7 @@ $backCond = '<a href="#" onClick="backHome(' . $role . ',' . $line . ',' . $tipo
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
     <style>
         .icon-large { font-size: 25px; }
         .icon-dark-blue { color: #003272; }
@@ -125,11 +129,10 @@ $backCond = '<a href="#" onClick="backHome(' . $role . ',' . $line . ',' . $tipo
     </div>
     
     <div class="w-100 p-3" style="background-color: #DDD;">
-        <!-- Encabezado con título y botón de cambio -->
+        <!-- Encabezado con título y botón -->
         <div class="d-flex justify-content-between align-items-center flex-wrap">
             <div class="d-flex align-items-center gap-3">
                 <h2 class="mb-0">Catálogo de <?php echo htmlspecialchars($currCatName); ?></h2>
-                <!-- Icono PDF -->
                 <?php 
                 $ruta_pdf = ($line == 1) ? "/pdfs/catalogo_automotriz/catalogo_dptos_{$dptoId}.pdf" : "/pdfs/catalogo_ferretero/catalogo_dptos_{$dptoId}.pdf";
                 ?>
@@ -140,7 +143,7 @@ $backCond = '<a href="#" onClick="backHome(' . $role . ',' . $line . ',' . $tipo
             <?php echo $botonCambioPrecio; ?>
         </div>
         
-        <!-- Contenedor de la cuadrícula de productos -->
+        <!-- Contenedor de productos (se reemplazará vía AJAX) -->
         <div id="productos-container">
             <?php echo $gridProductosHtml; ?>
         </div>
@@ -159,55 +162,54 @@ $backCond = '<a href="#" onClick="backHome(' . $role . ',' . $line . ',' . $tipo
     }
 
     <?php if ($role == 1 || $role == 2): ?>
-    // Lógica para cambiar el precio vía AJAX (solo para roles 1 y 2)
-    let currentPrecio = <?php echo $tipoPrecio; ?>; // 0 o 1
+    // Lógica AJAX para cambiar precio
+    let currentPrecio = <?php echo $tipoPrecio; ?>;
     const dptoId = <?php echo $dptoId; ?>;
     const role = <?php echo $role; ?>;
+    const line = <?php echo $line; ?>;
+    const comeFrom = <?php echo $comeFrom; ?>;
 
-    document.getElementById('btnCambiarPrecio').addEventListener('click', function() {
-        // Cambiar el estado (0 -> 1, 1 -> 0)
+    $('#btnCambiarPrecio').on('click', function() {
         const newPrecio = (currentPrecio == 0) ? 1 : 0;
+        const btn = $(this);
+        const originalHtml = btn.html();
         
-        // Mostrar indicador de carga (opcional)
-        this.innerHTML = '<i class="bi bi-hourglass-split"></i> Cargando...';
-        this.disabled = true;
+        // Mostrar loading
+        btn.html('<i class="bi bi-hourglass-split"></i> Cargando...');
+        btn.prop('disabled', true);
         
-        // Llamada AJAX al mismo script pero con parámetro ajax=1 y el nuevo precio
-        fetch(window.location.pathname + '?dpto_id=' + dptoId + '&line=<?php echo $line; ?>&from=<?php echo $comeFrom; ?>&ajax=1&prec=' + newPrecio)
-            .then(response => response.text())
-            .then(html => {
-                // Actualizar el contenedor con el nuevo HTML de productos
-                document.getElementById('productos-container').innerHTML = html;
-                // Actualizar el botón
+        // Llamada AJAX
+        $.ajax({
+            url: window.location.pathname,
+            method: 'GET',
+            data: {
+                dpto_id: dptoId,
+                line: line,
+                from: comeFrom,
+                ajax: 1,
+                prec: newPrecio
+            },
+            success: function(response) {
+                // Reemplazar SOLO el contenido del contenedor
+                $('#productos-container').html(response);
                 currentPrecio = newPrecio;
-                const btn = document.getElementById('btnCambiarPrecio');
+                
+                // Actualizar texto del botón
                 if (currentPrecio == 0) {
-                    btn.innerHTML = '<i class="bi bi-arrow-repeat"></i> Cambiar a Mayorista';
-                    btn.setAttribute('data-current', '0');
+                    btn.html('<i class="bi bi-arrow-repeat"></i> Cambiar a Mayorista');
                 } else {
-                    btn.innerHTML = '<i class="bi bi-arrow-repeat"></i> Cambiar a Minorista';
-                    btn.setAttribute('data-current', '1');
+                    btn.html('<i class="bi bi-arrow-repeat"></i> Cambiar a Minorista');
                 }
-                btn.disabled = false;
-            })
-            .catch(error => {
-                console.error('Error:', error);
+                btn.prop('disabled', false);
+            },
+            error: function(xhr, status, error) {
+                console.error('Error AJAX:', error);
                 alert('Error al cambiar el precio. Recargue la página.');
                 location.reload();
-            });
+            }
+        });
     });
     <?php endif; ?>
     </script>
 </body>
 </html>
-
-<?php
-// --- 4. MANEJAR LA PETICIÓN AJAX (al final del archivo) ---
-if (isset($_GET['ajax']) && $_GET['ajax'] == 1 && isset($_GET['prec'])) {
-    // Esta parte solo se ejecuta cuando se llama vía AJAX
-    // Devolvemos SOLO el HTML de la cuadrícula, no la página completa.
-    $tipoPrecioAjax = intval($_GET['prec']);
-    echo generarGridProductos($db, $dptoId, $tipoPrecioAjax, $role);
-    exit; // Importante: terminar la ejecución para no enviar el HTML completo.
-}
-?>
