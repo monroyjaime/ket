@@ -29,7 +29,7 @@ foreach ($consult as $value) { $currCatName = $value->name; }
 // Función para generar SOLO el grid de productos
 // Modificar la función generarGridProductos con el nuevo diseño
 
-// Modificar la función generarGridProductos con el nuevo diseño
+// Función generarGridProductos con foto GRANDE y protagonista
 function generarGridProductos($db, $dptoId, $tipoPrecio, $role) {
     $strTipoPrecio = ($tipoPrecio == 0) ? "cost_max" : "cost_mayor";
     $labelTipoPrecio = ($tipoPrecio == 0) ? "Precio" : "Precio Mayorista";
@@ -53,35 +53,32 @@ function generarGridProductos($db, $dptoId, $tipoPrecio, $role) {
         $imgUrl = $currCatImgRoute . $p->photo_url;
         
         $html .= '<div class="col">';
-        $html .= '<div class="card h-100 shadow-sm" style="border-radius: 12px; overflow: hidden; transition: transform 0.3s, box-shadow 0.3s; cursor: pointer;">';
+        $html .= '<div class="card h-100 shadow-sm" style="border-radius: 8px; overflow: hidden; transition: transform 0.3s, box-shadow 0.3s;">';
         
         // Header con código (pegado arriba)
-        $html .= '<div class="card-header text-center" style="background-color: #003272; border-bottom: none; padding: 10px;">';
-        $html .= '<h5 class="mb-0" style="color: white; font-weight: bold; font-size: 1rem;">' . htmlspecialchars($p->code) . '</h5>';
+        $html .= '<div class="card-header text-center" style="background-color: #003272; padding: 8px;">';
+        $html .= '<h5 class="mb-0" style="color: white; font-weight: bold; font-size: 0.9rem;">' . htmlspecialchars($p->code) . '</h5>';
         $html .= '</div>';
         
-        // Imagen - ocupa todo el espacio disponible
-        $html .= '<div style="background-color: #f8f9fa; flex: 1; display: flex; align-items: center; justify-content: center; min-height: 200px;">';
-        $html .= '<img src="' . $imgUrl . '" class="img-fluid" alt="' . htmlspecialchars($p->code) . '" style="max-height: 180px; width: auto; max-width: 100%; object-fit: contain; padding: 15px;">';
+        // Imagen - ocupando TODO el ancho y la mayor parte de la card
+        $html .= '<div style="background-color: white; padding: 20px; text-align: center;">';
+        $html .= '<img src="' . $imgUrl . '" alt="' . htmlspecialchars($p->code) . '" style="width: 100%; max-width: 100%; height: auto; object-fit: contain;">';
         $html .= '</div>';
         
-        // Footer con toda la información (descripción, precio, unidad)
-        $html .= '<div class="card-footer" style="background-color: #e8f4f4; border-top: 3px solid #037C79; padding: 12px;">';
-        $html .= '<p class="card-text text-center mb-2" style="font-size: 0.8rem; color: #333; font-weight: 500; min-height: 40px;">' . htmlspecialchars($p->name) . '</p>';
+        // Footer compacto con descripción y precio
+        $html .= '<div class="card-footer" style="background-color: #e8f4f4; border-top: 2px solid #037C79; padding: 10px;">';
+        $html .= '<div class="text-center">';
+        $html .= '<p class="mb-1" style="font-size: 0.75rem; color: #333; font-weight: 500; line-height: 1.3;">' . htmlspecialchars($p->name) . '</p>';
         
         if ($role > -1) {
-            $html .= '<div class="text-center">';
-            $html .= '<small style="color: #666; font-size: 0.7rem;">' . $labelTipoPrecio . '</small>';
-            $html .= '<h5 class="mb-1" style="color: #003272; font-weight: bold; font-size: 1.1rem;">$' . number_format($precio, 3, ",", ".") . '</h5>';
-            $html .= '<small class="text-muted" style="font-size: 0.7rem;">Unidad: ' . htmlspecialchars($p->unit) . '</small>';
-            $html .= '</div>';
+            $html .= '<small style="color: #666; font-size: 0.65rem;">' . $labelTipoPrecio . '</small>';
+            $html .= '<h6 class="mb-1" style="color: #003272; font-weight: bold; font-size: 0.95rem;">$' . number_format($precio, 3, ",", ".") . '</h6>';
+            $html .= '<small class="text-muted" style="font-size: 0.65rem;">Unidad: ' . htmlspecialchars($p->unit) . '</small>';
         } else {
-            $html .= '<div class="text-center">';
-            $html .= '<small class="text-muted" style="font-size: 0.7rem;">Unidad: ' . htmlspecialchars($p->unit) . '</small>';
-            $html .= '</div>';
+            $html .= '<small class="text-muted" style="font-size: 0.65rem;">Unidad: ' . htmlspecialchars($p->unit) . '</small>';
         }
         
-        $html .= '</div></div></div>';
+        $html .= '</div></div></div></div>';
     }
     $html .= '</div>';
     return $html;
@@ -127,65 +124,61 @@ $backCond = '<a href="#" onClick="backHome(' . $role . ',' . $line . ',' . $tipo
             box-shadow: 0 4px 8px rgba(0,0,0,0.2);
         }
         .card {
-            border-radius: 12px !important;
+            border-radius: 8px !important;
             transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
 
         .card:hover {
-            transform: translateY(-8px);
+            transform: translateY(-5px);
             box-shadow: 0 8px 20px rgba(0,0,0,0.15) !important;
         }
 
         .card-header {
-            padding: 10px !important;
+            padding: 8px !important;
         }
 
         .card-header h5 {
-            font-size: 1rem;
-            font-weight: bold;
+            font-size: 0.9rem;
             margin: 0;
         }
 
-        /* Contenedor de la imagen - ocupa todo el espacio disponible */
-        .card > div[style*="background-color: #f8f9fa"] {
-            background-color: #f8f9fa;
-            flex: 1;
+        /* Contenedor de la imagen - SIN restricciones de altura */
+        .card > div[style*="background-color: white"] {
+            background-color: white;
+            padding: 20px;
+            text-align: center;
             display: flex;
             align-items: center;
             justify-content: center;
-            min-height: 200px;
         }
 
+        /* La imagen ocupa TODO el ancho disponible */
         .card img {
-            max-height: 180px;
-            width: auto;
-            max-width: 100%;
+            width: 100% !important;
+            max-width: 100% !important;
+            height: auto !important;
             object-fit: contain;
-            padding: 15px;
+            display: block;
         }
 
         .card-footer {
             background-color: #e8f4f4;
-            border-top: 3px solid #037C79;
-            padding: 12px;
+            border-top: 2px solid #037C79;
+            padding: 10px;
         }
 
         .card-footer p {
-            font-size: 0.8rem;
-            color: #333;
-            font-weight: 500;
-            margin-bottom: 8px;
-            min-height: 40px;
+            font-size: 0.75rem;
+            margin-bottom: 4px;
+            line-height: 1.3;
         }
 
         .card-footer small {
-            font-size: 0.7rem;
+            font-size: 0.65rem;
         }
 
-        .card-footer h5 {
-            font-size: 1.1rem;
-            font-weight: bold;
-            color: #003272;
+        .card-footer h6 {
+            font-size: 0.95rem;
             margin-bottom: 4px;
         }
         
@@ -246,18 +239,12 @@ $backCond = '<a href="#" onClick="backHome(' . $role . ',' . $line . ',' . $tipo
         }
 
         @media (max-width: 576px) {
-           .card > div[style*="background-color: #f8f9fa"] {
-                min-height: 120px;
-            }
-            
-            .card img {
-                max-height: 100px;
-                padding: 8px;
+          .card > div[style*="background-color: white"] {
+                padding: 10px;
             }
             
             .card-footer p {
                 font-size: 0.65rem;
-                min-height: 30px;
             }
         }
         
