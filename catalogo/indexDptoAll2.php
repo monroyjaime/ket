@@ -112,6 +112,10 @@ $backCond = '<a href="#" onClick="backHome(' . $role . ',' . $line . ',' . $tipo
 <html>
 <head>
     <meta charset="utf-8"/>
+    <meta name="color-scheme" content="light only">
+    <meta name="supported-color-schemes" content="light">
+    <meta name="darkreader-lock" content="yes">
+    <meta http-equiv="Color-Scheme" content="light">
     <meta name="viewport" content="initial-scale=1, maximum-scale=1">
     <title>Catálogo KET - <?php echo htmlspecialchars($currCatName); ?></title>
     <link rel="Shortcut Icon" href="../favicon.ico" type="image/x-icon" />
@@ -403,6 +407,59 @@ $backCond = '<a href="#" onClick="backHome(' . $role . ',' . $line . ',' . $tipo
                 -webkit-line-clamp: 1;
             }
         }
+
+        @media (prefers-color-scheme: dark) {
+            html, body, :root {
+                color-scheme: light !important;
+                background-color: #DDD !important;
+            }
+            
+            /* Evitar que el navegador invierta o modifique colores */
+            img, video, canvas, iframe, 
+            .card, .card-header, .card-footer, .card-body,
+            .title-banner, .top-bar, .container-fluid,
+            div[style*="background-color"], span, p, h1, h2, h3, h4, h5, h6 {
+                filter: none !important;
+                background-color: initial;
+                color: initial;
+            }
+            
+            /* Forzar colores específicos nuevamente */
+            body, div[style*="background-color: #DDD"] {
+                background-color: #DDD !important;
+            }
+            
+            .card {
+                background-color: white !important;
+                border: 1px solid #ddd !important;
+            }
+            
+            .card-header {
+                background-color: #003272 !important;
+            }
+            
+            .card-header small {
+                color: white !important;
+            }
+            
+            .card-footer {
+                background-color: #e8f4f4 !important;
+                border-top-color: #037C79 !important;
+            }
+            
+            .title-banner {
+                background-color: #037c79 !important;
+            }
+            
+            .title-banner h1 {
+                color: white !important;
+            }
+            
+            #btnCambiarPrecio {
+                background-color: #037C79 !important;
+                color: white !important;
+            }
+        }
     </style>
 </head>
 <body>
@@ -541,6 +598,19 @@ $backCond = '<a href="#" onClick="backHome(' . $role . ',' . $line . ',' . $tipo
         });
     });
     <?php endif; ?>
+
+    // Forzar tema claro en Chrome Android
+    (function() {
+        // Prevenir que Chrome aplique tema oscuro automático
+        document.documentElement.style.colorScheme = 'light';
+        document.documentElement.setAttribute('data-color-scheme', 'light');
+        
+        // Forzar estilos en línea como respaldo
+        var style = document.createElement('style');
+        style.textContent = '*{color-scheme:light!important;}html,body{background-color:#DDD!important;}';
+        document.head.appendChild(style);
+    })();
+    
     </script>
 </body>
 </html>
