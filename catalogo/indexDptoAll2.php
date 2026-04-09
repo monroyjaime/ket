@@ -220,7 +220,7 @@ $backCond = '<a href="indiceDptos.php"  title="Volver"><i class="bi bi-arrow-lef
         .card-header small {
             color: white !important;
             font-weight: bold;
-            font-size: 0.7rem;
+            font-size: 0.85rem;
         }
         
         /* Contenedor de imagen con relación 4:3 */
@@ -255,7 +255,7 @@ $backCond = '<a href="indiceDptos.php"  title="Volver"><i class="bi bi-arrow-lef
         }
         
         .card-footer p {
-            font-size: 0.75rem;
+            font-size: 0.85rem;
             color: #333 !important;
             line-height: 1.2;
             margin-bottom: 2px;
@@ -266,12 +266,12 @@ $backCond = '<a href="indiceDptos.php"  title="Volver"><i class="bi bi-arrow-lef
         }
         
         .card-footer small {
-            font-size: 0.6rem;
+            font-size: 0.7rem;
             color: #666 !important;
         }
         
         .card-footer h6 {
-            font-size: 0.85rem;
+            font-size: 0.95rem;
             font-weight: bold;
             color: #003272 !important;
             margin-bottom: 0;
@@ -328,8 +328,14 @@ $backCond = '<a href="indiceDptos.php"  title="Volver"><i class="bi bi-arrow-lef
         
         @media (max-width: 768px) {
             #btnCambiarPrecio {
-                padding: 6px 15px;
-                font-size: 0.8rem;
+                padding: 6px 12px;
+                font-size: 0.75rem;
+                white-space: nowrap; /* Evita que el texto se divida en dos líneas */
+            }
+
+              #btnCambiarPrecio i {
+                margin-right: 4px;
+                font-size: 0.7rem;
             }
             
             .title-banner {
@@ -355,7 +361,7 @@ $backCond = '<a href="indiceDptos.php"  title="Volver"><i class="bi bi-arrow-lef
             }
             
             .card-footer p {
-                font-size: 0.7rem;
+                font-size: 0.75rem;
             }
             
             .card-footer h6 {
@@ -363,14 +369,15 @@ $backCond = '<a href="indiceDptos.php"  title="Volver"><i class="bi bi-arrow-lef
             }
             
             .card-footer small {
-                font-size: 0.55rem;
+                font-size: 0.65rem;
             }
         }
         
         @media (max-width: 576px) {
             #btnCambiarPrecio {
-                padding: 4px 10px;
+                padding: 5px 10px;
                 font-size: 0.7rem;
+                white-space: nowrap;
             }
             
             .title-banner h1 {
@@ -391,11 +398,15 @@ $backCond = '<a href="indiceDptos.php"  title="Volver"><i class="bi bi-arrow-lef
             }
             
             .card-footer p {
-                font-size: 0.65rem;
+                font-size: 0.7rem;
+            }
+
+             .card-footer small {
+                font-size: 0.6rem;
             }
             
             .card-footer h6 {
-                font-size: 0.75rem;
+                font-size: 0.8rem;
             }
             
             /* Footer vertical en móvil muy pequeño */
