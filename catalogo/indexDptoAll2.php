@@ -106,7 +106,9 @@ if (isset($_GET['ajax']) && $_GET['ajax'] == 1 && isset($_GET['prec'])) {
 $gridProductosHtml = generarGridProductos($db, $dptoId, $tipoPrecio, $role);
 
 // Flecha de retroceso
-$backCond = '<a href="#" onClick="backHome(' . $role . ',' . $line . ',' . $tipoPrecio . ',' . $comeFrom . ')" title="Volver"><i class="bi bi-arrow-left-circle-fill icon-dark-blue icon-large"></i></a>';
+//$backCond = '<a href="#" onClick="backHome(' . $role . ',' . $line . ',' . $tipoPrecio . ',' . $comeFrom . ')" title="Volver"><i class="bi bi-arrow-left-circle-fill icon-dark-blue icon-large"></i></a>';
+$backCond = '<a href="indiceDptos.php"  title="Volver"><i class="bi bi-arrow-left-circle-fill icon-dark-blue icon-large"></i></a>';
+
 ?>
 <!DOCTYPE html>
 <html>
