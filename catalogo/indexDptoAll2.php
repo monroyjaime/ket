@@ -289,6 +289,21 @@ $backCond = '<a href="#" onClick="backHome(' . $role . ',' . $line . ',' . $tipo
             padding: 0 0.5rem;
             margin-bottom: 1rem;
         }
+
+        /* Estilos del buscador */
+        #buscadorProductos:focus {
+            box-shadow: none;
+            border-color: #037C79;
+        }
+
+        #buscadorProductos::placeholder {
+            font-size: 0.85rem;
+            color: #999;
+        }
+
+        .input-group-text {
+            color: #037C79;
+        }
         
         /* Media Queries para responsive */
         @media (max-width: 1200px) {
@@ -504,6 +519,26 @@ $backCond = '<a href="#" onClick="backHome(' . $role . ',' . $line . ',' . $tipo
                onclick="window.open('<?php echo ($line == 1) ? "/pdfs/catalogo_automotriz/catalogo_dptos_{$dptoId}.pdf" : "/pdfs/catalogo_ferretero/catalogo_dptos_{$dptoId}.pdf"; ?>', '_blank')"></i>
         </h1>
     </div>
+
+   <!-- Buscador de productos -->
+    <div class="container-fluid px-3 mb-3">
+        <div class="row">
+            <div class="col-md-6 mx-auto">
+                <div class="input-group shadow-sm" style="border-radius: 30px; overflow: hidden;">
+                    <span class="input-group-text bg-white border-end-0" style="border-radius: 30px 0 0 30px;">
+                        <i class="bi bi-search" style="color: #037C79;"></i>
+                    </span>
+                    <input type="text" id="buscadorProductos" class="form-control border-start-0" 
+                        placeholder="Buscar por código o descripción..." 
+                        style="border-left: none; border-right: none;">
+                    <button class="btn btn-outline-secondary border-start-0" type="button" id="limpiarBusqueda" 
+                            style="border-radius: 0 30px 30px 0; background-color: white;">
+                        <i class="bi bi-x-circle" style="color: #dc3545;"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div> 
     
     <!-- CONTENIDO PRINCIPAL (grid de productos) -->
     <div class="w-100 p-3" style="background-color: #DDD;">
@@ -610,7 +645,71 @@ $backCond = '<a href="#" onClick="backHome(' . $role . ',' . $line . ',' . $tipo
         style.textContent = '*{color-scheme:light!important;}html,body{background-color:#DDD!important;}';
         document.head.appendChild(style);
     })();
-    
+
+    // Buscador de productos en tiempo real
+    document.addEventListener('DOMContentLoaded', function() {
+        const buscador = document.getElementById('buscadorProductos');
+        const limpiarBtn = document.getElementById('limpiarBusqueda');
+        
+        if (!buscador) return;
+        
+        function filtrarProductos() {
+            const termino = buscador.value.toLowerCase().trim();
+            const productos = document.querySelectorAll('#productos-grid .col');
+            let contador = 0;
+            
+            productos.forEach(producto => {
+                const card = producto.querySelector('.card');
+                if (!card) return;
+                
+                // Buscar en código (card-header) y en descripción (card-footer p)
+                const codigo = card.querySelector('.card-header small');
+                const descripcion = card.querySelector('.card-footer p');
+                
+                const textoCodigo = codigo ? codigo.textContent.toLowerCase() : '';
+                const textoDescripcion = descripcion ? descripcion.textContent.toLowerCase() : '';
+                
+                if (termino === '' || textoCodigo.includes(termino) || textoDescripcion.includes(termino)) {
+                    producto.style.display = '';
+                    contador++;
+                } else {
+                    producto.style.display = 'none';
+                }
+            });
+            
+            // Mostrar mensaje si no hay resultados
+            let mensajeNoResultados = document.getElementById('mensajeNoResultados');
+            if (contador === 0 && termino !== '') {
+                if (!mensajeNoResultados) {
+                    mensajeNoResultados = document.createElement('div');
+                    mensajeNoResultados.id = 'mensajeNoResultados';
+                    mensajeNoResultados.className = 'alert alert-warning text-center mt-3';
+                    mensajeNoResultados.innerHTML = '<i class="bi bi-exclamation-triangle"></i> No se encontraron productos que coincidan con "<strong>' + 
+                                                    termino + '</strong>"';
+                    document.getElementById('productos-grid').parentNode.appendChild(mensajeNoResultados);
+                } else {
+                    mensajeNoResultados.style.display = 'block';
+                    mensajeNoResultados.innerHTML = '<i class="bi bi-exclamation-triangle"></i> No se encontraron productos que coincidan con "<strong>' + 
+                                                    termino + '</strong>"';
+                }
+            } else if (mensajeNoResultados) {
+                mensajeNoResultados.style.display = 'none';
+            }
+        }
+        
+        // Evento keyup para filtrar mientras escribe
+        buscador.addEventListener('keyup', filtrarProductos);
+        
+        // Botón limpiar búsqueda
+        if (limpiarBtn) {
+            limpiarBtn.addEventListener('click', function() {
+                buscador.value = '';
+                filtrarProductos();
+                buscador.focus();
+            });
+        }
+    });
+
     </script>
 </body>
 </html>
