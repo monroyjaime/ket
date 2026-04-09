@@ -220,7 +220,7 @@ $backCond = '<a href="indiceDptos.php"  title="Volver"><i class="bi bi-arrow-lef
         .card-header small {
             color: white !important;
             font-weight: bold;
-            font-size: 0.85rem;
+            font-size: 0.95rem;
         }
         
         /* Contenedor de imagen con relación 4:3 */
@@ -427,7 +427,7 @@ $backCond = '<a href="indiceDptos.php"  title="Volver"><i class="bi bi-arrow-lef
             }
             
             .card-header small {
-                font-size: 0.6rem;
+                font-size: 0.75rem;
             }
             
             .card-footer p {
