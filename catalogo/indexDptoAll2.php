@@ -120,6 +120,21 @@ $backCond = '<a href="#" onClick="backHome(' . $role . ',' . $line . ',' . $tipo
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
     <style>
+        /* RESET COMPLETO - Forzar tema claro independientemente del sistema */
+        * {
+            color-scheme: light !important;
+            forced-color-adjust: none !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+        }
+        
+        body {
+            background-color: #DDD !important;
+            color: #333 !important;
+            margin: 0;
+            padding: 0;
+        }
+        
         /* Estilos generales */
         .icon-large {
             font-size: 25px;
@@ -130,21 +145,21 @@ $backCond = '<a href="#" onClick="backHome(' . $role . ',' . $line . ',' . $tipo
         }
         
         /* Barra superior */
-        .top-bar {
-            background-color: #CCC;
-            padding: 12px 0;
+        .top-bar, 
+        div[style*="background-color: #CCC"] {
+            background-color: #CCC !important;
         }
         
         /* Título en franja verde agua */
         .title-banner {
-            background-color: #037c79;
+            background-color: #037c79 !important;
             padding: 12px 0;
             text-align: center;
             margin-bottom: 20px;
         }
         
         .title-banner h1 {
-            color: white;
+            color: white !important;
             margin: 0;
             font-size: 1.8rem;
             display: flex;
@@ -159,8 +174,8 @@ $backCond = '<a href="#" onClick="backHome(' . $role . ',' . $line . ',' . $tipo
         
         /* Botón de cambio de precio */
         #btnCambiarPrecio {
-            background-color: #037C79;
-            color: white;
+            background-color: #037C79 !important;
+            color: white !important;
             border-radius: 25px;
             padding: 8px 25px;
             font-weight: bold;
@@ -177,6 +192,8 @@ $backCond = '<a href="#" onClick="backHome(' . $role . ',' . $line . ',' . $tipo
         
         /* Cards de productos */
         .card {
+            background-color: white !important;
+            border: 1px solid #ddd !important;
             border-radius: 8px !important;
             transition: transform 0.2s ease, box-shadow 0.2s ease;
             overflow: hidden;
@@ -204,8 +221,8 @@ $backCond = '<a href="#" onClick="backHome(' . $role . ',' . $line . ',' . $tipo
         .card-img-container {
             position: relative;
             width: 100%;
-            padding-top: 75%; /* 4:3 = 75% de altura relativa al ancho */
-            background-color: #f8f9fa;
+            padding-top: 75%;
+            background-color: #f8f9fa !important;
             overflow: hidden;
         }
         
@@ -233,7 +250,7 @@ $backCond = '<a href="#" onClick="backHome(' . $role . ',' . $line . ',' . $tipo
         
         .card-footer p {
             font-size: 0.75rem;
-            color: #333;
+            color: #333 !important;
             line-height: 1.2;
             margin-bottom: 2px;
             display: -webkit-box;
@@ -244,13 +261,19 @@ $backCond = '<a href="#" onClick="backHome(' . $role . ',' . $line . ',' . $tipo
         
         .card-footer small {
             font-size: 0.6rem;
+            color: #666 !important;
         }
         
         .card-footer h6 {
             font-size: 0.85rem;
             font-weight: bold;
-            color: #003272;
+            color: #003272 !important;
             margin-bottom: 0;
+        }
+        
+        /* Contenedor principal */
+        div[style*="background-color: #DDD"] {
+            background-color: #DDD !important;
         }
         
         /* Grid responsivo */
@@ -283,10 +306,6 @@ $backCond = '<a href="#" onClick="backHome(' . $role . ',' . $line . ',' . $tipo
         }
         
         @media (max-width: 768px) {
-            .top-bar {
-                padding: 8px 0;
-            }
-            
             #btnCambiarPrecio {
                 padding: 6px 15px;
                 font-size: 0.8rem;
@@ -328,10 +347,6 @@ $backCond = '<a href="#" onClick="backHome(' . $role . ',' . $line . ',' . $tipo
         }
         
         @media (max-width: 576px) {
-            .top-bar {
-                padding: 5px 0;
-            }
-            
             #btnCambiarPrecio {
                 padding: 4px 10px;
                 font-size: 0.7rem;
@@ -391,6 +406,11 @@ $backCond = '<a href="#" onClick="backHome(' . $role . ',' . $line . ',' . $tipo
     </style>
 </head>
 <body>
+    <script>
+    // Forzar tema claro eliminando cualquier clase oscura del sistema
+    document.documentElement.style.colorScheme = 'light';
+    document.body.style.backgroundColor = '#DDD';
+</script>
     <!-- BARRA SUPERIOR - Versión corregida -->
     <div class="w-100" style="background-color: #CCC; padding: 12px 0;">
         <div class="container-fluid">
