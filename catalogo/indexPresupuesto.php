@@ -4,6 +4,14 @@ error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
 // ============================================
+// 1. PRIMERO: Incluir la conexión a BD
+// ============================================
+
+require_once("../php/dbcat.php");
+$db = new DB();
+$conn = $db->getLink();
+
+// ============================================
 // DEPURACIÓN: Ver qué parámetros llegan
 // ============================================
 $debug = [];
@@ -31,9 +39,7 @@ if ($presupuestoId > 0) {
 $itemsStr = isset($_GET['items']) ? $_GET['items'] : '';
 $mostrarPrecio = isset($_GET['mostrar_precio']) ? intval($_GET['mostrar_precio']) : 0;
 
-require_once("../php/dbcat.php");
-$db = new DB();
-$conn = $db->getLink();
+
 
 $tags = '';
 
