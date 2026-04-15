@@ -1,6 +1,20 @@
 <?php
+
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
+
+// ============================================
+// DEPURACIÓN: Ver qué parámetros llegan
+// ============================================
+$debug = [];
+$debug['get'] = $_GET;
+$debug['presupuesto_id'] = isset($_GET['presupuesto_id']) ? $_GET['presupuesto_id'] : 'NO';
+$debug['num_valery'] = isset($_GET['num_valery']) ? $_GET['num_valery'] : 'NO';
+$debug['items'] = isset($_GET['items']) ? substr($_GET['items'], 0, 100) : 'NO';
+
+// Guardar depuración en archivo temporal
+file_put_contents('/tmp/presupuesto_debug.log', date('Y-m-d H:i:s') . "\n" . print_r($debug, true) . "\n\n", FILE_APPEND);
+// ============================================
 
 $role = isset($_GET['role_num']) ? intval($_GET['role_num']) : -1;
 $pageGlobal = isset($_GET['page_global']) ? intval($_GET['page_global']) : 1;
