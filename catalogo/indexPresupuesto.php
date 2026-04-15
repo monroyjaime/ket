@@ -5,7 +5,15 @@ ini_set('display_errors', 1);
 $role = isset($_GET['role_num']) ? intval($_GET['role_num']) : -1;
 $pageGlobal = isset($_GET['page_global']) ? intval($_GET['page_global']) : 1;
 $totalPaginasGlobal = isset($_GET['total_paginas']) ? intval($_GET['total_paginas']) : 1;
-$numValery = isset($_GET['num_valery']) ? intval($_GET['num_valery']) : 0;
+
+$presupuestoId = isset($_GET['presupuesto_id']) ? intval($_GET['presupuesto_id']) : 0;
+if ($presupuestoId > 0) {
+    // Obtener num_valery de la BD para mostrar en el título
+    $result = pg_query($conn, "SELECT num_valery FROM presupuesto_gen WHERE idx = $presupuestoId");
+    if ($result && $row = pg_fetch_assoc($result)) {
+        $numValery = $row['num_valery'];
+    }
+}
 $itemsStr = isset($_GET['items']) ? $_GET['items'] : '';
 $mostrarPrecio = isset($_GET['mostrar_precio']) ? intval($_GET['mostrar_precio']) : 0;
 
