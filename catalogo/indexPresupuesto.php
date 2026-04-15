@@ -1,58 +1,77 @@
 <?php
-
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
 // ============================================
-// 1. PRIMERO: Incluir la conexión a BD
+// 1. INCLUIR CONEXIÓN A BD
 // ============================================
-
 require_once("../php/dbcat.php");
 $db = new DB();
 $conn = $db->getLink();
 
 // ============================================
-// DEPURACIÓN: Ver qué parámetros llegan
+// 2. OBTENER PARÁMETROS GET
 // ============================================
-$debug = [];
-$debug['get'] = $_GET;
-$debug['presupuesto_id'] = isset($_GET['presupuesto_id']) ? $_GET['presupuesto_id'] : 'NO';
-$debug['num_valery'] = isset($_GET['num_valery']) ? $_GET['num_valery'] : 'NO';
-$debug['items'] = isset($_GET['items']) ? substr($_GET['items'], 0, 100) : 'NO';
-
-// Guardar depuración en archivo temporal
-file_put_contents('/tmp/presupuesto_debug.log', date('Y-m-d H:i:s') . "\n" . print_r($debug, true) . "\n\n", FILE_APPEND);
-// ============================================
-
 $role = isset($_GET['role_num']) ? intval($_GET['role_num']) : -1;
 $pageGlobal = isset($_GET['page_global']) ? intval($_GET['page_global']) : 1;
 $totalPaginasGlobal = isset($_GET['total_paginas']) ? intval($_GET['total_paginas']) : 1;
+$mostrarPrecio = isset($_GET['mostrar_precio']) ? intval($_GET['mostrar_precio']) : 0;
 
-$presupuestoId = isset($_GET['presupuesto_id']) ? intval($_GET['presupuesto_id']) : 0;
-if ($presupuestoId > 0) {
-    // Obtener num_valery de la BD para mostrar en el título
-    $result = pg_query($conn, "SELECT num_valery FROM presupuesto_gen WHERE idx = $presupuestoId");
-    if ($result && $row = pg_fetch_assoc($result)) {
-        $numValery = $row['num_valery'];
+// El parámetro principal: presupuesto_num (el número que ve el usuario, ej: 292)
+$presupuestoNum = isset($_GET['presupuesto_num']) ? intval($_GET['presupuesto_num']) : 0;
+
+// Si recibimos presupuesto_id (por compatibilidad), lo tratamos igual
+if ($presupuestoNum == 0 && isset($_GET['presupuesto_id'])) {
+    $presupuestoNum = intval($_GET['presupuesto_id']);
+}
+
+$tags = '';
+$numValery = 0;
+$productos = [];
+
+// ============================================
+// 3. OBTENER DATOS DEL PRESUPUESTO DESDE BD
+// ============================================
+if ($presupuestoNum > 0) {
+    // Obtener idx y num_valery a partir del presupuesto_num
+    $queryPresupuesto = "
+        SELECT idx, num_valery, presupuesto_num 
+        FROM presupuesto_gen 
+        WHERE presupuesto_num = $presupuestoNum
+    ";
+    $resultPresupuesto = pg_query($conn, $queryPresupuesto);
+    
+    if ($resultPresupuesto && $rowPresupuesto = pg_fetch_assoc($resultPresupuesto)) {
+        $idx = $rowPresupuesto['idx'];
+        $numValery = $rowPresupuesto['num_valery'];
+        
+        // Consultar productos del presupuesto usando idx
+        $queryProductos = "
+            SELECT 
+                pd.product_code,
+                pd.cantidad,
+                pd.precio,
+                p.name as descripcion,
+                p.photo_url,
+                d.img_route
+            FROM presupuesto_detail pd
+            JOIN productos p ON pd.product_code = p.code
+            LEFT JOIN departamentos d ON p.dpto_id = d.id
+            WHERE pd.pres_idx = $idx
+              AND p.show = true
+              AND p.cost_max > 0
+            ORDER BY pd.orden ASC
+        ";
+        
+        $resultProductos = pg_query($conn, $queryProductos);
+        if ($resultProductos) {
+            $productos = pg_fetch_all($resultProductos);
+        }
     }
 }
 
-// Dar prioridad a POST sobre GET para los ítems, ya que podrían ser muchos y no es recomendable pasarlos por URL. Si no hay POST, entonces usar GET.
-$itemsStr = '';
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['items'])) {
-    $itemsStr = $_POST['items'];
-} elseif (isset($_GET['items'])) {
-    $itemsStr = $_GET['items'];
-}
-
-$mostrarPrecio = isset($_GET['mostrar_precio']) ? intval($_GET['mostrar_precio']) : 0;
-
-
-
-$tags = '';
-
 // ============================================
-// ENCABEZADO CON LOGO Y NUMERACIÓN
+// 4. GENERAR ENCABEZADO
 // ============================================
 $tags .= '<div class="header">';
 $tags .= '<div class="row align-items-center">';
@@ -60,122 +79,77 @@ $tags .= '<div class="col-6">';
 $tags .= '<img src="../catalogo/images/logo.png" class="logo" alt="KET">';
 $tags .= '</div>';
 $tags .= '<div class="col-6 pagination-info">';
-$tags .= 'Pág. '.$pageGlobal.' / '.$totalPaginasGlobal;
+$tags .= 'Pág. ' . $pageGlobal . ' / ' . $totalPaginasGlobal;
 $tags .= '</div>';
 $tags .= '</div>';
 $tags .= '</div>';
 
 // ============================================
-// TÍTULO DEL PRESUPUESTO
+// 5. TÍTULO DEL PRESUPUESTO
 // ============================================
 if ($numValery > 0) {
     $tags .= '<div class="text-center">';
-    $tags .= '<h1 class="rounded-title">Presupuesto N° '.$numValery.'</h1>';
+    $tags .= '<h1 class="rounded-title">Presupuesto N° ' . htmlspecialchars($numValery) . '</h1>';
     $tags .= '</div>';
 }
 
 // ============================================
-// PROCESAR ÍTEMS
+// 6. GENERAR GRID DE PRODUCTOS
 // ============================================
-if (empty($itemsStr)) {
-    $tags .= '<p>No se especificaron productos</p>';
+if (empty($productos)) {
+    $tags .= '<p>No se encontraron productos para este presupuesto.</p>';
 } else {
-    $items = explode(',', $itemsStr);
+    $tags .= '<div class="products-grid">';
+    $tags .= '<div class="row row-cols-1 row-cols-sm-3 g-4 justify-content-center">';
     
-    $codigos = [];
-    $precios = [];
-    foreach ($items as $item) {
-        $parts = explode('|', $item);
-        if (count($parts) >= 2) {
-            $codigo = trim($parts[0]);
-            $codigos[] = $codigo;
-            $precios[$codigo] = floatval($parts[1]);
-        }
-    }
-    
-    if (empty($codigos)) {
-        $tags .= '<p>No se pudieron procesar los productos</p>';
-    } else {
-        // Escapar códigos para consulta
-        $codigos_escapados = array();
-        foreach ($codigos as $codigo) {
-            $codigos_escapados[] = "'" . pg_escape_string($conn, $codigo) . "'";
-        }
-        $codigos_lista = implode(',', $codigos_escapados);
+    foreach ($productos as $producto) {
+        $code = $producto['product_code'];
+        $precio = floatval($producto['precio']);
+        $descripcion = $producto['descripcion'];
+        $photoUrl = $producto['photo_url'];
         
-        // Consultar productos
-        $order_by = "ORDER BY array_position(ARRAY[$codigos_lista], p.code)";
-        $query = "SELECT p.code, p.name, p.photo_url, d.img_route 
-                  FROM productos p
-                  JOIN departamentos d ON p.dpto_id = d.id
-                  WHERE p.code IN ($codigos_lista)
-                    AND p.show = true
-                    AND p.cost_max > 0
-                  $order_by";
-        
-        $result = pg_query($conn, $query);
-        
-        if (!$result) {
-            $tags .= '<p>Error en consulta: ' . pg_last_error($conn) . '</p>';
+        // Manejar imagen
+        if (empty($photoUrl) || $photoUrl == 'empty.jpg') {
+            $imgUrl = '../catalogo/images/empty.jpg';
         } else {
-            $productos = pg_fetch_all($result);
-            
-            if (empty($productos)) {
-                $tags .= '<p>No se encontraron productos con los códigos especificados.</p>';
-            } else {
-                $tags .= '<div class="products-grid">';
-                $tags .= '<div class="row row-cols-1 row-cols-sm-3 g-4 justify-content-center">';
-                
-                foreach ($productos as $producto) {
-                    $code = $producto['code'];
-                    $precio = isset($precios[$code]) ? $precios[$code] : 0;
-                    
-                    // Manejar imagen
-                    $photoUrl = $producto['photo_url'];
-                    if (empty($photoUrl) || $photoUrl == 'empty.jpg') {
-                        $imgUrl = '../catalogo/images/empty.jpg';
-                    } else {
-                        $imgUrl = $producto['img_route'] . $photoUrl;
-                    }
-                    
-                    $tags .= '<div class="col">';
-                    $tags .= '<div class="card h-100">';
-                    
-                    // Encabezado con código
-                    $tags .= '<div class="card-header text-center" style="background-color: #037C79; color: white; font-weight: bold;">';
-                    $tags .= htmlspecialchars($code);
-                    $tags .= '</div>';
-                    
-                    // Cuerpo: foto y descripción 50/50
-                    $tags .= '<div class="row g-0">';
-                    $tags .= '<div class="col-6 text-center img-container">';
-                    $tags .= '<img src="'.$imgUrl.'" alt="'.htmlspecialchars($code).'" style="max-height:90px; width:auto; max-width:100%; object-fit:contain;">';
-                    $tags .= '</div>';
-                    $tags .= '<div class="col-6 texto">';
-                    $tags .= htmlspecialchars($producto['name']);
-                    $tags .= '</div>';
-                    $tags .= '</div>';
-                    
-                    // Precio histórico
-                    if ($mostrarPrecio == 1 && $precio > 0) {
-                        $precioFormateado = number_format($precio, 3, ',', '.');
-                        $tags .= '<div class="card-footer text-center" style="background-color: #f0f0f0; padding: 6px;">';
-                        $tags .= '<strong>Precio: $' . $precioFormateado . '</strong>';
-                        $tags .= '</div>';
-                    }
-                    
-                    $tags .= '</div>';
-                    $tags .= '</div>';
-                }
-                
-                $tags .= '</div>';
-                $tags .= '</div>';
-            }
+            $imgUrl = $producto['img_route'] . $photoUrl;
         }
+        
+        $tags .= '<div class="col">';
+        $tags .= '<div class="card h-100">';
+        
+        // Encabezado con código
+        $tags .= '<div class="card-header text-center" style="background-color: #037C79; color: white; font-weight: bold;">';
+        $tags .= htmlspecialchars($code);
+        $tags .= '</div>';
+        
+        // Cuerpo: foto y descripción 50/50
+        $tags .= '<div class="row g-0">';
+        $tags .= '<div class="col-6 text-center img-container">';
+        $tags .= '<img src="' . $imgUrl . '" alt="' . htmlspecialchars($code) . '" style="max-height:90px; width:auto; max-width:100%; object-fit:contain;">';
+        $tags .= '</div>';
+        $tags .= '<div class="col-6 texto">';
+        $tags .= htmlspecialchars($descripcion);
+        $tags .= '</div>';
+        $tags .= '</div>';
+        
+        // Precio histórico (si se solicita)
+        if ($mostrarPrecio == 1 && $precio > 0) {
+            $precioFormateado = number_format($precio, 3, ',', '.');
+            $tags .= '<div class="card-footer text-center" style="background-color: #f0f0f0; padding: 6px;">';
+            $tags .= '<strong>Precio: $' . $precioFormateado . '</strong>';
+            $tags .= '</div>';
+        }
+        
+        $tags .= '</div>';
+        $tags .= '</div>';
     }
+    
+    $tags .= '</div>';
+    $tags .= '</div>';
 }
-
 ?>
+
 <!DOCTYPE html>
 <html>
 <head>
