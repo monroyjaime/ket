@@ -37,10 +37,12 @@ if ($presupuestoId > 0) {
     }
 }
 
-// Aceptar productos tanto por GET como por POST
-$itemsStr = isset($_GET['items']) ? $_GET['items'] : '';
-if (empty($itemsStr) && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['items'])) {
+// Dar prioridad a POST sobre GET para los ítems, ya que podrían ser muchos y no es recomendable pasarlos por URL. Si no hay POST, entonces usar GET.
+$itemsStr = '';
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['items'])) {
     $itemsStr = $_POST['items'];
+} elseif (isset($_GET['items'])) {
+    $itemsStr = $_GET['items'];
 }
 
 $mostrarPrecio = isset($_GET['mostrar_precio']) ? intval($_GET['mostrar_precio']) : 0;
