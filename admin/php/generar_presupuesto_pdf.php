@@ -24,18 +24,18 @@ if ($presupuesto_id == 0) {
 
 // Verificar que el presupuesto existe y obtener num_valery
 $db = new DBAsync();
-$result = $db->consultaSegura("SELECT num_valery FROM presupuesto_gen WHERE idx = $1", [$presupuesto_id]);
+$result = $db->consultaSegura("SELECT presupuesto_num  FROM presupuesto_gen WHERE idx = $1", [$presupuesto_id]);
 
 if (empty($result)) {
     echo json_encode(['success' => false, 'error' => 'Presupuesto no encontrado']);
     exit;
 }
 
-$num_valery = $result[0]->num_valery;
+$num_valery = $result[0]->presupuesto_num ;
 
 // Ruta del PDF
-$pdf_path = "/var/www/html/pdfs/presupuestos/presupuesto_{$num_valery}.pdf";
-$pdf_url = "/pdfs/presupuestos/presupuesto_{$num_valery}.pdf";
+$pdf_path = "/var/www/html/pdfs/presupuestos/presupuesto_{$presupuesto_num }.pdf";
+$pdf_url = "/pdfs/presupuestos/presupuesto_{$presupuesto_num }.pdf";
 
 // 🔴 ELIMINAR PDF EXISTENTE SIEMPRE (para forzar regeneración)
 if (file_exists($pdf_path)) {

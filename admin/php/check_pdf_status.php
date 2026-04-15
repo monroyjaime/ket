@@ -11,16 +11,16 @@ if ($presupuesto_id == 0) {
 
 require_once("../../php/dbcat_async.php");
 $db = new DBAsync();
-$result = $db->consultaSegura("SELECT num_valery FROM presupuesto_gen WHERE idx = $1", [$presupuesto_id]);
+$result = $db->consultaSegura("SELECT presupuesto_num FROM presupuesto_gen WHERE idx = $1", [$presupuesto_id]);
 
 if (empty($result)) {
     echo json_encode(['success' => false, 'error' => 'Presupuesto no encontrado']);
     exit;
 }
 
-$num_valery = $result[0]->num_valery;
-$pdf_path = "/var/www/html/pdfs/presupuestos/presupuesto_{$num_valery}.pdf";
-$pdf_url = "/pdfs/presupuestos/presupuesto_{$num_valery}.pdf";
+$num_valery = $result[0]->presupuesto_num ;
+$pdf_path = "/var/www/html/pdfs/presupuestos/presupuesto_{$presupuesto_num}.pdf";
+$pdf_url = "/pdfs/presupuestos/presupuesto_{$presupuesto_num}.pdf";
 
 // Verificar si el PDF existe y tiene tamaño > 0
 if (file_exists($pdf_path) && filesize($pdf_path) > 0) {
