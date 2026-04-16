@@ -4,33 +4,77 @@ ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
 session_start();
-
-
-
-
 require_once("../../php/dbcat_async.php");
 
-error_log("=== verPresupuesto.php ===");
-error_log("GET: " . print_r($_GET, true));
-
-$presupuesto_id = $_GET['presupuesto_id'] ?? 0;
+// Recibir parámetros
 $presupuesto_num = $_GET['presupuesto_num'] ?? 0;
-
-error_log("presupuesto_id: $presupuesto_id");
-error_log("presupuesto_num: $presupuesto_num");
+$presupuesto_id = $_GET['presupuesto_id'] ?? 0;
 
 $db = new DBAsync();
 
-// Si recibimos presupuesto_id (idx) y no presupuesto_num, convertir a presupuesto_num
+// Si recibimos presupuesto_id (idx), convertirlo a presupuesto_num
 if ($presupuesto_id > 0 && $presupuesto_num == 0) {
     $resultConv = $db->consultaSegura("SELECT presupuesto_num FROM presupuesto_gen WHERE idx = $1", [$presupuesto_id]);
     if (!empty($resultConv)) {
         $presupuesto_num = $resultConv[0]->presupuesto_num;
-    } else {
-        die('Presupuesto no encontrado. ID: ' . $presupuesto_id);
     }
-} elseif ($presupuesto_num == 0) {
+}
+
+// Validar que tenemos un número de presupuesto
+if ($presupuesto_num == 0) {
     die('No se especificó presupuesto');
+}
+
+try {
+    // 1. Obtener datos generales del presupuesto usando presupuesto_num
+    $presupuestoInfo = $db->consultaSegura(
+        "SELECT pg.*, u.full_name as usuario_nombre
+         FROM presupuesto_gen pg
+         LEFT JOIN usuario u ON pg.user_num = u.num
+         WHERE pg.presupuesto_num = $1",
+        [$presupuesto_num]
+    );
+    
+    if (empty($presupuestoInfo)) {
+        die('Presupuesto no encontrado. Número: ' . $presupuesto_num);
+    }
+    
+    $presupuesto = $presupuestoInfo[0];
+    
+    // 2. Obtener el idx real para buscar los detalles
+    $idx = $presupuesto->idx;
+    
+    // 3. Obtener detalles del presupuesto usando idx
+    $detalles = $db->consultaSegura(
+        "SELECT pd.*, p.name as producto_nombre, p.unit as unidad
+         FROM presupuesto_detail pd
+         LEFT JOIN productos p ON pd.product_code = p.code
+         WHERE pd.pres_idx = $1
+         ORDER BY pd.orden",
+        [$idx]
+    );
+    
+    if (empty($detalles)) {
+        die('No se encontraron detalles para el presupuesto. Número: ' . $presupuesto_num);
+    }
+    
+    // Calcular subtotal
+    $subtotal = 0;
+    foreach ($detalles as $detalle) {
+        $subtotal += $detalle->cantidad * $detalle->precio;
+    }
+    
+    // Usar descuentos, recargos e IVA de la base de datos
+    $descuento = floatval($presupuesto->descuento_monto) ?? 0;
+    $recargo = floatval($presupuesto->recargo_monto) ?? 0;
+    $iva = floatval($presupuesto->iva_monto) ?? 0;
+    $iva_porcentaje = floatval($presupuesto->iva_porcentaje) ?? 0;
+    $total = $subtotal - $descuento + $recargo + $iva;
+    $descPercent = (1-(($subtotal - $descuento)/$subtotal)) *100;
+    $descLabel = ($descPercent ===0)? "" : "Descuento (".$descPercent."%): ";
+    
+} catch (Exception $e) {
+    die("Error al cargar el presupuesto: " . $e->getMessage());
 }
 
 try {
