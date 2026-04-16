@@ -21,7 +21,7 @@ if ($presupuesto_num == 0 && $presupuesto_id > 0) {
     }
 }
 
-// Validar que tenemos un número de presupuesto
+// Validar que tenemos un número de presupuesto..
 if ($presupuesto_num == 0) {
     echo json_encode(['success' => false, 'error' => 'No se especificó presupuesto (presupuesto_num o presupuesto_id)']);
     exit;
