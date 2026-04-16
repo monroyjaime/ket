@@ -432,7 +432,10 @@ try {
             </div>
         `);
         
-        const url = `https://ketelectropartes.com/admin/php/verPresupuesto.php?presupuesto_id=${presupuestoId}`;
+    // Buscar el presupuesto_num correspondiente al idx
+        const presupuesto = listaPresupuestos.find(p => p.idx == presupuestoId);
+        const presupuestoNum = presupuesto ? presupuesto.presupuesto_num : presupuestoId;
+        const url = `https://ketelectropartes.com/admin/php/verPresupuesto.php?presupuesto_num=${presupuestoNum}`;        
         
         $.get(url, function(data) {
             $('#presupuesto-content').html(data);
