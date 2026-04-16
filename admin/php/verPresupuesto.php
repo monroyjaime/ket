@@ -4,10 +4,20 @@ ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
 session_start();
+
+
+
+
 require_once("../../php/dbcat_async.php");
+
+error_log("=== verPresupuesto.php ===");
+error_log("GET: " . print_r($_GET, true));
 
 $presupuesto_id = $_GET['presupuesto_id'] ?? 0;
 $presupuesto_num = $_GET['presupuesto_num'] ?? 0;
+
+error_log("presupuesto_id: $presupuesto_id");
+error_log("presupuesto_num: $presupuesto_num");
 
 $db = new DBAsync();
 
