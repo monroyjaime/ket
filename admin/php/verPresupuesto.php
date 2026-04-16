@@ -462,7 +462,7 @@ try {
             <a href="../presupuestos/index.php" class="btn btn-success">🏠 Ir al Inicio</a>
             <!-- Botón para ver PDF de imágenes con opción de precios -->
             <div class="d-inline-flex align-items-center gap-2">
-                <button type="button" class="btn btn-info" onclick="verPDFImagenes(<?php echo $presupuesto->presupuesto_num; ?>return false; )">
+                <button type="button" class="btn btn-info" onclick="verPDFImagenes(<?php echo $presupuesto->presupuesto_num; ?>; return false; )">
                     <i class="bi bi-file-pdf-fill"></i> Ver PDF de Imágenes
                 </button>
                 <div class="form-check form-switch">
