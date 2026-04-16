@@ -7,7 +7,21 @@ session_start();
 require_once("../../php/dbcat_async.php");
 
 $presupuesto_id = $_GET['presupuesto_id'] ?? 0;
+$presupuesto_num = $_GET['presupuesto_num'] ?? 0;
+
 $db = new DBAsync();
+
+// Si recibimos presupuesto_id (idx) y no presupuesto_num, convertir a presupuesto_num
+if ($presupuesto_id > 0 && $presupuesto_num == 0) {
+    $resultConv = $db->consultaSegura("SELECT presupuesto_num FROM presupuesto_gen WHERE idx = $1", [$presupuesto_id]);
+    if (!empty($resultConv)) {
+        $presupuesto_num = $resultConv[0]->presupuesto_num;
+    } else {
+        die('Presupuesto no encontrado. ID: ' . $presupuesto_id);
+    }
+} elseif ($presupuesto_num == 0) {
+    die('No se especificó presupuesto');
+}
 
 try {
     // Obtener datos generales del presupuesto
@@ -15,8 +29,8 @@ try {
         "SELECT pg.*, u.full_name as usuario_nombre
          FROM presupuesto_gen pg
          LEFT JOIN usuario u ON pg.user_num = u.num
-         WHERE pg.idx = $1",
-        [$presupuesto_id]
+         WHERE pg.presupuesto_num = $1",
+        [$presupuesto_num]
     );
     
     if (empty($presupuestoGen)) {
@@ -30,9 +44,9 @@ try {
         "SELECT pd.*, p.name as producto_nombre, p.unit as unidad
          FROM presupuesto_detail pd
          LEFT JOIN productos p ON pd.product_code = p.code
-         WHERE pd.pres_idx = $1
+         WHERE pd.pres_idx = (SELECT idx FROM presupuesto_gen WHERE presupuesto_num = $1)
          ORDER BY pd.orden",
-        [$presupuesto_id]
+        [$presupuesto_num]
     );
     
     if (empty($detalles)) {
