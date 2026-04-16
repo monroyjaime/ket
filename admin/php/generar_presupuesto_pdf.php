@@ -6,10 +6,19 @@ require_once("../../php/dbcat_async.php");
 header('Content-Type: application/json');
 
 // Obtener parámetros
+$presupuesto_num = isset($_GET['presupuesto_num']) ? intval($_GET['presupuesto_num']) : 0;
 $presupuesto_id = isset($_GET['presupuesto_id']) ? intval($_GET['presupuesto_id']) : 0;
 $calidad = isset($_GET['calidad']) ? $_GET['calidad'] : 'web';
 $mostrarPrecio = isset($_GET['mostrar_precio']) ? intval($_GET['mostrar_precio']) : 0;
 $async = isset($_GET['async']) ? $_GET['async'] : 0;
+
+if ($presupuesto_num == 0 && isset($_GET['presupuesto_id'])) {
+    $idx = intval($_GET['presupuesto_id']);
+    $result = $db->consultaSegura("SELECT presupuesto_num FROM presupuesto_gen WHERE idx = $1", [$idx]);
+    if (!empty($result)) {
+        $presupuesto_num = $result[0]->presupuesto_num;
+    }
+}
 
 // Validar calidad
 if (!in_array($calidad, ['web', 'impresion'])) {

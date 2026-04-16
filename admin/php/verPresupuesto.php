@@ -394,7 +394,7 @@ try {
             <a href="../presupuestos/index.php" class="btn btn-success">🏠 Ir al Inicio</a>
             <!-- Botón para ver PDF de imágenes con opción de precios -->
             <div class="d-inline-flex align-items-center gap-2">
-                <button type="button" class="btn btn-info" onclick="verPDFImagenes(<?php echo $presupuesto->idx; ?>)">
+                <button type="button" class="btn btn-info" onclick="verPDFImagenes(<?php echo $presupuesto->presupuesto_num; ?>)">
                     <i class="bi bi-file-pdf-fill"></i> Ver PDF de Imágenes
                 </button>
                 <div class="form-check form-switch">
@@ -477,7 +477,7 @@ try {
             btn.disabled = true;
             
             // Usar modo asíncrono
-            const url = `../../admin/php/generar_presupuesto_pdf.php?presupuesto_id=${presupuestoId}&calidad=web&mostrar_precio=${mostrarPrecio}&async=1`;
+            const url = `../../admin/php/generar_presupuesto_pdf.php?presupuesto_id=${presupuestoNum}&calidad=web&mostrar_precio=${mostrarPrecio}&async=1`;
             
             fetch(url)
                 .then(response => response.json())
