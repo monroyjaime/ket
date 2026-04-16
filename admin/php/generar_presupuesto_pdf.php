@@ -15,7 +15,7 @@ $async = isset($_GET['async']) ? $_GET['async'] : 0;
 // Si recibimos presupuesto_id, convertirlo a presupuesto_num
 if ($presupuesto_num == 0 && $presupuesto_id > 0) {
     $db = new DBAsync();
-    $result = $db->consultaSegura("SELECT presupuesto_num FROM presupuesto_gen WHERE idx = $1", [$presupuesto_id]);
+    $result = $db->consultaSegura("SELECT presupuesto_num FROM presupuesto_gen WHERE presupuesto_num = $1", [$presupuesto_num]);
     if (!empty($result)) {
         $presupuesto_num = $result[0]->presupuesto_num;
     }
@@ -33,7 +33,7 @@ if (!in_array($calidad, ['web', 'impresion'])) {
 }
 
 // Validar ID
-if ($presupuesto_id == 0) {
+if ($presupuesto_num == 0) {
     echo json_encode(['success' => false, 'error' => 'No se especificó presupuesto']);
     exit;
 }
@@ -50,8 +50,8 @@ if (empty($result)) {
 $num_valery = $result[0]->presupuesto_num ;
 
 // Ruta del PDF
-$pdf_path = "/var/www/html/pdfs/presupuestos/presupuesto_{$presupuesto_num }.pdf";
-$pdf_url = "/pdfs/presupuestos/presupuesto_{$presupuesto_num }.pdf";
+$pdf_path = "/var/www/html/pdfs/presupuestos/presupuesto_{$presupuesto_num}.pdf";
+$pdf_url = "/pdfs/presupuestos/presupuesto_{$presupuesto_num}.pdf";
 
 // 🔴 ELIMINAR PDF EXISTENTE SIEMPRE (para forzar regeneración)
 if (file_exists($pdf_path)) {
@@ -87,8 +87,7 @@ if ($async == 1) {
 set_time_limit(300);
 $script_path = '/home/jaime/catalogo_ket/generar_presupuesto_pdf.py';
 $python_path = '/home/jaime/catalogo_ket/venv/bin/python3';
-$comando = "$python_path $script_path --presupuesto $presupuesto_id --calidad $calidad --mostrar_precio $mostrarPrecio 2>&1";
-
+$comando = "$python_path $script_path --presupuesto $presupuesto_num --calidad $calidad --mostrar_precio $mostrarPrecio 2>&1";
 $output = [];
 $return_code = 0;
 exec($comando, $output, $return_code);
