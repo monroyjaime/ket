@@ -477,8 +477,8 @@ try {
             btn.disabled = true;
             
             // Usar modo asíncrono
-            const url = `../../admin/php/generar_presupuesto_pdf.php?presupuesto_id=${presupuestoNum}&calidad=web&mostrar_precio=${mostrarPrecio}&async=1`;
-            
+            //const url = `../../admin/php/generar_presupuesto_pdf.php?presupuesto_id=${presupuestoNum}&calidad=web&mostrar_precio=${mostrarPrecio}&async=1`;
+            const url = `../../admin/php/generar_presupuesto_pdf.php?presupuesto_num=${presupuestoNum}&calidad=web&mostrar_precio=${mostrarPrecio}&async=0`;
             fetch(url)
                 .then(response => response.json())
                 .then(data => {
