@@ -7,9 +7,15 @@ header('Content-Type: application/json');
 
 $presupuesto_num = isset($_GET['presupuesto_num']) ? intval($_GET['presupuesto_num']) : 0;
 
+require_once("../../php/dbcat_async.php");
+$db = new DBAsync();
+
+$result = $db->consultaSegura("SELECT presupuesto_num FROM presupuesto_gen WHERE presupuesto_num = $1", [$presupuesto_num]);
+
 echo json_encode([
-    'success' => false,
-    'debug' => 'Llegó al script',
-    'presupuesto_num' => $presupuesto_num
+    'success' => !empty($result),
+    'presupuesto_num' => $presupuesto_num,
+    'found' => !empty($result),
+    'result' => $result
 ]);
 exit;
