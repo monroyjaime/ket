@@ -467,7 +467,7 @@ try {
                 btn.disabled = false;
             });
         }
-        function verPDFImagenes(presupuestoId) {
+        function verPDFImagenes(presupuestoNum) {
             const checkbox = document.getElementById('mostrarPrecioCheck');
             const mostrarPrecio = checkbox && checkbox.checked ? 1 : 0;
             
