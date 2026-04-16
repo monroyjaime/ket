@@ -12,10 +12,11 @@ $calidad = isset($_GET['calidad']) ? $_GET['calidad'] : 'web';
 $mostrarPrecio = isset($_GET['mostrar_precio']) ? intval($_GET['mostrar_precio']) : 0;
 $async = isset($_GET['async']) ? $_GET['async'] : 0;
 
-// Si recibimos presupuesto_id, convertirlo a presupuesto_num
+// Si recibimos presupuesto_id (idx), convertirlo a presupuesto_num
 if ($presupuesto_num == 0 && $presupuesto_id > 0) {
     $db = new DBAsync();
-    $result = $db->consultaSegura("SELECT presupuesto_num FROM presupuesto_gen WHERE presupuesto_num = $1", [$presupuesto_num]);
+    // Buscar por idx, no por presupuesto_num
+    $result = $db->consultaSegura("SELECT presupuesto_num FROM presupuesto_gen WHERE idx = $1", [$presupuesto_id]);
     if (!empty($result)) {
         $presupuesto_num = $result[0]->presupuesto_num;
     }
