@@ -462,7 +462,7 @@ try {
             <a href="../presupuestos/index.php" class="btn btn-success">🏠 Ir al Inicio</a>
             <!-- Botón para ver PDF de imágenes con opción de precios -->
             <div class="d-inline-flex align-items-center gap-2">
-                <button type="button" class="btn btn-info" onclick="verPDFImagenes(<?php echo $presupuesto->presupuesto_num; ?>)">
+                <button type="button" class="btn btn-info" onclick="verPDFImagenes(<?php echo $presupuesto->presupuesto_num; return false; ?>)">
                     <i class="bi bi-file-pdf-fill"></i> Ver PDF de Imágenes
                 </button>
                 <div class="form-check form-switch">
@@ -538,11 +538,27 @@ try {
         function verPDFImagenes(presupuestoNum) {
             console.log("=== verPDFImagenes llamada ===");
             console.log("presupuestoNum recibido:", presupuestoNum);
+
+             // Prevenir cualquier comportamiento por defecto
+            if (event) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
     
             const checkbox = document.getElementById('mostrarPrecioCheck');
             const mostrarPrecio = checkbox && checkbox.checked ? 1 : 0;
+
+             // Construir URL correcta
+            const url = `../../admin/php/generar_presupuesto_pdf.php?presupuesto_num=${presupuestoNum}&calidad=web&mostrar_precio=${mostrarPrecio}&async=0`;
             
-            const btn = event.target.closest('button');
+            console.log("URL generada:", url);
+            
+            // Abrir en nueva ventana
+            window.open(url, '_blank');
+            
+            return false;
+            
+            /*const btn = event.target.closest('button');
             const originalText = btn.innerHTML;
             btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Generando PDF...';
             btn.disabled = true;
@@ -571,7 +587,7 @@ try {
                     alert('Error al iniciar la generación del PDF');
                     btn.innerHTML = originalText;
                     btn.disabled = false;
-                });
+                }); */
         }
 
         function verificarPDF(presupuestoId, btn, originalText) {
