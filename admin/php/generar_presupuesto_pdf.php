@@ -12,12 +12,20 @@ $calidad = isset($_GET['calidad']) ? $_GET['calidad'] : 'web';
 $mostrarPrecio = isset($_GET['mostrar_precio']) ? intval($_GET['mostrar_precio']) : 0;
 $async = isset($_GET['async']) ? $_GET['async'] : 0;
 
+error_log("=== generar_presupuesto_pdf.php DEBUG ===");
+error_log("presupuesto_num: " . $presupuesto_num);
+error_log("presupuesto_id: " . $presupuesto_id);
+
+
 // Si recibimos presupuesto_id (idx), convertirlo a presupuesto_num
 if ($presupuesto_num == 0 && $presupuesto_id > 0) {
     $db = new DBAsync();
     // Buscar por idx, no por presupuesto_num
     $result = $db->consultaSegura("SELECT presupuesto_num FROM presupuesto_gen WHERE idx = $1", [$presupuesto_id]);
+    error_log("Resultado consulta: " . print_r($result, true));
+    
     if (!empty($result)) {
+        error_log("Presupuesto NO encontrado para número: " . $presupuesto_num);
         $presupuesto_num = $result[0]->presupuesto_num;
     }
 }
