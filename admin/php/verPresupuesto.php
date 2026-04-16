@@ -492,6 +492,9 @@ try {
             });
         }
         function verPDFImagenes(presupuestoNum) {
+            console.log("=== verPDFImagenes llamada ===");
+            console.log("presupuestoNum recibido:", presupuestoNum);
+    
             const checkbox = document.getElementById('mostrarPrecioCheck');
             const mostrarPrecio = checkbox && checkbox.checked ? 1 : 0;
             
