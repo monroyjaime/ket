@@ -12,12 +12,19 @@ $calidad = isset($_GET['calidad']) ? $_GET['calidad'] : 'web';
 $mostrarPrecio = isset($_GET['mostrar_precio']) ? intval($_GET['mostrar_precio']) : 0;
 $async = isset($_GET['async']) ? $_GET['async'] : 0;
 
-if ($presupuesto_num == 0 && isset($_GET['presupuesto_id'])) {
-    $idx = intval($_GET['presupuesto_id']);
-    $result = $db->consultaSegura("SELECT presupuesto_num FROM presupuesto_gen WHERE idx = $1", [$idx]);
+// Si recibimos presupuesto_id, convertirlo a presupuesto_num
+if ($presupuesto_num == 0 && $presupuesto_id > 0) {
+    $db = new DBAsync();
+    $result = $db->consultaSegura("SELECT presupuesto_num FROM presupuesto_gen WHERE idx = $1", [$presupuesto_id]);
     if (!empty($result)) {
         $presupuesto_num = $result[0]->presupuesto_num;
     }
+}
+
+// Validar que tenemos un número de presupuesto
+if ($presupuesto_num == 0) {
+    echo json_encode(['success' => false, 'error' => 'No se especificó presupuesto (presupuesto_num o presupuesto_id)']);
+    exit;
 }
 
 // Validar calidad
