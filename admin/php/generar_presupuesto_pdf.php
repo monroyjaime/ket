@@ -76,7 +76,7 @@ if ($async == 1) {
     exit;
 }
 
-// Modo síncrono
+// Modo síncrono (con timeout aumentado)
 set_time_limit(300);
 $script_path = '/home/jaime/catalogo_ket/generar_presupuesto_pdf.py';
 $python_path = '/home/jaime/catalogo_ket/venv/bin/python3';
@@ -86,15 +86,11 @@ $return_code = 0;
 exec($comando, $output, $return_code);
 
 if ($return_code === 0 && file_exists($pdf_path) && filesize($pdf_path) > 0) {
-    echo json_encode([
-        'success' => true,
-        'pdf_url' => $pdf_url,
-        'output' => implode("\n", $output)
-    ]);
+    // 🔴 REDIRIGIR AL PDF EN LUGAR DE DEVOLVER JSON
+    header('Location: ' . $pdf_url);
+    exit;
 } else {
-    echo json_encode([
-        'success' => false,
-        'error' => implode("\n", $output),
-        'return_code' => $return_code
-    ]);
+    // Si hay error, mostrar mensaje
+    echo "Error generando PDF:<br>";
+    echo "<pre>" . htmlspecialchars(implode("\n", $output)) . "</pre>";
 }
