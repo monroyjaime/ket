@@ -47,29 +47,39 @@ try {
     }
     
     $imgRoute = $deptoResult[0]->img_route;
+
+
     $imgRoute = preg_replace('#^https?://[^/]+/#', '', $imgRoute);
     $imgRoute = ltrim($imgRoute, '/');
     
-    if (empty($imgRoute)) {
-        $imgRoute = 'catalogo/images/departamentos/';
-    }
-    
-    if (substr($imgRoute, -1) !== '/') {
+    if (!empty($imgRoute) && substr($imgRoute, -1) !== '/') {
         $imgRoute .= '/';
     }
+
+    if (empty($imgRoute)) {
+        //$imgRoute = 'catalogo/images/departamentos/';
+        $imgRoute = 'catalogo/images/';
+    }
+    
+    /*if (substr($imgRoute, -1) !== '/') {
+        $imgRoute .= '/';
+    }*/
     
     $nombreArchivo = $codigo . '.jpg';
     $directorioDestino = $docRoot . '/' . $imgRoute;
     $rutaCompleta = $directorioDestino . $nombreArchivo;
-    
-    // Solo el nombre del archivo para la BD
     $rutaRelativa = $nombreArchivo;
     
     // Crear directorio si no existe
     if (!file_exists($directorioDestino)) {
-        if (!mkdir($directorioDestino, 0775, true)) {
+        if (!mkdir($directorioDestino, 0777, true)) {
             throw new Exception('No se pudo crear el directorio: ' . $directorioDestino);
         }
+    }
+
+    // Verificar permisos de escritura
+    if (!is_writable($directorioDestino)) {
+        throw new Exception('Directorio no tiene permisos de escritura: ' . $directorioDestino);
     }
     
     // ============================================
