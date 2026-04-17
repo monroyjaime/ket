@@ -1,9 +1,21 @@
 <?php
-// upload_final.php - Con respaldo y control de caché
-ini_set('display_errors', 0);
-ini_set('log_errors', 1);
-error_reporting(E_ALL);
+// upload_final.php - Solución robusta con carpeta temporal personalizada
 
+// --- 1. CONFIGURACIÓN FORZADA DE CARPETA TEMPORAL ---
+// Esta es la solución clave. Definimos una ruta fija y le decimos a PHP que la use.
+$customTempDir = '/home/jaime/catalogo_ket/tmp';
+
+// Verificamos si la carpeta existe. Si no, la creamos.
+if (!is_dir($customTempDir)) {
+    mkdir($customTempDir, 0700, true);
+}
+
+// ¡Aquí forzamos a PHP a usar NUESTRA carpeta, sobreescribiendo cualquier otra configuración!
+ini_set('upload_tmp_dir', $customTempDir);
+// También la configuramos como variable de entorno para Playwright y otros procesos.
+putenv("TMPDIR=$customTempDir");
+
+// --- 2. RESTO DEL SCRIPT (Sin cambios importantes, pero incluido por completitud) ---
 session_start();
 
 // Verificar autenticación RÁPIDAMENTE
@@ -16,11 +28,12 @@ if ($role != 1 || $isAdmin != 1) {
     exit;
 }
 
-// 🔴 CERRAR LA SESIÓN para liberar el archivo de sesión
+// Cerramos la sesión para liberar el archivo de sesión
 session_write_close();
 
 header('Content-Type: application/json');
 
+// Función para enviar respuesta JSON
 function sendJsonResponse($success, $message, $extra = []) {
     $response = array_merge(['success' => $success, 'message' => $message], $extra);
     echo json_encode($response);
@@ -41,9 +54,10 @@ try {
         sendJsonResponse(false, 'Error en archivo: ' . $archivo['error']);
     }
     
-    // Verificar que el temporal existe
+    // Verificar que el temporal existe (ahora debería ser nuestra carpeta)
     if (!file_exists($archivo['tmp_name'])) {
-        sendJsonResponse(false, 'El archivo temporal no existe: ' . $archivo['tmp_name']);
+        // Añadimos información de depuración en caso de que falle
+        sendJsonResponse(false, 'El archivo temporal no existe. Dir: ' . ini_get('upload_tmp_dir'));
     }
     
     $docRoot = $_SERVER['DOCUMENT_ROOT'];
@@ -61,7 +75,7 @@ try {
     
     $imgRoute = $deptoResult[0]->img_route;
     
-    // Limpiar la ruta
+    // Limpiar la ruta (eliminar protocolo y dominio)
     $imgRoute = preg_replace('#^https?://[^/]+/#', '', $imgRoute);
     $imgRoute = ltrim($imgRoute, '/');
     if (substr($imgRoute, -1) !== '/') {
