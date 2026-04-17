@@ -1,14 +1,26 @@
 <?php
 // upload_final.php - Con respaldo y control de caché
-// Forzar modo de errores silencioso (solo JSON)
 ini_set('display_errors', 0);
 ini_set('log_errors', 1);
 error_reporting(E_ALL);
 
 session_start();
+
+// Verificar autenticación RÁPIDAMENTE
+$isAdmin = $_SESSION['usr_admin'] ?? 0;
+$role = $_SESSION['role'] ?? -1;
+
+if ($role != 1 || $isAdmin != 1) {
+    header('Content-Type: application/json');
+    echo json_encode(['success' => false, 'message' => 'No autorizado']);
+    exit;
+}
+
+// 🔴 CERRAR LA SESIÓN para liberar el archivo de sesión
+session_write_close();
+
 header('Content-Type: application/json');
 
-// Función para enviar respuesta JSON
 function sendJsonResponse($success, $message, $extra = []) {
     $response = array_merge(['success' => $success, 'message' => $message], $extra);
     echo json_encode($response);
@@ -16,14 +28,6 @@ function sendJsonResponse($success, $message, $extra = []) {
 }
 
 try {
-    // Verificar autenticación
-    $isAdmin = $_SESSION['usr_admin'] ?? 0;
-    $role = $_SESSION['role'] ?? -1;
-    
-    if ($role != 1 || $isAdmin != 1) {
-        sendJsonResponse(false, 'No autorizado');
-    }
-    
     // Verificar datos
     if (!isset($_POST['codigo']) || !isset($_POST['dpto_id']) || !isset($_FILES['archivo'])) {
         sendJsonResponse(false, 'Datos incompletos');
@@ -35,6 +39,11 @@ try {
     
     if ($archivo['error'] !== UPLOAD_ERR_OK) {
         sendJsonResponse(false, 'Error en archivo: ' . $archivo['error']);
+    }
+    
+    // Verificar que el temporal existe
+    if (!file_exists($archivo['tmp_name'])) {
+        sendJsonResponse(false, 'El archivo temporal no existe: ' . $archivo['tmp_name']);
     }
     
     $docRoot = $_SERVER['DOCUMENT_ROOT'];
@@ -52,7 +61,7 @@ try {
     
     $imgRoute = $deptoResult[0]->img_route;
     
-    // Limpiar la ruta (eliminar protocolo y dominio)
+    // Limpiar la ruta
     $imgRoute = preg_replace('#^https?://[^/]+/#', '', $imgRoute);
     $imgRoute = ltrim($imgRoute, '/');
     if (substr($imgRoute, -1) !== '/') {
@@ -75,30 +84,19 @@ try {
         }
     }
     
-    // ============================================
-    // RESPALDAR FOTO EXISTENTE SI EXISTE
-    // ============================================
+    // Respaldar foto existente si existe
     $backupName = null;
     if (file_exists($rutaCompleta)) {
         $timestamp = date('Ymd_His');
-        $extension = pathinfo($nombreArchivo, PATHINFO_EXTENSION);
         $nombreBase = pathinfo($nombreArchivo, PATHINFO_FILENAME);
-        $backupName = $nombreBase . "_backup_{$timestamp}." . $extension;
+        $backupName = $nombreBase . "_backup_{$timestamp}.jpg";
         $rutaBackup = $directorioDestino . $backupName;
-        if (copy($rutaCompleta, $rutaBackup)) {
-            error_log("Backup creado: " . $rutaBackup);
-        } else {
-            error_log("No se pudo crear backup de: " . $rutaCompleta);
-        }
+        copy($rutaCompleta, $rutaBackup);
     }
     
-    // Guardar el nuevo archivo (usando move_uploaded_file que es más seguro)
+    // Guardar el nuevo archivo
     if (!move_uploaded_file($archivo['tmp_name'], $rutaCompleta)) {
-        // Si falla, intentar con copy como fallback
-        if (!copy($archivo['tmp_name'], $rutaCompleta)) {
-            $error = error_get_last();
-            sendJsonResponse(false, 'Error al guardar archivo: ' . ($error['message'] ?? 'desconocido'));
-        }
+        sendJsonResponse(false, 'Error al guardar el archivo');
     }
     
     // Actualizar base de datos
@@ -106,7 +104,6 @@ try {
     $result = $db->querySet($updateQuery);
     
     if ($result !== 1) {
-        // Si falla la BD, restaurar backup si existe
         if (isset($rutaBackup) && file_exists($rutaBackup)) {
             copy($rutaBackup, $rutaCompleta);
         }
