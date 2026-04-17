@@ -68,6 +68,30 @@ try {
     $nombreArchivo = $codigo . '.jpg';
     $directorioDestino = $docRoot . '/' . $imgRoute;
     $rutaCompleta = $directorioDestino . $nombreArchivo;
+
+    // ============================================
+    // LOGS DE DEPURACIÓN
+    // ============================================
+    error_log("=== upload_final.php DEBUG ===");
+    error_log("docRoot: " . $docRoot);
+    error_log("imgRoute: " . $imgRoute);
+    error_log("directorioDestino: " . $directorioDestino);
+    error_log("rutaCompleta: " . $rutaCompleta);
+    error_log("nombreArchivo: " . $nombreArchivo);
+    error_log("archivo tmp_name: " . $archivo['tmp_name']);
+    error_log("archivo size: " . $archivo['size']);
+    error_log("archivo error: " . $archivo['error']);
+
+    // Verificar directorio
+    if (file_exists($directorioDestino)) {
+        error_log("Directorio SI existe");
+        error_log("Directorio es escribible: " . (is_writable($directorioDestino) ? 'SI' : 'NO'));
+    } else {
+        error_log("Directorio NO existe");
+    }
+
+
+
     $rutaRelativa = $nombreArchivo;
     
     // Crear directorio si no existe
@@ -100,6 +124,21 @@ try {
             error_log("No se pudo crear backup de: " . $rutaCompleta);
         }
     }
+
+
+    error_log("Intentando copiar archivo...");
+    error_log("Origen: " . $archivo['tmp_name']);
+    error_log("Destino: " . $rutaCompleta);
+
+    // Guardar el nuevo archivo
+    if (!copy($archivo['tmp_name'], $rutaCompleta)) {
+        $error = error_get_last();
+        error_log("ERROR al copiar: " . ($error['message'] ?? 'desconocido'));
+        throw new Exception('Error al copiar archivo: ' . ($error['message'] ?? 'desconocido'));
+    } else {
+        error_log("Archivo copiado exitosamente");
+    }
+
     
     // Guardar el nuevo archivo (usando el método que funcionó)
     if (!copy($archivo['tmp_name'], $rutaCompleta)) {
