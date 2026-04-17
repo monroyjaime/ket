@@ -1,4 +1,14 @@
 <?php
+// Forzar visualización de errores en el navegador
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+
+// También crear un archivo de log personalizado
+$debug_log = '/tmp/upload_debug.log';
+file_put_contents($debug_log, date('Y-m-d H:i:s') . " - Iniciando upload_final.php\n", FILE_APPEND);
+
+
 // upload_final.php - Con respaldo y control de caché
 session_start();
 header('Content-Type: application/json');
@@ -69,18 +79,14 @@ try {
     $directorioDestino = $docRoot . '/' . $imgRoute;
     $rutaCompleta = $directorioDestino . $nombreArchivo;
 
-    // ============================================
-    // LOGS DE DEPURACIÓN
-    // ============================================
-    error_log("=== upload_final.php DEBUG ===");
-    error_log("docRoot: " . $docRoot);
-    error_log("imgRoute: " . $imgRoute);
-    error_log("directorioDestino: " . $directorioDestino);
-    error_log("rutaCompleta: " . $rutaCompleta);
-    error_log("nombreArchivo: " . $nombreArchivo);
-    error_log("archivo tmp_name: " . $archivo['tmp_name']);
-    error_log("archivo size: " . $archivo['size']);
-    error_log("archivo error: " . $archivo['error']);
+    // Logs personalizados
+    file_put_contents('/tmp/upload_debug.log', "=== upload_final.php ===\n", FILE_APPEND);
+    file_put_contents('/tmp/upload_debug.log', "docRoot: $docRoot\n", FILE_APPEND);
+    file_put_contents('/tmp/upload_debug.log', "imgRoute: $imgRoute\n", FILE_APPEND);
+    file_put_contents('/tmp/upload_debug.log', "directorioDestino: $directorioDestino\n", FILE_APPEND);
+    file_put_contents('/tmp/upload_debug.log', "rutaCompleta: $rutaCompleta\n", FILE_APPEND);
+    file_put_contents('/tmp/upload_debug.log', "nombreArchivo: $nombreArchivo\n", FILE_APPEND);
+    file_put_contents('/tmp/upload_debug.log', "archivo tmp_name: " . $archivo['tmp_name'] . "\n", FILE_APPEND);
 
     // Verificar directorio
     if (file_exists($directorioDestino)) {
@@ -132,9 +138,16 @@ try {
 
     // Guardar el nuevo archivo
     if (!copy($archivo['tmp_name'], $rutaCompleta)) {
-        $error = error_get_last();
-        error_log("ERROR al copiar: " . ($error['message'] ?? 'desconocido'));
-        throw new Exception('Error al copiar archivo: ' . ($error['message'] ?? 'desconocido'));
+       $error = error_get_last();
+        $response['message'] = 'Error al copiar archivo: ' . ($error['message'] ?? 'desconocido');
+        $response['debug'] = [
+            'origen' => $archivo['tmp_name'],
+            'destino' => $rutaCompleta,
+            'directorio_existe' => file_exists($directorioDestino),
+            'directorio_escribible' => is_writable($directorioDestino)
+        ];
+        echo json_encode($response);
+        exit;
     } else {
         error_log("Archivo copiado exitosamente");
     }
