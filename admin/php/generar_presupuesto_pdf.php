@@ -76,7 +76,7 @@ if ($async == 1) {
     exit;
 }
 
-// Modo síncrono (con timeout aumentado)
+// Modo síncrono (con timeout aumentado) ...
 set_time_limit(300);
 $script_path = '/home/jaime/catalogo_ket/generar_presupuesto_pdf.py';
 $python_path = '/home/jaime/catalogo_ket/venv/bin/python3';
