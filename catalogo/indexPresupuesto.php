@@ -94,15 +94,20 @@ if ($numValery > 0) {
 }
 
 // ============================================
-// 6. GENERAR GRID DE PRODUCTOS
+// 6. GENERAR GRID DE PRODUCTOS CON PAGINACIÓN
 // ============================================
 if (empty($productos)) {
     $tags .= '<p>No se encontraron productos para este presupuesto.</p>';
 } else {
+    // Calcular productos por página
+    $productos_por_pagina = ($mostrarPrecio == 1) ? 18 : 21;
+    $inicio = ($pageGlobal - 1) * $productos_por_pagina;
+    $productos_pagina = array_slice($productos, $inicio, $productos_por_pagina);
+    
     $tags .= '<div class="products-grid">';
     $tags .= '<div class="row row-cols-1 row-cols-sm-3 g-4 justify-content-center">';
     
-    foreach ($productos as $producto) {
+    foreach ($productos_pagina as $producto) {
         $code = $producto['product_code'];
         $precio = floatval($producto['precio']);
         $descripcion = $producto['descripcion'];
@@ -117,23 +122,18 @@ if (empty($productos)) {
         
         $tags .= '<div class="col">';
         $tags .= '<div class="card h-100">';
-        
-        // Encabezado con código
         $tags .= '<div class="card-header text-center" style="background-color: #037C79; color: white; font-weight: bold;">';
         $tags .= htmlspecialchars($code);
         $tags .= '</div>';
-        
-        // Cuerpo: foto y descripción 50/50
         $tags .= '<div class="row g-0">';
         $tags .= '<div class="col-6 text-center img-container">';
-        $tags .= '<img src="' . $imgUrl . '" alt="' . htmlspecialchars($code) . '" style="max-height:90px; width:auto; max-width:100%; object-fit:contain;">';
+        $tags .= '<img src="'.$imgUrl.'" alt="'.htmlspecialchars($code).'" style="max-height:90px; width:auto; max-width:100%; object-fit:contain;">';
         $tags .= '</div>';
         $tags .= '<div class="col-6 texto">';
         $tags .= htmlspecialchars($descripcion);
         $tags .= '</div>';
         $tags .= '</div>';
         
-        // Precio histórico (si se solicita)
         if ($mostrarPrecio == 1 && $precio > 0) {
             $precioFormateado = number_format($precio, 3, ',', '.');
             $tags .= '<div class="card-footer text-center" style="background-color: #f0f0f0; padding: 6px;">';
