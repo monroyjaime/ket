@@ -490,13 +490,7 @@ $pageTitle = "Actualización de Fotos - Catálogo";
         
         // Función para actualizar foto - MODIFICADA sin opción URL
 function actualizarFoto(codigo, departamento, dptoId, tieneFotoActual, imgRoute, fotoActual) {
-    console.log('=== actualizarFoto ===');
-    console.log('codigo:', codigo);
-    console.log('departamento:', departamento);
-    console.log('dptoId:', dptoId);
-    console.log('tieneFotoActual:', tieneFotoActual);
-    console.log('imgRoute RECIBIDO:', imgRoute);
-    console.log('fotoActual:', fotoActual);
+
     // Limpiar y preparar la ruta base
     var rutaBase = imgRoute || '';
     rutaBase = rutaBase.replace(/^https?:\/\/[^/]+\//, '');
@@ -575,9 +569,8 @@ function actualizarFoto(codigo, departamento, dptoId, tieneFotoActual, imgRoute,
         },
         preConfirm: () => {
             const archivo = document.getElementById('archivoFoto').files[0];
-            
             if (!archivo) {
-                Swal.showValidationMessage('Debes seleccionar un archivo de imagen');
+                Swal.showValidationMessage('Debes seleccionar un archivo');
                 return false;
             }
             
@@ -591,27 +584,45 @@ function actualizarFoto(codigo, departamento, dptoId, tieneFotoActual, imgRoute,
                 return false;
             }
             
-            const formData = new FormData();
-            formData.append('archivo', archivo);
-            formData.append('codigo', codigo);
-            formData.append('dpto_id', dptoId);
+            Swal.showLoading();
             
-            return fetch('upload_final.php', {
-                method: 'POST',
-                body: formData,
-                credentials: 'include'
-            })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('HTTP error ' + response.status);
-                }
-                return response.json();
-            })
-            .then(data => {
-                if (!data.success) {
-                    throw new Error(data.message);
-                }
-                return data;
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const base64 = e.target.result.split(',')[1];
+                    
+                    const formData = new FormData();
+                    formData.append('codigo', codigo);
+                    formData.append('dpto_id', dptoId);
+                    formData.append('imagen_base64', base64);
+                    
+                    const xhr = new XMLHttpRequest();
+                    xhr.open('POST', 'upload_base64.php', true);
+                    xhr.onload = function() {
+                        if (xhr.status === 200) {
+                            try {
+                                const data = JSON.parse(xhr.responseText);
+                                if (data.success) {
+                                    resolve(data);
+                                } else {
+                                    reject(new Error(data.message));
+                                }
+                            } catch(e) {
+                                reject(new Error('Error al parsear JSON: ' + e.message));
+                            }
+                        } else {
+                            reject(new Error('Error HTTP: ' + xhr.status));
+                        }
+                    };
+                    xhr.onerror = function() {
+                        reject(new Error('Error de red'));
+                    };
+                    xhr.send(formData);
+                };
+                reader.onerror = function() {
+                    reject(new Error('Error al leer el archivo'));
+                };
+                reader.readAsDataURL(archivo);
             });
         }
     }).then((result) => {
