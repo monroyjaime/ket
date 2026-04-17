@@ -45,8 +45,16 @@ if (empty($result)) {
 }
 
 // Ruta del PDF
-$pdf_path = "/var/www/html/pdfs/presupuestos/presupuesto_{$presupuesto_num}.pdf";
-$pdf_url = "/pdfs/presupuestos/presupuesto_{$presupuesto_num}.pdf";
+// Determinar la subcarpeta según mostrar_precio
+if ($mostrarPrecio == 1) {
+    $subcarpeta = "conPrecio/";
+} else {
+    $subcarpeta = "";
+}
+
+// Ruta del PDF
+$pdf_path = "/var/www/html/pdfs/presupuestos/{$subcarpeta}presupuesto_{$presupuesto_num}.pdf";
+$pdf_url = "/pdfs/presupuestos/{$subcarpeta}presupuesto_{$presupuesto_num}.pdf";
 
 // Eliminar PDF existente si existe
 if (file_exists($pdf_path)) {
