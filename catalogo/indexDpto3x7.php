@@ -37,8 +37,14 @@ foreach ($consult as $value){
 // CONFIGURACIÓN - 3 COLUMNAS, FOTO GRANDE
 // ============================================
 $cols = 3;
-$rowsConTitulo = 7; // 3x7 = 21 productos con título
-$rowsSinTitulo = 8; // 3x8 = 24 productos sin título
+// Determinar filas según si hay precio o no
+if ($tipo_precio == 'sin') {
+    $rowsConTitulo = 7; // 3x7 = 21 productos
+    $rowsSinTitulo = 8; // 3x8 = 24 productos
+} else {
+    $rowsConTitulo = 6; // 3x6 = 18 productos (con precio)
+    $rowsSinTitulo = 7; // 3x7 = 21 productos (con precio)
+}
 
 // Calcular productos por página SEGÚN el caso
 if ($pageNum == 1 && $firstProd == 1) {
@@ -56,7 +62,10 @@ $totalProductos = $consultTotal[0]->total;
 if ($pageNum == 1) {
     $offset = ($firstProd - 1);
 } else {
-    $offset = ($firstProd - 1) + 21 + (($pageNum - 2) * 24);
+    // Acumulativo: primera página (21 o 18) + páginas siguientes (24 o 21 cada una)
+    $productosPrimeraPagina = ($tipo_precio == 'sin') ? 21 : 18;
+    $productosPaginasSiguientes = ($tipo_precio == 'sin') ? 24 : 21;
+    $offset = ($firstProd - 1) + $productosPrimeraPagina + (($pageNum - 2) * $productosPaginasSiguientes);
 }
 
 // Construir consulta según si hay precio o no
