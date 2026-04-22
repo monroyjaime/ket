@@ -103,14 +103,12 @@ $tags .= '<div class="row align-items-center">';
 $tags .= '<div class="col-6">';
 $tags .= '<img src="../catalogo/images/logo.png" class="logo" alt="KET">';
 $tags .= '</div>';
-// Fecha y paginación
 $tags .= '<div class="col-6 text-end">';
 if ($pageGlobal == 1) {
-    $tags .= '<div class="fecha-actualizacion">Actualizado: ' . $fechaActualizacion . '</div>';
+    $tags .= '<span class="fecha-actualizacion">Actualizado: ' . $fechaActualizacion . '</span>';
+    $tags .= '<span class="separador"> | </span>';
 }
-
-$tags .= '<div class="col-6 pagination-info">';
-$tags .= 'Pág. '.$pageGlobal.' / '.$totalPaginasGlobal;
+$tags .= '<span class="pagination-info">Pág. ' . $pageGlobal . ' / ' . $totalPaginasGlobal . '</span>';
 $tags .= '</div>';
 $tags .= '</div>';
 $tags .= '</div>';
