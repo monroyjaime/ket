@@ -23,7 +23,7 @@ $dptoId = (isset($_GET['dpto_id'])) ? intval($_GET['dpto_id']) : 1;
 
 
 $linea_nombre = ($line == 1) ? 'automotriz' : 'ferretero';
-
+echo '<script>var lineaNombre = "' . $linea_nombre . '";</script>';
 if ($role == 1 || $role == 2) {
     // Usuarios con cambio de precio: el PDF depende del $tipoPrecio actual
     if ($tipoPrecio == 0) {
@@ -606,7 +606,6 @@ const dptoId = <?php echo $dptoId; ?>;
 const role = <?php echo $role; ?>;
 const line = <?php echo $line; ?>;
 const comeFrom = <?php echo $comeFrom; ?>;
-const lineaNombre = '<?php echo ($line == 1) ? "automotriz" : "ferretero"; ?>';
 
 // Función para ajustar el texto del botón según el ancho de pantalla
 function ajustarTextoBoton() {
@@ -687,6 +686,15 @@ $(document).ready(function() {
 });
 <?php endif; ?>
 
+// Manejador global para el ícono del PDF
+$(document).on('click', '.pdf-icon', function() {
+    var url = $(this).data('url');
+    if (url) {
+        window.open(url, '_blank');
+    }
+});
+
+
     // Forzar tema claro en Chrome Android
     (function() {
         // Prevenir que Chrome aplique tema oscuro automático
@@ -760,14 +768,6 @@ $(document).ready(function() {
                 filtrarProductos();
                 buscador.focus();
             });
-        }
-    });
-
-    // Manejador global para el ícono del PDF
-    $(document).on('click', '.pdf-icon', function() {
-        var url = $(this).data('url');
-        if (url) {
-            window.open(url, '_blank');
         }
     });
 
