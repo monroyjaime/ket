@@ -16,6 +16,11 @@ if ($role == 3) {
     $tipoPrecio = 0;
 }
 
+// Obtener parámetros GET
+if (isset($_GET['line'])) $line = intval($_GET['line']);
+if (isset($_GET['from'])) $comeFrom = intval($_GET['from']);
+$dptoId = (isset($_GET['dpto_id'])) ? intval($_GET['dpto_id']) : 1;
+
 
 $linea_nombre = ($line == 1) ? 'automotriz' : 'ferretero';
 
@@ -44,10 +49,7 @@ if ($role == 1 || $role == 2) {
     $label_pdf = "Ver catálogo PDF";
 }
 
-// Obtener parámetros GET
-if (isset($_GET['line'])) $line = intval($_GET['line']);
-if (isset($_GET['from'])) $comeFrom = intval($_GET['from']);
-$dptoId = (isset($_GET['dpto_id'])) ? intval($_GET['dpto_id']) : 1;
+
 
 // Obtener nombre del departamento
 $consult = $db->consultas("SELECT name FROM departamentos WHERE id=" . $dptoId);
