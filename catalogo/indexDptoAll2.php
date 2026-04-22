@@ -554,8 +554,8 @@ $backCond = '<a href="indiceDptos.php"  title="Volver"><i class="bi bi-arrow-lef
         <h1>
             <i class="bi bi-grid-3x3-gap-fill"></i>
             Catálogo de <?php echo htmlspecialchars($currCatName); ?>
-            <i class="bi bi-file-pdf-fill" style="color: #dc3545; cursor: pointer; font-size: 1.8rem;"
-                onclick="window.open('<?php echo $ruta_pdf; ?>', '_blank')"
+            <i class="bi bi-file-pdf-fill pdf-icon" style="color: #dc3545; cursor: pointer; font-size: 1.8rem;"
+                data-url="<?php echo $ruta_pdf; ?>"
                 title="<?php echo $label_pdf; ?>"></i>
         </h1>
     </div>
@@ -655,8 +655,8 @@ $('#btnCambiarPrecio').on('click', function() {
             $('#btnCambiarPrecio').attr('data-current', currentPrecio);
             ajustarTextoBoton();
             
-            // Actualizar el enlace del PDF
-            var pdfIcon = $('.title-banner .bi-file-pdf-fill');
+            // Actualizar el enlace del PDF (usando data-url)
+            var pdfIcon = $('.title-banner .pdf-icon');
             var nuevaRutaPdf = '';
             
             if (currentPrecio == 0) {
@@ -667,9 +667,7 @@ $('#btnCambiarPrecio').on('click', function() {
                 pdfIcon.attr('title', 'PDF con Precio Mayorista');
             }
             
-            pdfIcon.off('click').on('click', function() {
-                window.open(nuevaRutaPdf, '_blank');
-            });
+            pdfIcon.attr('data-url', nuevaRutaPdf);
             
             btn.prop('disabled', false);
         },
@@ -762,6 +760,14 @@ $(document).ready(function() {
                 filtrarProductos();
                 buscador.focus();
             });
+        }
+    });
+
+    // Manejador global para el ícono del PDF
+    $(document).on('click', '.pdf-icon', function() {
+        var url = $(this).data('url');
+        if (url) {
+            window.open(url, '_blank');
         }
     });
 
