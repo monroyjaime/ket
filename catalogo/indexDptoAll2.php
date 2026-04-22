@@ -601,104 +601,93 @@ $backCond = '<a href="indiceDptos.php"  title="Volver"><i class="bi bi-arrow-lef
     }
 
     <?php if ($role == 1 || $role == 2): ?>
-    let currentPrecio = <?php echo $tipoPrecio; ?>;
-    const dptoId = <?php echo $dptoId; ?>;
-    const role = <?php echo $role; ?>;
-    const line = <?php echo $line; ?>;
-    const comeFrom = <?php echo $comeFrom; ?>;
+let currentPrecio = <?php echo $tipoPrecio; ?>;
+const dptoId = <?php echo $dptoId; ?>;
+const role = <?php echo $role; ?>;
+const line = <?php echo $line; ?>;
+const comeFrom = <?php echo $comeFrom; ?>;
+const lineaNombre = '<?php echo ($line == 1) ? "automotriz" : "ferretero"; ?>';
 
-    <?php if ($role == 1 || $role == 2): ?>
-    let currentPrecio = <?php echo $tipoPrecio; ?>;
-    const dptoId = <?php echo $dptoId; ?>;
-    const role = <?php echo $role; ?>;
-    const line = <?php echo $line; ?>;
-    const comeFrom = <?php echo $comeFrom; ?>;
-    var lineaNombre = '<?php echo ($line == 1) ? "automotriz" : "ferretero"; ?>';
-
-    // Función para ajustar el texto del botón según el ancho de pantalla
-    function ajustarTextoBoton() {
-        const btn = document.getElementById('btnCambiarPrecio');
-        if (!btn) return;
-        
-        const esMovil = window.innerWidth <= 768;
-        const esMovilPeq = window.innerWidth <= 480;
-        const currentPrecioVal = parseInt(btn.getAttribute('data-current'));
-        
-        if (esMovilPeq) {
-            // Texto ultra corto para móviles pequeños
-            btn.innerHTML = currentPrecioVal == 0 ? 
-                '<i class="bi bi-arrow-repeat"></i> Mayorista' : 
-                '<i class="bi bi-arrow-repeat"></i> Minorista';
-        } else if (esMovil) {
-            // Texto corto para tablets/móviles
-            btn.innerHTML = currentPrecioVal == 0 ? 
-                '<i class="bi bi-arrow-repeat"></i> Ver Mayorista' : 
-                '<i class="bi bi-arrow-repeat"></i> Ver Minorista';
-        } else {
-            // Texto completo en desktop
-            btn.innerHTML = currentPrecioVal == 0 ? 
-                '<i class="bi bi-arrow-repeat"></i> Ver Precio Mayorista' : 
-                '<i class="bi bi-arrow-repeat"></i> Ver Precio Minorista';
-        }
-    }
-
-    $('#btnCambiarPrecio').on('click', function() {
-        const newPrecio = (currentPrecio == 0) ? 1 : 0;
-        const btn = $(this);
-        
-        btn.html('<i class="bi bi-hourglass-split"></i> Cargando...');
-        btn.prop('disabled', true);
-        
-        $.ajax({
-            url: window.location.pathname,
-            method: 'GET',
-            data: {
-                dpto_id: dptoId,
-                line: line,
-                from: comeFrom,
-                ajax: 1,
-                prec: newPrecio
-            },
-            success: function(response) {
-                $('#productos-container').html(response);
-                currentPrecio = newPrecio;
-                $('#btnCambiarPrecio').attr('data-current', currentPrecio);
-                ajustarTextoBoton();
-                
-                // Actualizar el enlace del PDF
-                var pdfIcon = $('.title-banner .bi-file-pdf-fill');
-                var nuevaRutaPdf = '';
-                
-                if (currentPrecio == 0) {
-                    nuevaRutaPdf = '/pdfs/catalogo_' + lineaNombre + '/conPrecio/catalogo_dptos_' + dptoId + '.pdf';
-                    pdfIcon.attr('title', 'PDF con Precio Minorista');
-                } else {
-                    nuevaRutaPdf = '/pdfs/catalogo_' + lineaNombre + '/conPrecioMayor/catalogo_dptos_' + dptoId + '.pdf';
-                    pdfIcon.attr('title', 'PDF con Precio Mayorista');
-                }
-                
-                pdfIcon.off('click').on('click', function() {
-                    window.open(nuevaRutaPdf, '_blank');
-                });
-                
-                btn.prop('disabled', false);
-            },
-            error: function(xhr, status, error) {
-                console.error('Error AJAX:', error);
-                alert('Error al cambiar el precio. Recargue la página.');
-                location.reload();
-            }
-        });
-    });
+// Función para ajustar el texto del botón según el ancho de pantalla
+function ajustarTextoBoton() {
+    const btn = document.getElementById('btnCambiarPrecio');
+    if (!btn) return;
     
-    // Ejecutar ajuste de texto al cargar y al redimensionar
-    $(document).ready(function() {
-        ajustarTextoBoton();
-        $(window).resize(function() {
+    const esMovil = window.innerWidth <= 768;
+    const esMovilPeq = window.innerWidth <= 480;
+    const currentPrecioVal = parseInt(btn.getAttribute('data-current'));
+    
+    if (esMovilPeq) {
+        btn.innerHTML = currentPrecioVal == 0 ?
+            '<i class="bi bi-arrow-repeat"></i> Mayorista' :
+            '<i class="bi bi-arrow-repeat"></i> Minorista';
+    } else if (esMovil) {
+        btn.innerHTML = currentPrecioVal == 0 ?
+            '<i class="bi bi-arrow-repeat"></i> Ver Mayorista' :
+            '<i class="bi bi-arrow-repeat"></i> Ver Minorista';
+    } else {
+        btn.innerHTML = currentPrecioVal == 0 ?
+            '<i class="bi bi-arrow-repeat"></i> Ver Precio Mayorista' :
+            '<i class="bi bi-arrow-repeat"></i> Ver Precio Minorista';
+    }
+}
+
+$('#btnCambiarPrecio').on('click', function() {
+    const newPrecio = (currentPrecio == 0) ? 1 : 0;
+    const btn = $(this);
+    
+    btn.html('<i class="bi bi-hourglass-split"></i> Cargando...');
+    btn.prop('disabled', true);
+    
+    $.ajax({
+        url: window.location.pathname,
+        method: 'GET',
+        data: {
+            dpto_id: dptoId,
+            line: line,
+            from: comeFrom,
+            ajax: 1,
+            prec: newPrecio
+        },
+        success: function(response) {
+            $('#productos-container').html(response);
+            currentPrecio = newPrecio;
+            $('#btnCambiarPrecio').attr('data-current', currentPrecio);
             ajustarTextoBoton();
-        });
+            
+            // Actualizar el enlace del PDF
+            var pdfIcon = $('.title-banner .bi-file-pdf-fill');
+            var nuevaRutaPdf = '';
+            
+            if (currentPrecio == 0) {
+                nuevaRutaPdf = '/pdfs/catalogo_' + lineaNombre + '/conPrecio/catalogo_dptos_' + dptoId + '.pdf';
+                pdfIcon.attr('title', 'PDF con Precio Minorista');
+            } else {
+                nuevaRutaPdf = '/pdfs/catalogo_' + lineaNombre + '/conPrecioMayor/catalogo_dptos_' + dptoId + '.pdf';
+                pdfIcon.attr('title', 'PDF con Precio Mayorista');
+            }
+            
+            pdfIcon.off('click').on('click', function() {
+                window.open(nuevaRutaPdf, '_blank');
+            });
+            
+            btn.prop('disabled', false);
+        },
+        error: function(xhr, status, error) {
+            console.error('Error AJAX:', error);
+            alert('Error al cambiar el precio. Recargue la página.');
+            location.reload();
+        }
     });
-    <?php endif; ?>
+});
+
+$(document).ready(function() {
+    ajustarTextoBoton();
+    $(window).resize(function() {
+        ajustarTextoBoton();
+    });
+});
+<?php endif; ?>
 
     // Forzar tema claro en Chrome Android
     (function() {
