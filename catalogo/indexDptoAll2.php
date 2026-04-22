@@ -600,7 +600,7 @@ $backCond = '<a href="indiceDptos.php"  title="Volver"><i class="bi bi-arrow-lef
         window.location.href = urlString;
     }
 
-    <?php if ($role == 1 || $role == 2): ?>
+<?php if ($role == 1 || $role == 2): ?>
 let currentPrecio = <?php echo $tipoPrecio; ?>;
 const dptoId = <?php echo $dptoId; ?>;
 const role = <?php echo $role; ?>;
@@ -654,7 +654,7 @@ $('#btnCambiarPrecio').on('click', function() {
             $('#btnCambiarPrecio').attr('data-current', currentPrecio);
             ajustarTextoBoton();
             
-            // Actualizar el enlace del PDF (usando data-url)
+            // Actualizar el enlace del PDF
             var pdfIcon = $('.title-banner .pdf-icon');
             var nuevaRutaPdf = '';
             
@@ -688,7 +688,7 @@ $(document).ready(function() {
 
 // Manejador global para el ícono del PDF
 $(document).on('click', '.pdf-icon', function() {
-    var url = $(this).data('url');
+    var url = $(this).attr('data-url');
     if (url) {
         window.open(url, '_blank');
     }
