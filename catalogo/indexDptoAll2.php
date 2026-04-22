@@ -16,6 +16,34 @@ if ($role == 3) {
     $tipoPrecio = 0;
 }
 
+
+$linea_nombre = ($line == 1) ? 'automotriz' : 'ferretero';
+
+if ($role == 1 || $role == 2) {
+    // Usuarios con cambio de precio: el PDF depende del $tipoPrecio actual
+    if ($tipoPrecio == 0) {
+        // Minorista
+        $ruta_pdf = "/pdfs/catalogo_{$linea_nombre}/conPrecio/catalogo_dptos_{$dptoId}.pdf";
+        $label_pdf = "PDF con Precio Minorista";
+    } else {
+        // Mayorista
+        $ruta_pdf = "/pdfs/catalogo_{$linea_nombre}/conPrecioMayor/catalogo_dptos_{$dptoId}.pdf";
+        $label_pdf = "PDF con Precio Mayorista";
+    }
+} elseif ($role == 3) {
+    // Usuario minorista (rol 3)
+    $ruta_pdf = "/pdfs/catalogo_{$linea_nombre}/conPrecio/catalogo_dptos_{$dptoId}.pdf";
+    $label_pdf = "PDF con Precio Minorista";
+} elseif ($role == 4) {
+    // Usuario mayorista (rol 4)
+    $ruta_pdf = "/pdfs/catalogo_{$linea_nombre}/conPrecioMayor/catalogo_dptos_{$dptoId}.pdf";
+    $label_pdf = "PDF con Precio Mayorista";
+} else {
+    // Visitante o sin sesión: PDF sin precio
+    $ruta_pdf = "/pdfs/catalogo_{$linea_nombre}/catalogo_dptos_{$dptoId}.pdf";
+    $label_pdf = "Ver catálogo PDF";
+}
+
 // Obtener parámetros GET
 if (isset($_GET['line'])) $line = intval($_GET['line']);
 if (isset($_GET['from'])) $comeFrom = intval($_GET['from']);
@@ -528,8 +556,9 @@ $backCond = '<a href="indiceDptos.php"  title="Volver"><i class="bi bi-arrow-lef
         <h1>
             <i class="bi bi-grid-3x3-gap-fill"></i>
             Catálogo de <?php echo htmlspecialchars($currCatName); ?>
-            <i class="bi bi-file-pdf-fill" style="color: #ff9999; cursor: pointer;" 
-               onclick="window.open('<?php echo ($line == 1) ? "/pdfs/catalogo_automotriz/catalogo_dptos_{$dptoId}.pdf" : "/pdfs/catalogo_ferretero/catalogo_dptos_{$dptoId}.pdf"; ?>', '_blank')"></i>
+            <i class="bi bi-file-pdf-fill" style="color: #dc3545; cursor: pointer; font-size: 1.8rem;"
+                onclick="window.open('<?php echo $ruta_pdf; ?>', '_blank')"
+                title="<?php echo $label_pdf; ?>"></i>
         </h1>
     </div>
 
