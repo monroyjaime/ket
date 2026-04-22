@@ -1,6 +1,7 @@
 <?php
 require_once("../php/dbcat.php");
-
+// Fecha/hora de generación
+$fechaActualizacion = date('Y-m-d H:i');
 // Obtener parámetros
 $role = isset($_GET['role_num']) ? intval($_GET['role_num']) : -1;
 $dptoId = isset($_GET['dpto_id']) ? intval($_GET['dpto_id']) : 1;
@@ -102,6 +103,12 @@ $tags .= '<div class="row align-items-center">';
 $tags .= '<div class="col-6">';
 $tags .= '<img src="../catalogo/images/logo.png" class="logo" alt="KET">';
 $tags .= '</div>';
+// Fecha y paginación
+$tags .= '<div class="col-6 text-end">';
+if ($pageGlobal == 1) {
+    $tags .= '<div class="fecha-actualizacion">Actualizado: ' . $fechaActualizacion . '</div>';
+}
+
 $tags .= '<div class="col-6 pagination-info">';
 $tags .= 'Pág. '.$pageGlobal.' / '.$totalPaginasGlobal;
 $tags .= '</div>';
@@ -288,6 +295,18 @@ body {
 .col-6.texto::first-letter {
     text-transform: uppercase;
 }
+
+.fecha-actualizacion {
+    font-size: 8pt;
+    color: #666;
+    margin-bottom: 2px;
+}
+.pagination-info {
+    text-align: right;
+    font-size: 11pt;
+    color: #333;
+}
+
 @media print {
     body {
         margin: 5.5mm 10mm;
