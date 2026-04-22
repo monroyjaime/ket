@@ -521,11 +521,7 @@ $backCond = '<a href="indiceDptos.php"  title="Volver"><i class="bi bi-arrow-lef
     </style>
 </head>
 <body>
-    <script>
-    // Forzar tema claro eliminando cualquier clase oscura del sistema
-    document.documentElement.style.colorScheme = 'light';
-    document.body.style.backgroundColor = '#DDD';
-</script>
+
     <!-- BARRA SUPERIOR - Versión corregida -->
     <div class="w-100" style="background-color: #CCC; padding: 12px 0;">
         <div class="container-fluid">
@@ -592,6 +588,7 @@ $backCond = '<a href="indiceDptos.php"  title="Volver"><i class="bi bi-arrow-lef
     </div>
 
     <script>
+    
     function backHome(rol, line, prec, from) {
         let urlString = "";
         if (from == 0) {
@@ -609,6 +606,14 @@ $backCond = '<a href="indiceDptos.php"  title="Volver"><i class="bi bi-arrow-lef
     const role = <?php echo $role; ?>;
     const line = <?php echo $line; ?>;
     const comeFrom = <?php echo $comeFrom; ?>;
+
+    <?php if ($role == 1 || $role == 2): ?>
+    let currentPrecio = <?php echo $tipoPrecio; ?>;
+    const dptoId = <?php echo $dptoId; ?>;
+    const role = <?php echo $role; ?>;
+    const line = <?php echo $line; ?>;
+    const comeFrom = <?php echo $comeFrom; ?>;
+    var lineaNombre = '<?php echo ($line == 1) ? "automotriz" : "ferretero"; ?>';
 
     // Función para ajustar el texto del botón según el ancho de pantalla
     function ajustarTextoBoton() {
@@ -659,6 +664,23 @@ $backCond = '<a href="indiceDptos.php"  title="Volver"><i class="bi bi-arrow-lef
                 currentPrecio = newPrecio;
                 $('#btnCambiarPrecio').attr('data-current', currentPrecio);
                 ajustarTextoBoton();
+                
+                // Actualizar el enlace del PDF
+                var pdfIcon = $('.title-banner .bi-file-pdf-fill');
+                var nuevaRutaPdf = '';
+                
+                if (currentPrecio == 0) {
+                    nuevaRutaPdf = '/pdfs/catalogo_' + lineaNombre + '/conPrecio/catalogo_dptos_' + dptoId + '.pdf';
+                    pdfIcon.attr('title', 'PDF con Precio Minorista');
+                } else {
+                    nuevaRutaPdf = '/pdfs/catalogo_' + lineaNombre + '/conPrecioMayor/catalogo_dptos_' + dptoId + '.pdf';
+                    pdfIcon.attr('title', 'PDF con Precio Mayorista');
+                }
+                
+                pdfIcon.off('click').on('click', function() {
+                    window.open(nuevaRutaPdf, '_blank');
+                });
+                
                 btn.prop('disabled', false);
             },
             error: function(xhr, status, error) {
