@@ -1,5 +1,5 @@
 <?php
-// upload_base64.php - Versión robusta
+// upload_base64.php - Versión robusta con devolución de dpto_id
 session_start();
 header('Content-Type: application/json');
 
@@ -108,7 +108,14 @@ if (file_put_contents($rutaCompleta, $imagen_data) === false) {
 $updateQuery = "UPDATE productos SET photo_url = '$nombreArchivo' WHERE code = '$codigo'";
 $db->querySet($updateQuery);
 
+// ============================================
+// DEVOLVER dpto_id EN LA RESPUESTA
+// ============================================
 $response['success'] = true;
 $response['message'] = 'Foto actualizada correctamente';
+$response['dpto_id'] = $dptoId;        // ← NUEVO: departamento afectado
+$response['codigo'] = $codigo;          // ← NUEVO: código del producto
+$response['url'] = '/' . $imgRoute . $nombreArchivo;
+
 echo json_encode($response);
 ?>
