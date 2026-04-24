@@ -136,7 +136,9 @@ try {
     sendJsonResponse(true, 'Foto actualizada correctamente', [
         'url' => '/' . $imgRoute . $nombreArchivo,
         'backup' => $backupName,
-        'timestamp' => time()
+        'timestamp' => time(),
+        'dpto_id' => $dptoId,        // ← NUEVO: departamento afectado
+        'codigo' => $codigo           // ← NUEVO: código del producto
     ]);
     
 } catch (Exception $e) {

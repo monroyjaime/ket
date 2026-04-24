@@ -404,15 +404,15 @@ $pageTitle = "Actualización de Fotos - Catálogo";
         $(document).ready(function() {
             // Inicializar DataTable
             // En el DataTable, agregar opción de agrupación
-    var table = $('#tablaProductos').DataTable({
-    "processing": true,
-    "serverSide": true,
-    "ajax": {
-        "url": "getProductos.php",
-        "type": "GET",
-        "dataSrc": function(json) {
-            console.log("Datos recibidos:", json);
-            return json.data;
+            var table = $('#tablaProductos').DataTable({
+            "processing": true,
+            "serverSide": true,
+            "ajax": {
+                "url": "getProductos.php",
+                "type": "GET",
+                "dataSrc": function(json) {
+                    console.log("Datos recibidos:", json);
+                    return json.data;
         }
     },
     "columns": [
@@ -487,6 +487,76 @@ $pageTitle = "Actualización de Fotos - Catálogo";
     }
 });
         });
+
+// Array para acumular departamentos afectados por cambios de fotos
+let dptosPendientes = [];
+
+// Función para actualizar PDFs de departamentos pendientes
+function actualizarPDFsPendientes() {
+    if (dptosPendientes.length === 0) return;
+    
+    // Eliminar duplicados
+    const dptosUnicos = [...new Set(dptosPendientes)];
+    
+    Swal.fire({
+        title: 'Actualizar catálogos PDF',
+        html: `<p>Se actualizaron fotos en ${dptosUnicos.length} departamento(s).</p>
+               <p>¿Desea regenerar los PDFs de estos departamentos ahora?</p>
+               <small class="text-muted">Esto puede tomar unos segundos.</small>`,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Sí, actualizar ahora',
+        cancelButtonText: 'No, después',
+        confirmButtonColor: '#037C79'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            actualizarPDFsPorDepartamentos(dptosUnicos);
+        }
+        // Limpiar la lista después de decidir
+        dptosPendientes = [];
+    });
+}
+
+// Función para actualizar PDFs de una lista de departamentos
+function actualizarPDFsPorDepartamentos(dptos) {
+    Swal.fire({
+        title: 'Actualizando PDFs...',
+        text: 'Por favor espere, esto puede tomar varios segundos...',
+        allowOutsideClick: false,
+        didOpen: () => {
+            Swal.showLoading();
+        }
+    });
+    
+    const promises = dptos.map(dptoId => {
+        return fetch('actualizar_pdfs_dpto.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ dpto_id: dptoId })
+        }).then(response => response.json());
+    });
+    
+    Promise.all(promises)
+        .then(resultados => {
+            const exitosos = resultados.filter(r => r.success).length;
+            Swal.fire({
+                title: '¡Actualización completada!',
+                html: `<p>PDFs actualizados para ${exitosos} de ${dptos.length} departamentos.</p>`,
+                icon: 'success',
+                timer: 3000,
+                showConfirmButton: false
+            });
+            // Recargar la tabla para mostrar nuevas fotos
+            $('#tablaProductos').DataTable().ajax.reload(null, false);
+        })
+        .catch(error => {
+            Swal.fire({
+                title: 'Error',
+                text: 'Hubo un problema actualizando algunos PDFs.',
+                icon: 'error'
+            });
+        });
+}        
         
         // Función para actualizar foto - MODIFICADA sin opción URL
 function actualizarFoto(codigo, departamento, dptoId, tieneFotoActual, imgRoute, fotoActual) {
@@ -627,6 +697,16 @@ function actualizarFoto(codigo, departamento, dptoId, tieneFotoActual, imgRoute,
         }
     }).then((result) => {
         if (result.isConfirmed && result.value) {
+
+             // ============================================
+            // ACUMULAR DEPARTAMENTO PARA ACTUALIZAR PDF
+            // ============================================
+            if (result.value.dpto_id && !dptosPendientes.includes(result.value.dpto_id)) {
+                dptosPendientes.push(result.value.dpto_id);
+                console.log("Departamento acumulado:", result.value.dpto_id);
+                console.log("Departamentos pendientes:", dptosPendientes);
+            }
+
             let mensaje = 'La foto se ha actualizado correctamente';
             if (result.value.backup) {
                 mensaje += `<br><small>Backup de la foto anterior: ${result.value.backup}</small>`;
@@ -641,6 +721,12 @@ function actualizarFoto(codigo, departamento, dptoId, tieneFotoActual, imgRoute,
                 // Forzar recarga completa de la tabla
                 $('#tablaProductos').DataTable().ajax.reload(null, false);
                 
+                // Si hay departamentos pendientes, preguntar después de un breve retraso
+                if (dptosPendientes.length > 0) {
+                    setTimeout(() => {
+                        actualizarPDFsPendientes();
+                    }, 800);
+                }
                 // Opcional: Recargar la página después de 1 segundo
                 // setTimeout(() => location.reload(), 1000);
             });
