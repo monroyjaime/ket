@@ -123,6 +123,7 @@ foreach ($departamentos as $d) {
     <link rel="Shortcut Icon" href="../favicon.ico" type="image/x-icon" />
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         body {
             background-color: #DDD;
@@ -315,6 +316,40 @@ foreach ($departamentos as $d) {
             border-color: #037C79;
             box-shadow: 0 0 0 0.2rem rgba(3, 124, 121, 0.25);
         }
+
+        /* Barra de progreso para generación de PDFs */
+
+        .progress-container {
+            margin: 15px 0;
+            display: none;
+        }
+        .progress {
+            background-color: #e0e0e0;
+            border-radius: 10px;
+            height: 20px;
+            overflow: hidden;
+        }
+        .progress-bar {
+            background-color: #037C79;
+            width: 0%;
+            height: 100%;
+            transition: width 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 11px;
+            font-weight: bold;
+        }
+        .progress-status {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+            text-align: center;
+        }
+
+
+
     </style>
 </head>
 <body>
@@ -340,6 +375,63 @@ foreach ($departamentos as $d) {
             <i class="bi bi-file-pdf-fill"></i>
         </h1>
     </div>
+
+    <!-- Sección de Generación de Líneas Completas -->
+    <div class="card mt-3">
+        <div class="card-header" style="background-color: #003272;">
+            <i class="bi bi-file-pdf-fill"></i> Generar PDFs de Línea Completa (Impresión)
+            <span class="float-end">
+                <i class="bi bi-printer-fill"></i> Calidad de impresión
+            </span>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header" style="background-color: #037C79;">
+                            🔧 Línea Automotriz
+                        </div>
+                        <div class="card-body text-center">
+                            <div class="btn-group" role="group">
+                                <button class="btn btn-success btn-sm" onclick="generarLineaCompleta('A', 'sin')">
+                                    <i class="bi bi-eye-fill"></i> sin Precio
+                                </button>
+                                <button class="btn btn-primary btn-sm" onclick="generarLineaCompleta('A', 'minorista')">
+                                    <i class="bi bi-tag-fill"></i> con Precio
+                                </button>
+                                <button class="btn btn-warning btn-sm" onclick="generarLineaCompleta('A', 'mayorista')">
+                                    <i class="bi bi-tag-fill"></i> con Prec. Mayor
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header" style="background-color: #037C79;">
+                            🔩 Línea Ferretera
+                        </div>
+                        <div class="card-body text-center">
+                            <div class="btn-group" role="group">
+                                <button class="btn btn-success btn-sm" onclick="generarLineaCompleta('F', 'sin')">
+                                    <i class="bi bi-eye-fill"></i> sin Precio
+                                </button>
+                                <button class="btn btn-primary btn-sm" onclick="generarLineaCompleta('F', 'minorista')">
+                                    <i class="bi bi-tag-fill"></i> con Precio
+                                </button>
+                                <button class="btn btn-warning btn-sm" onclick="generarLineaCompleta('F', 'mayorista')">
+                                    <i class="bi bi-tag-fill"></i> con Prec. Mayor
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
 
     <div class="container-fluid px-4">
         <div class="row">
@@ -399,9 +491,18 @@ foreach ($departamentos as $d) {
                     </div>
                 </div>
             </div>
+
+            
             
             <!-- Área de log -->
             <div class="col-md-8">
+                <!-- Barra de progreso para generación de PDFs -->
+                <div id="progressContainer" class="progress-container" style="display: none;">
+                    <div class="progress">
+                        <div id="progressBar" class="progress-bar" style="width: 0%;">0%</div>
+                    </div>
+                    <div id="progressStatus" class="progress-status">Iniciando...</div>
+                </div>
                 <div class="card">
                     <div class="card-header">
                         <i class="bi bi-terminal"></i> Log de Actualización
@@ -431,6 +532,11 @@ foreach ($departamentos as $d) {
         let procesando = false;
         let pdfsGenerados = [];
         let calidadActual = 'web';
+
+        // Variables para monitorear progreso
+        let intervalProgreso = null;
+        let lineaActual = null;
+        let tipoPrecioActual = null;
         
         function actualizarContador() {
             var seleccionados = document.querySelectorAll('.dpto-check:checked').length;
@@ -585,6 +691,211 @@ foreach ($departamentos as $d) {
         }
         
         actualizarContador();
+
+
+        function generarLineaCompleta(linea, tipoPrecio) {
+            var nombreLinea = (linea === 'A') ? 'Automotriz' : 'Ferretera';
+            var tipoTexto = '';
+            var tiempoEstimado = (linea === 'A') ? '5-10 minutos' : '3-5 minutos';
+            
+            if (tipoPrecio === 'sin') {
+                tipoTexto = 'sin Precio';
+            } else if (tipoPrecio === 'minorista') {
+                tipoTexto = 'con Precio Minorista';
+            } else {
+                tipoTexto = 'con Precio Mayorista';
+            }
+            
+            Swal.fire({
+                title: 'Generar PDF de línea completa',
+                html: `<p><strong>Línea ${nombreLinea}</strong><br>${tipoTexto}</p>
+                    <p>Tiempo estimado: <strong>${tiempoEstimado}</strong></p>
+                    <small>El proceso se ejecutará en segundo plano. La barra de progreso se actualizará automáticamente.</small>`,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Sí, generar',
+                cancelButtonText: 'Cancelar',
+                confirmButtonColor: '#037C79'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Limpiar monitoreo anterior si existe
+                    if (intervalProgreso) {
+                        clearInterval(intervalProgreso);
+                        intervalProgreso = null;
+                    }
+                    
+                    lineaActual = linea;
+                    tipoPrecioActual = tipoPrecio;
+                    
+                    agregarLog('🖨️ Iniciando generación de PDF: Línea ' + nombreLinea + ' (' + tipoTexto + ')', 'proc');
+                    agregarLog('⏱️ Tiempo estimado: ' + tiempoEstimado, 'info');
+                    agregarLog('⏳ Proceso en segundo plano - Monitoreando progreso...', 'info');
+                    
+                    // Mostrar barra de progreso
+                    mostrarProgreso(0, 'Iniciando proceso...');
+                    
+                    fetch('actualizar_catalogo_api.php', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                        body: 'linea=' + linea + '&tipo_precio=' + tipoPrecio + '&calidad=impresion&async=1'
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            agregarLog('✅ Proceso iniciado correctamente', 'ok');
+                            if (data.processing) {
+                                agregarLog('📄 Monitoreando generación en segundo plano...', 'info');
+                                iniciarMonitoreoProgreso(linea, tipoPrecio);
+                            }
+                        } else {
+                            ocultarProgreso();
+                            agregarLog('❌ Error: ' + (data.error || 'Desconocido'), 'error');
+                        }
+                    })
+                    .catch(error => {
+                        ocultarProgreso();
+                        agregarLog('❌ Error de conexión: ' + error.message, 'error');
+                    });
+                }
+            });
+        }
+
+        // Función para mostrar la barra de progreso
+        function mostrarProgreso(porcentaje, mensaje) {
+            var container = document.getElementById('progressContainer');
+            var bar = document.getElementById('progressBar');
+            var status = document.getElementById('progressStatus');
+            
+            if (container) {
+                container.style.display = 'block';
+                if (bar) {
+                    bar.style.width = porcentaje + '%';
+                    bar.textContent = porcentaje + '%';
+                }
+                if (status) {
+                    status.textContent = mensaje;
+                }
+            }
+        }
+
+        // Función para ocultar la barra de progreso
+        function ocultarProgreso() {
+            var container = document.getElementById('progressContainer');
+            if (container) {
+                container.style.display = 'none';
+            }
+            if (intervalProgreso) {
+                clearInterval(intervalProgreso);
+                intervalProgreso = null;
+            }
+        }
+
+        // Función para actualizar el progreso
+        function actualizarProgreso(porcentaje, mensaje) {
+            var bar = document.getElementById('progressBar');
+            var status = document.getElementById('progressStatus');
+            
+            if (bar) {
+                bar.style.width = porcentaje + '%';
+                bar.textContent = porcentaje + '%';
+            }
+            if (status) {
+                status.textContent = mensaje;
+            }
+        }
+
+        // Función para iniciar monitoreo de progreso (polling)
+        function iniciarMonitoreoProgreso(linea, tipoPrecio) {
+            if (intervalProgreso) {
+                clearInterval(intervalProgreso);
+            }
+            
+            // Determinar la URL del PDF según línea y tipo
+            var pdfUrl = '';
+            var carpeta = (linea === 'A') ? 'catalogo_automotriz' : 'catalogo_ferretero';
+            
+            if (tipoPrecio === 'minorista') {
+                pdfUrl = '/pdfs/' + carpeta + '/conPrecio/catalogo_linea_' + linea + '_minor.pdf';
+            } else if (tipoPrecio === 'mayorista') {
+                pdfUrl = '/pdfs/' + carpeta + '/conPrecioMayor/catalogo_linea_' + linea + '_mayor.pdf';
+            } else {
+                pdfUrl = '/pdfs/' + carpeta + '/print/catalogo_linea_' + linea + '.pdf';
+            }
+            
+            console.log("Monitoreando PDF:", pdfUrl);
+            
+            let intentos = 0;
+            const maxIntentos = 240; // 20 minutos (240 * 5 = 1200 segundos)
+            let mensaje95Enviado = false;
+            let mensajeTardioEnviado = false;
+            
+            agregarLog('📊 Iniciando monitoreo de generación (hasta 20 minutos)...', 'proc');
+            
+            intervalProgreso = setInterval(function() {
+                intentos++;
+                
+                // Verificar si el PDF existe
+                fetch(pdfUrl, { method: 'HEAD', cache: 'no-cache' })
+                    .then(response => {
+                        if (response.ok) {
+                            // PDF encontrado
+                            clearInterval(intervalProgreso);
+                            intervalProgreso = null;
+                            actualizarProgreso(100, '¡Completado!');
+                            agregarLog('✅ PDF generado correctamente: Línea ' + (linea === 'A' ? 'Automotriz' : 'Ferretera'), 'ok');
+                            agregarLog('📄 <a href="' + pdfUrl + '" target="_blank">Ver PDF generado</a>', 'info');
+                            setTimeout(function() { ocultarProgreso(); }, 5000);
+                        } else if (intentos >= maxIntentos) {
+                            // Tiempo de espera agotado
+                            clearInterval(intervalProgreso);
+                            intervalProgreso = null;
+                            ocultarProgreso();
+                            agregarLog('⏰ El proceso de generación está tomando más tiempo de lo esperado.', 'warning');
+                            agregarLog('💡 El PDF se está generando en segundo plano. Revise más tarde en:', 'info');
+                            agregarLog('📄 ' + pdfUrl, 'info');
+                            agregarLog('🔍 Puede verificar manualmente si el archivo ya existe en esa ubicación.', 'info');
+                        } else {
+                            // Aún generando - calcular progreso
+                            var porcentaje = Math.min(intentos * 2, 95);
+                            var tiempoTranscurrido = Math.floor(intentos * 5 / 60);
+                            var tiempoRestante = Math.floor((maxIntentos - intentos) * 5 / 60);
+                            
+                            actualizarProgreso(porcentaje, 'Generando PDF... (' + tiempoTranscurrido + 'm/' + tiempoRestante + 'm restante)');
+                            
+                            // Mensaje cuando alcanza 95% (para tranquilizar al usuario)
+                            if (porcentaje >= 95 && !mensaje95Enviado) {
+                                mensaje95Enviado = true;
+                                agregarLog('📊 Progreso 95% - Finalizando y combinando páginas...', 'proc');
+                                agregarLog('⏳ Las líneas completas con muchos productos pueden tardar varios minutos.', 'info');
+                            }
+                            
+                            // Mensaje cuando lleva más de 5 minutos (12 intentos)
+                            if (intentos > 60 && !mensajeTardioEnviado) {
+                                mensajeTardioEnviado = true;
+                                agregarLog('⏳ El proceso continúa. La generación de líneas completas es normal que tome tiempo.', 'info');
+                            }
+                            
+                            // Log de progreso cada 30 segundos (6 intentos)
+                            if (intentos % 6 === 0 && porcentaje < 95) {
+                                agregarLog('📊 Progreso: ' + porcentaje + '% - Generando... (' + tiempoTranscurrido + 'm)', 'proc');
+                            }
+                        }
+                    })
+                    .catch(() => {
+                        // Error de red - seguir esperando
+                        if (intentos >= maxIntentos) {
+                            clearInterval(intervalProgreso);
+                            intervalProgreso = null;
+                            ocultarProgreso();
+                            agregarLog('⏰ Tiempo de espera agotado por problemas de conexión.', 'error');
+                            agregarLog('💡 Verifique más tarde si el PDF se generó en: ' + pdfUrl, 'info');
+                        } else if (intentos % 12 === 0) {
+                            agregarLog('⚠️ Verificando estado del servidor...', 'info');
+                        }
+                    });
+            }, 5000); // Verificar cada 5 segundos
+        }
     </script>
+
 </body>
 </html>
